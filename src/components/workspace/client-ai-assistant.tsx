@@ -114,6 +114,8 @@ export function ClientAiAssistant({
   const canAsk = !loading && question.trim().length > 1 && (mode === "general" || Boolean(contextCaseId));
 
   useEffect(() => {
+    if (!activeThreadId) return;
+
     const stillValid =
       activeThread &&
       (mode === "general"
@@ -123,7 +125,7 @@ export function ClientAiAssistant({
     if (!stillValid) {
       setActiveThreadId(contextThreads[0]?.id || null);
     }
-  }, [activeThread, contextCaseId, contextThreads, mode]);
+  }, [activeThread, activeThreadId, contextCaseId, contextThreads, mode]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ block: "end" });
@@ -173,6 +175,12 @@ export function ClientAiAssistant({
     }
   }
 
+  function startNewConversation() {
+    setActiveThreadId(null);
+    setQuestion("");
+    setError(null);
+  }
+
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-sm">
@@ -186,6 +194,10 @@ export function ClientAiAssistant({
               <Badge variant="outline" className="rounded-full px-3 py-1">
                 <Scale className="mr-1 h-3.5 w-3.5" />
                 Pakistani-law context
+              </Badge>
+              <Badge variant="outline" className="rounded-full px-3 py-1">
+                <Briefcase className="mr-1 h-3.5 w-3.5" />
+                Lawyer directory aware
               </Badge>
             </div>
 
@@ -271,7 +283,7 @@ export function ClientAiAssistant({
                   size="icon"
                   variant="outline"
                   title="New chat"
-                  onClick={() => setActiveThreadId(null)}
+                  onClick={startNewConversation}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -338,7 +350,11 @@ export function ClientAiAssistant({
                 <Badge variant="outline" className="rounded-full px-3 py-1">
                   {activeThread.messages.length} messages
                 </Badge>
-              ) : null}
+              ) : (
+                <Badge variant="outline" className="rounded-full px-3 py-1">
+                  New conversation
+                </Badge>
+              )}
             </div>
           </div>
 

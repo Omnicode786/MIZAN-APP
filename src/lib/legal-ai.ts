@@ -61,6 +61,39 @@ export async function buildCaseContext(caseId: string) {
   return { legalCase, text };
 }
 
+async function buildMizanLawyerDirectoryContext() {
+  try {
+    const lawyers = await prisma.lawyerProfile.findMany({
+      where: { isPublic: true },
+      include: { user: true },
+      orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }],
+      take: 12
+    });
+
+    if (!lawyers.length) return "";
+
+    return [
+      "MIZAN lawyer directory snapshot:",
+      "Use this only when the client asks about finding, choosing, or escalating to a lawyer. Treat a verified badge as MIZAN profile verification only; do not invent licence numbers, bar enrolment details, availability, or outcomes.",
+      ...lawyers.map((lawyer) =>
+        [
+          `- ${lawyer.user.name}`,
+          lawyer.firmName ? `firm: ${lawyer.firmName}` : "firm: independent practice",
+          lawyer.city ? `city: ${lawyer.city}` : "city: n/a",
+          lawyer.specialties.length ? `specialties: ${lawyer.specialties.join(", ")}` : "specialties: n/a",
+          `experience: ${lawyer.yearsExperience} years`,
+          typeof lawyer.rating === "number" ? `rating: ${lawyer.rating}` : "rating: n/a",
+          lawyer.fixedFeeFrom ? `fixed fee from PKR ${lawyer.fixedFeeFrom}` : "fixed fee: proposal based",
+          lawyer.verifiedBadge ? "MIZAN verified profile: yes" : "MIZAN verified profile: no"
+        ].join("; ")
+      )
+    ].join("\n");
+  } catch (error) {
+    console.error("Unable to load MIZAN lawyer directory context.", error);
+    return "";
+  }
+}
+
 export async function answerPakistaniLegalQuestion({
   question,
   caseId,
@@ -79,6 +112,7 @@ export async function answerPakistaniLegalQuestion({
   const outputLanguage = normalizeLanguage(language);
   let context = "";
   let sources: string[] = [];
+  const lawyerDirectoryContext = await buildMizanLawyerDirectoryContext();
 
   if (caseId) {
     const built = await buildCaseContext(caseId);
@@ -96,15 +130,22 @@ export async function answerPakistaniLegalQuestion({
     }
   }
 
+  if (lawyerDirectoryContext) {
+    context += `${lawyerDirectoryContext}\n\n`;
+    sources.push("MIZAN lawyer directory");
+  }
+
   const law = buildPakistanLawContext(`${question}\n${context}`);
   sources.push(...law.matches.map((item) => item.title));
 
   const prompt = [
-    "You are MIZAN's Pakistani legal workflow assistant.",
+    "You are MIZAN's in-app Pakistani legal assistant for clients and lawyers.",
+    "Be personal, direct, and practical: speak as MIZAN's AI assistant, help the client feel oriented, and keep the tone professional.",
+    "MIZAN has lawyer profile and directory data in the supplied context. You may use it to suggest how the client can find a suitable lawyer in MIZAN, but do not invent licensing, bar enrolment, availability, fees, or outcomes.",
     "You are assistive, careful, and structured like a professional Pakistani lawyer reasoning through a file.",
     getLanguageInstruction(outputLanguage),
     
-    "Reason from the provided Pakistan-law context and the uploaded case record. Do not invent facts outside the record.",
+    "Reason from the provided Pakistan-law context, MIZAN platform context, and uploaded case record. Do not invent facts outside the record.",
     role === "LAWYER"
       ? "Address the user as a lawyer and include litigation/procedural posture, evidence gaps, and opposition risks where relevant."
       : simpleLanguageMode
