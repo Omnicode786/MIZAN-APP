@@ -27,6 +27,27 @@ export async function POST(request: Request) {
     if (!legalCase) return NextResponse.json({ error: "Case not found." }, { status: 404 });
   }
 
+  let threadId = body.threadId;
+  if (threadId) {
+    const existingThread = await prisma.assistantThread.findFirst({
+      where: { id: threadId, createdById: user.id }
+    });
+
+    if (!existingThread) {
+      return NextResponse.json({ error: "Thread not found." }, { status: 404 });
+    }
+
+    if (
+      (existingThread.caseId || null) !== (body.caseId || null) ||
+      (existingThread.documentId || null) !== (body.documentId || null)
+    ) {
+      return NextResponse.json(
+        { error: "This thread belongs to a different assistant context." },
+        { status: 400 }
+      );
+    }
+  }
+
   let ai;
   try {
     ai = await answerPakistaniLegalQuestion({
@@ -51,16 +72,7 @@ export async function POST(request: Request) {
     throw error;
   }
 
-  let threadId = body.threadId;
-  if (threadId) {
-    const existingThread = await prisma.assistantThread.findFirst({
-      where: { id: threadId, createdById: user.id }
-    });
-
-    if (!existingThread) {
-      return NextResponse.json({ error: "Thread not found." }, { status: 404 });
-    }
-  } else {
+  if (!threadId) {
     const thread = await prisma.assistantThread.create({
       data: {
         createdById: user.id,

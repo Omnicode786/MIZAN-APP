@@ -37,6 +37,7 @@ type NavItem = {
 function resolveIcon(item: NavItem): LucideIcon {
   const text = `${item.href} ${item.label}`.toLowerCase();
   if (text.includes("dashboard")) return BarChart3;
+  if (text.includes("assistant") || text.includes("ai ")) return Bot;
   if (text.includes("case") || text.includes("queue") || text.includes("review")) return FolderKanban;
   if (text.includes("lawyer") || text.includes("profile")) return Users;
   if (text.includes("upload") || text.includes("evidence")) return FileCheck2;

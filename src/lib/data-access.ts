@@ -88,7 +88,7 @@ export async function getCaseDetail(caseId?: string) {
   };
 }
 
-function sanitizeAssistantThreads<
+export function sanitizeAssistantThreads<
   T extends Array<{ messages: Array<{ role: string; content: string; confidence: number | null }> }>
 >(threads: T): T {
   return threads.map((thread) => ({

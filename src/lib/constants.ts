@@ -11,6 +11,7 @@ type NavItem = {
 export const CLIENT_NAV: NavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", translationKey: "dashboard" },
   { href: "/client/cases", label: "My Cases", translationKey: "cases" },
+  { href: "/client/assistant", label: "AI Assistant", translationKey: "aiLegalAssistance" },
   { href: "/client/lawyers", label: "Find Lawyers", translationKey: "lawyers" },
   { href: "/client/upload", label: "Upload Center", translationKey: "uploadDocument" },
   { href: "/client/drafts", label: "Drafting Studio", translationKey: "draftingStudio" },
