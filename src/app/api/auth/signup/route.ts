@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { handleApiError } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 
@@ -59,9 +60,6 @@ export async function POST(request: Request) {
       redirectTo: user.role === "LAWYER" ? "/lawyer/dashboard" : "/client/dashboard"
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Invalid signup request." },
-      { status: 400 }
-    );
+    return handleApiError(error, "AUTH_SIGNUP_ROUTE", "Unable to create your account.");
   }
 }
