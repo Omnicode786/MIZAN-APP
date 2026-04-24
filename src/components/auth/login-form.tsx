@@ -21,29 +21,33 @@ export function LoginForm() {
     setLoading(true);
     setError("");
 
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-    setLoading(false);
+      if (!response.ok) {
+        setError(data?.error || "Unable to sign in.");
+        return;
+      }
 
-    if (!response.ok) {
-      setError(data.error || "Unable to sign in.");
-      return;
+      router.push(data.redirectTo);
+      router.refresh();
+    } catch {
+      setError("Unable to sign in. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(data.redirectTo);
-    router.refresh();
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md animate-in fade-in-0 slide-in-from-bottom-2">
       <CardHeader>
         <CardTitle>{t(language, "login")} to MIZAN</CardTitle>
         <CardDescription>

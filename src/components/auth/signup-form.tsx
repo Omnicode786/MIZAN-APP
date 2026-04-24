@@ -23,28 +23,33 @@ export function SignupForm() {
     setLoading(true);
     setError("");
 
-    const response = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name, email, password, role })
-    });
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name, email, password, role })
+      });
 
-    const data = await response.json();
-    setLoading(false);
+      const data = await response.json().catch(() => null);
 
-    if (!response.ok) {
-      setError(data.error || "Unable to create account.");
-      return;
+      if (!response.ok) {
+        setError(data?.error || "Unable to create account.");
+        return;
+      }
+
+      router.push(data.redirectTo);
+      router.refresh();
+    } catch {
+      setError("Unable to create account. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(data.redirectTo);
-    router.refresh();
   }
 
   return (
-    <Card className="w-full max-w-lg">
+    <Card className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-2">
       <CardHeader>
         <CardTitle>{t(language, "signup")}</CardTitle>
         <CardDescription>

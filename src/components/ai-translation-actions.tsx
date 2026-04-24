@@ -128,7 +128,7 @@ async function parseJsonResponse(response: Response) {
     return {
       error: response.ok
         ? "The translation service returned an unreadable response."
-        : raw.slice(0, 240) || "Translation failed."
+        : "Translation failed. Please try again."
     };
   }
 }
