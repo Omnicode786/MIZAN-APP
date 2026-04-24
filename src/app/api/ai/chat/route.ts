@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { AiProviderError } from "@/lib/ai";
+import { apiError, handleApiError, notFound, unauthorized, validationError } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/lib/legal-ai";
 import { normalizeLanguage } from "@/lib/language";
@@ -17,43 +17,37 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const user = await getCurrentUserWithProfile();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = schema.parse(await request.json());
-  const language = normalizeLanguage(body.language);
-  let caseTitle: string | undefined;
-
-  if (body.caseId) {
-    const { legalCase } = await getAccessibleCase(body.caseId);
-    if (!legalCase) return NextResponse.json({ error: "Case not found." }, { status: 404 });
-    caseTitle = legalCase.title;
-  }
-
-  let threadId = body.threadId;
-  if (threadId) {
-    const existingThread = await prisma.assistantThread.findFirst({
-      where: { id: threadId, createdById: user.id }
-    });
-
-    if (!existingThread) {
-      return NextResponse.json({ error: "Thread not found." }, { status: 404 });
-    }
-
-    if (
-      (existingThread.caseId || null) !== (body.caseId || null) ||
-      (existingThread.documentId || null) !== (body.documentId || null)
-    ) {
-      return NextResponse.json(
-        { error: "This thread belongs to a different assistant context." },
-        { status: 400 }
-      );
-    }
-  }
-
-  let ai;
   try {
-    ai = await answerPakistaniLegalQuestion({
+    const user = await getCurrentUserWithProfile();
+    if (!user) return unauthorized();
+
+    const body = schema.parse(await request.json());
+    const language = normalizeLanguage(body.language);
+    let caseTitle: string | undefined;
+
+    if (body.caseId) {
+      const { legalCase } = await getAccessibleCase(body.caseId);
+      if (!legalCase) return notFound();
+      caseTitle = legalCase.title;
+    }
+
+    let threadId = body.threadId;
+    if (threadId) {
+      const existingThread = await prisma.assistantThread.findFirst({
+        where: { id: threadId, createdById: user.id }
+      });
+
+      if (!existingThread) return notFound();
+
+      if (
+        (existingThread.caseId || null) !== (body.caseId || null) ||
+        (existingThread.documentId || null) !== (body.documentId || null)
+      ) {
+        return validationError("This conversation belongs to a different assistant context.");
+      }
+    }
+
+    const ai = await answerPakistaniLegalQuestion({
       question: body.question,
       caseId: body.caseId,
       documentId: body.documentId,
@@ -61,65 +55,64 @@ export async function POST(request: Request) {
       simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
       language
     });
-  } catch (error) {
-    if (error instanceof AiProviderError) {
-      return NextResponse.json(
-        {
-          error: error.message
-        },
-        { status: 502 }
-      );
+
+    if (!threadId) {
+      let threadTitle = body.title?.trim() || "New conversation";
+
+      try {
+        threadTitle = await generateAssistantThreadTitle({
+          question: body.question,
+          caseTitle,
+          language
+        });
+      } catch (error) {
+        console.error("[AI_CHAT_TITLE_ERROR]", error);
+      }
+
+      const thread = await prisma.assistantThread.create({
+        data: {
+          createdById: user.id,
+          caseId: body.caseId,
+          documentId: body.documentId,
+          title: threadTitle,
+          scope: body.documentId ? "DOCUMENT" : body.caseId ? "CASE" : "GENERAL"
+        }
+      });
+      threadId = thread.id;
     }
 
-    throw error;
-  }
+    if (!threadId) return apiError("Unable to start this conversation right now.", 500);
 
-  if (!threadId) {
-    const threadTitle = await generateAssistantThreadTitle({
-      question: body.question,
-      caseTitle,
-      language
-    });
+    const [, message] = await prisma.$transaction([
+      prisma.assistantMessage.create({
+        data: {
+          threadId,
+          role: "USER",
+          content: body.question
+        }
+      }),
+      prisma.assistantMessage.create({
+        data: {
+          threadId,
+          role: "AI",
+          content: ai.text,
+          confidence: ai.confidence,
+          sources: ai.sources
+        }
+      }),
+      prisma.assistantThread.update({
+        where: { id: threadId },
+        data: { updatedAt: new Date() }
+      })
+    ]);
 
-    const thread = await prisma.assistantThread.create({
-      data: {
-        createdById: user.id,
-        caseId: body.caseId,
-        documentId: body.documentId,
-        title: threadTitle,
-        scope: body.documentId ? "DOCUMENT" : body.caseId ? "CASE" : "GENERAL"
-      }
-    });
-    threadId = thread.id;
-  }
-
-  const [, message] = await prisma.$transaction([
-    prisma.assistantMessage.create({
-      data: {
-        threadId,
-        role: "USER",
-        content: body.question
-      }
-    }),
-    prisma.assistantMessage.create({
-      data: {
-        threadId,
-        role: "AI",
-        content: ai.text,
-        confidence: ai.confidence,
-        sources: ai.sources
-      }
-    }),
-    prisma.assistantThread.update({
+    const thread = await prisma.assistantThread.findUnique({
       where: { id: threadId },
-      data: { updatedAt: new Date() }
-    })
-  ]);
+      include: { messages: { orderBy: { createdAt: "asc" } } }
+    });
 
-  const thread = await prisma.assistantThread.findUnique({
-    where: { id: threadId },
-    include: { messages: { orderBy: { createdAt: "asc" } } }
-  });
-
-  return NextResponse.json({ thread, message });
+    return NextResponse.json({ thread, message });
+  } catch (error) {
+    return handleApiError(error, "AI_CHAT_ROUTE", "Unable to process this request right now.");
+  }
 }

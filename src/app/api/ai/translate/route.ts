@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { AiProviderError } from "@/lib/ai";
+import { handleApiError, unauthorized } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { runAiTask } from "@/lib/ai";
 import { getLanguageInstruction, normalizeLanguage } from "@/lib/language";
@@ -13,7 +13,7 @@ const schema = z.object({
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUserWithProfile();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return unauthorized();
 
     const body = schema.parse(await request.json());
     const targetLanguage = normalizeLanguage(body.targetLanguage);
@@ -42,21 +42,6 @@ export async function POST(request: Request) {
       fallback: result.provider === "mock"
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Translation request is invalid." },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof AiProviderError) {
-      return NextResponse.json({ error: error.message }, { status: 502 });
-    }
-
-    console.error("Translate route failed.", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Translation failed." },
-      { status: 500 }
-    );
+    return handleApiError(error, "AI_TRANSLATE_ROUTE", "Translation failed. Please try again.");
   }
 }

@@ -10,7 +10,8 @@ type AiTaskOptions = {
 };
 
 function envValue(value: string | undefined, fallback: string) {
-  return (value || fallback).trim().replace(/^["']|["']$/g, "");
+  const normalized = (value || "").trim().replace(/^["']|["']$/g, "");
+  return normalized || fallback;
 }
 
 function envApiKey(value: string | undefined) {
@@ -32,6 +33,10 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
   }
 
   const model = envValue(process.env.OPENAI_MODEL, "gpt-4.1-mini");
+  if (!model) {
+    throw new Error("OpenAI model is not configured.");
+  }
+
   let response: Response | null = null;
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -59,6 +64,11 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
       parsed?.error?.message ||
       parsed?.message ||
       "";
+    console.error("[OPENAI_PROVIDER_ERROR]", {
+      status: response.status,
+      model,
+      body: bodyText
+    });
 
     throw new Error(
       remoteMessage
@@ -90,6 +100,10 @@ export async function generateOpenAIInsight(
   context?: string,
   options: AiTaskOptions = {}
 ) {
+  if (!prompt.trim()) {
+    throw new Error("OpenAI prompt is empty.");
+  }
+
   return callOpenAI({
     temperature: options.temperature ?? 0.25,
     max_tokens: options.maxOutputTokens ?? 4096,
@@ -108,6 +122,22 @@ export async function generateOpenAIVisionInsight(
   context?: string,
   options: AiTaskOptions = {}
 ) {
+  if (!prompt.trim()) {
+    throw new Error("OpenAI prompt is empty.");
+  }
+
+  const validImages = images.filter(
+    (image) =>
+      typeof image?.mimeType === "string" &&
+      image.mimeType.trim().length > 0 &&
+      typeof image?.data === "string" &&
+      image.data.trim().length > 0
+  );
+
+  if (validImages.length !== images.length) {
+    throw new Error("OpenAI image input is invalid.");
+  }
+
   return callOpenAI({
     temperature: options.temperature ?? 0.25,
     max_tokens: options.maxOutputTokens ?? 4096,
@@ -119,7 +149,7 @@ export async function generateOpenAIVisionInsight(
             type: "text",
             text: `${prompt}\n\nWorking context:\n${context || "No extra context supplied."}`
           },
-          ...images.map((image) => ({
+          ...validImages.map((image) => ({
             type: "image_url",
             image_url: {
               url: `data:${image.mimeType};base64,${image.data}`
