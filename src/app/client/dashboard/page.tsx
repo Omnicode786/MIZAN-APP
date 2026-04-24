@@ -49,7 +49,7 @@ export default async function ClientDashboardPage() {
             <div className="absolute left-[-140px] top-[25%] h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
           </div>
 
-          <div className="relative grid gap-7 p-6 lg:grid-cols-[minmax(0,1.25fr)_360px] lg:p-8">
+          <div className="relative grid gap-7 p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,360px)] lg:p-8">
             <div className="flex flex-col justify-between">
               <div>
                 <div className="flex flex-wrap gap-2">
@@ -127,7 +127,7 @@ export default async function ClientDashboardPage() {
 
         <RiskReadinessDashboard metrics={snapshot.metrics} />
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_420px]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,420px)]">
           <main className="space-y-6">
             <div className="flex flex-col gap-4 rounded-[2rem] border border-border/70 bg-card/80 p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -245,7 +245,7 @@ export default async function ClientDashboardPage() {
                   countVariant="warning"
                 />
 
-                <div className="mt-4 w-100">
+                <div className="mt-4 w-full">
                   <DeadlineBoard deadlines={snapshot.deadlines} />
                 </div>
               </CardContent>

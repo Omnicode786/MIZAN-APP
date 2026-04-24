@@ -25,7 +25,7 @@ export function DeadlineBoard({ deadlines }: { deadlines: any[] }) {
   }
 
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className="flex w-full flex-col gap-4">
       {deadlines.map((deadline) => {
         const tone = getDeadlineTone(deadline);
         const Icon = tone.icon;
@@ -34,12 +34,12 @@ export function DeadlineBoard({ deadlines }: { deadlines: any[] }) {
           <Card
             key={deadline.id}
             className={cn(
-              "w-full overflow-hidden border-border/70 bg-background/75 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg",
+              "w-full overflow-hidden border-border/70 bg-background/75 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg",
               tone.border
             )}
           >
             <CardContent className="p-0">
-              <div className="flex w-full items-start gap-4 p-4">
+              <div className="flex w-full items-start gap-4 p-4 sm:p-5">
                 <div
                   className={cn(
                     "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",

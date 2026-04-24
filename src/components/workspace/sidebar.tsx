@@ -69,8 +69,8 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "app-sidebar hidden border-r border-border/70 bg-card/80 transition-all duration-300 lg:block",
-        collapsed ? "w-[76px] px-2.5 py-5" : "w-72 p-5"
+        "app-sidebar sticky top-0 hidden h-screen shrink-0 border-r border-border/70 bg-card/80 backdrop-blur-xl transition-all duration-300 lg:flex lg:flex-col",
+        collapsed ? "w-[84px] px-3 py-5" : "w-72 p-5"
       )}
     >
       <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between gap-3")}>
@@ -90,22 +90,22 @@ export function Sidebar({
         )}
       </div>
 
-      <div className={cn("mt-8", collapsed && "mt-6")}>
+      <div className={cn("mt-8 flex flex-1 flex-col", collapsed && "mt-6")}>
         {!collapsed ? (
-          <p className="mb-3 px-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             {heading}
           </p>
         ) : (
           <div className="mb-3 h-3" />
         )}
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 rounded-[1.75rem] border border-border/60 bg-background/55 p-2 shadow-sm">
           <Link
             href="/"
             title="Back to Home"
             className={cn(
-              "flex rounded-2xl text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
-              collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3"
+              "flex rounded-2xl text-sm text-muted-foreground transition hover:bg-muted/80 hover:text-foreground",
+              collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3.5"
             )}
           >
             <Home className="h-5 w-5 shrink-0" />
@@ -124,10 +124,10 @@ export function Sidebar({
                 title={collapsed ? label : undefined}
                 className={cn(
                   "flex rounded-2xl text-sm transition",
-                  collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3",
+                  collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3.5",
                   active
                     ? "bg-primary text-primary-foreground shadow-soft"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" />
