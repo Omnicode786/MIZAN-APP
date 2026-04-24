@@ -796,7 +796,7 @@ export function CaseWorkspaceLive({
               <SectionHeader
                 icon={CalendarClock}
                 title={t(language, "timeline")}
-                description="Minimal event log with key evidence dates and recommended next steps."
+                description="hello event log with key evidence dates and recommended next steps."
               />
               <div className="mt-4">
                 <TimelineView items={initialCase.timelineEvents || []} />
