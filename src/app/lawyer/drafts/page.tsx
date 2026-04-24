@@ -10,8 +10,11 @@ import { prisma } from "@/lib/prisma";
 
 export default async function LawyerDraftsPage() {
   const user = await getCurrentUserWithProfile();
+  const lawyerProfileId = user?.lawyerProfile?.id;
   const drafts = await prisma.draft.findMany({
-    where: { case: { assignments: { some: { lawyerProfileId: user?.lawyerProfile?.id } } } },
+    where: lawyerProfileId
+      ? { case: { assignments: { some: { lawyerProfileId } } } }
+      : { id: "__NO_ACCESS__" },
     include: { case: true, versions: true },
     orderBy: { updatedAt: "desc" }
   });
@@ -22,11 +25,10 @@ export default async function LawyerDraftsPage() {
         eyebrow="Draft approvals"
         title="Review and verify live drafts"
         description="Use the case workspace to edit the text, mark it verified, or return it for correction."
-        action={<div />}
       />
       <div className="grid gap-4">
         {drafts.map((draft) => (
-          <Card key={draft.id}>
+          <Card key={draft.id} className="soft-hover">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -42,6 +44,13 @@ export default async function LawyerDraftsPage() {
             </CardContent>
           </Card>
         ))}
+        {!drafts.length ? (
+          <Card>
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              No drafts found yet.
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </AppShell>
   );

@@ -7,10 +7,24 @@ import { getCurrentUserWithProfile } from "@/lib/auth";
 
 export default async function LawyerProfilePage() {
   const user = await getCurrentUserWithProfile();
-  const profile = { ...user?.lawyerProfile, user };
+  if (!user) return null;
+
+  const profile = user.lawyerProfile
+    ? { ...user.lawyerProfile, user }
+    : {
+        user,
+        specialties: [],
+        firmName: "",
+        bio: "",
+        yearsExperience: 0,
+        hourlyRate: 0,
+        fixedFeeFrom: 0,
+        city: "",
+        isPublic: false
+      };
 
   return (
-    <AppShell nav={LAWYER_NAV} heading="Lawyer Workspace" currentPath="/lawyer/profile" user={user!}>
+    <AppShell nav={LAWYER_NAV} heading="Lawyer Workspace" currentPath="/lawyer/profile" user={user}>
       <SectionHeader
         eyebrow="Public Profile"
         title="Control how clients discover you"

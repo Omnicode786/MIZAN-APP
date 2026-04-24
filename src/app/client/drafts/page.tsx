@@ -10,8 +10,9 @@ import { prisma } from "@/lib/prisma";
 
 export default async function ClientDraftsPage() {
   const user = await getCurrentUserWithProfile();
+  const clientProfileId = user?.clientProfile?.id;
   const drafts = await prisma.draft.findMany({
-    where: { case: { clientProfileId: user?.clientProfile?.id } },
+    where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
     include: { case: true, versions: true },
     orderBy: { updatedAt: "desc" }
   });
@@ -26,7 +27,7 @@ export default async function ClientDraftsPage() {
       />
       <div className="grid gap-4">
         {drafts.map((draft) => (
-          <Card key={draft.id}>
+          <Card key={draft.id} className="soft-hover">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -43,6 +44,13 @@ export default async function ClientDraftsPage() {
             </CardContent>
           </Card>
         ))}
+        {!drafts.length ? (
+          <Card>
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              No drafts found yet.
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </AppShell>
   );
