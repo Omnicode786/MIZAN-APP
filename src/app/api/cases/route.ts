@@ -20,6 +20,8 @@ export async function GET() {
     if (!user) return unauthorized();
     if (user.role === "LAWYER" && !user.lawyerProfile) return NextResponse.json({ cases: [] });
     if (user.role === "CLIENT" && !user.clientProfile) return NextResponse.json({ cases: [] });
+    const lawyerProfileId = user.lawyerProfile?.id;
+    const clientProfileId = user.clientProfile?.id;
 
     const cases =
       user.role === "LAWYER"
@@ -27,7 +29,7 @@ export async function GET() {
             where: {
               assignments: {
                 some: {
-                  lawyerProfileId: user.lawyerProfile.id
+                  lawyerProfileId
                 }
               }
             },
@@ -39,7 +41,7 @@ export async function GET() {
             orderBy: { updatedAt: "desc" }
           })
         : await prisma.case.findMany({
-            where: { clientProfileId: user.clientProfile.id },
+            where: { clientProfileId },
             include: {
               assignments: { include: { lawyer: { include: { user: true } } } },
               deadlines: true,

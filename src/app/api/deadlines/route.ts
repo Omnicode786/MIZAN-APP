@@ -71,8 +71,9 @@ export async function PATCH(request: Request) {
   try {
     const user = await requireUser();
     const body = updateSchema.parse(await request.json());
-    const dueDate = body.dueDate ? parseDueDate(body.dueDate) : undefined;
-    if (body.dueDate && !dueDate) return validationError("Invalid deadline date.");
+    const parsedDueDate = body.dueDate ? parseDueDate(body.dueDate) : undefined;
+    if (body.dueDate && !parsedDueDate) return validationError("Invalid deadline date.");
+    const dueDate = parsedDueDate || undefined;
     const existing = await prisma.deadline.findUnique({ where: { id: body.id } });
     if (!existing) return notFound();
     const { legalCase } = await getAccessibleCase(existing.caseId);
