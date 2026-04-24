@@ -13,9 +13,10 @@ import { t } from "@/lib/translations";
 export function Topbar({
   user
 }: {
-  user: { name: string; role: string };
+  user: { name: string; role: string } | null;
 }) {
   const language = useLanguage();
+  const displayUser = user || { name: "MIZAN user", role: "USER" };
 
   return (
     <div className="app-topbar sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
@@ -37,10 +38,10 @@ export function Topbar({
             </Link>
           </Button>
           <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/70 px-3 py-2 shadow-sm">
-            <Avatar name={user.name} className="h-9 w-9 text-xs" />
+            <Avatar name={displayUser.name} className="h-9 w-9 text-xs" />
             <div className="hidden min-w-0 sm:block">
-              <p className="truncate text-sm font-medium">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.role.toLowerCase()}</p>
+              <p className="truncate text-sm font-medium">{displayUser.name}</p>
+              <p className="text-xs text-muted-foreground">{displayUser.role.toLowerCase()}</p>
             </div>
           </div>
         </div>

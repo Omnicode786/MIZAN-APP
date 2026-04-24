@@ -13,7 +13,7 @@ export function AppShell({
   nav: Array<{ href: string; label: string; translationKey?: TranslationKey }>;
   heading: string;
   currentPath?: string;
-  user: { name: string; role: string };
+  user: { name: string; role: string } | null;
   children: ReactNode;
 }) {
   return (
