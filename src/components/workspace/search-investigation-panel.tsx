@@ -101,16 +101,16 @@ export function SearchInvestigationPanel({ cases }: { cases: SearchCase[] }) {
           })
         });
 
-        const json = await res.json();
+        const json = await res.json().catch(() => null);
 
         if (!res.ok) {
-          throw new Error(json.error || "Search failed.");
+          throw new Error(json?.error || "Search failed.");
         }
 
         setData(json);
       } catch (err: any) {
         if (err.name !== "AbortError") {
-          setError(err.message || "Search failed.");
+          setError(err instanceof Error ? err.message : "Search failed.");
         }
       } finally {
         setLoading(false);
@@ -128,7 +128,7 @@ export function SearchInvestigationPanel({ cases }: { cases: SearchCase[] }) {
   const results = data?.results || [];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-2">
       <Card className="overflow-hidden border-border/70">
         <CardContent className="p-0">
           <div className="border-b border-border/70 bg-muted/20 p-5">
@@ -271,7 +271,7 @@ function SearchResultCard({
   query: string;
 }) {
   return (
-    <Card className="border-border/70 transition hover:shadow-lg">
+    <Card className="border-border/70 soft-hover">
       <CardContent className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1">
