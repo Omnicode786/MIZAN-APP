@@ -10,14 +10,45 @@ export type ContentBlock =
   | { type: "ol"; items: string[] };
 
 export function renderInlineFormatting(text: string): ReactNode[] {
-  const boldSplit = text.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+  const parts = text
+    .split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g)
+    .filter(Boolean);
 
-  return boldSplit.map((part, index) => {
-    if (/^\*\*.*\*\*$/.test(part)) {
+  return parts.map((part, index) => {
+    if (/^\*\*[^*]+\*\*$/.test(part)) {
       return (
         <strong key={index} className="font-semibold text-foreground">
           {part.slice(2, -2)}
         </strong>
+      );
+    }
+
+    if (/^`[^`]+`$/.test(part)) {
+      return (
+        <code
+          key={index}
+          className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+
+    const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (link) {
+      const [, label, href] = link;
+      const safeHref = /^https?:\/\//i.test(href) ? href : "#";
+
+      return (
+        <a
+          key={index}
+          href={safeHref}
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium text-primary underline underline-offset-4"
+        >
+          {label}
+        </a>
       );
     }
 

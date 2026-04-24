@@ -32,6 +32,8 @@ export async function analyzeCaseText(text: string, category?: string, language?
   const summary = await runAiTask(
     [
       "Summarize the case record, identify likely dispute points, keep the output assistive rather than decisive legal advice, and stay grounded in the file record.",
+      "Return Markdown only. Use headings, bullets, and **bold** for important dates, parties, evidence gaps, deadlines, and next actions.",
+      "Do not wrap the answer in a code block.",
       "Keep any JSON keys or action enum values in English if structured data is requested later.",
       getLanguageInstruction(outputLanguage)
     ].join("\n\n"),
