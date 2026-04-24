@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-  --background: 220 23% 98%;
+  --background: 220 28% 98%;
   --foreground: 222 47% 11%;
 
   --card: 0 0% 100%;
@@ -17,11 +17,11 @@
   --primary: 221 83% 53%;
   --primary-foreground: 210 40% 98%;
 
-  --secondary: 215 25% 91%;
+  --secondary: 216 28% 92%;
   --secondary-foreground: 222 47% 11%;
 
-  --muted: 214 32% 95%;
-  --muted-foreground: 215 16% 47%;
+  --muted: 214 34% 95%;
+  --muted-foreground: 216 15% 43%;
 
   --accent: 216 34% 94%;
   --accent-foreground: 222 47% 11%;
@@ -35,47 +35,47 @@
   --warning: 38 92% 50%;
   --warning-foreground: 222 47% 11%;
 
-  --border: 214 20% 86%;
-  --input: 214 20% 88%;
+  --border: 214 22% 86%;
+  --input: 214 22% 88%;
   --ring: 221 83% 53%;
 
   --radius: 1rem;
 }
 
 .dark {
-  --background: 228 30% 8%;
-  --foreground: 210 40% 98%;
+  --background: 230 36% 7%;
+  --foreground: 214 42% 96%;
 
-  --card: 228 28% 11%;
-  --card-foreground: 210 40% 98%;
+  --card: 229 31% 11%;
+  --card-foreground: 214 42% 96%;
 
-  --popover: 228 28% 11%;
-  --popover-foreground: 210 40% 98%;
+  --popover: 229 31% 11%;
+  --popover-foreground: 214 42% 96%;
 
-  --primary: 223 100% 68%;
-  --primary-foreground: 228 30% 8%;
+  --primary: 220 100% 72%;
+  --primary-foreground: 230 36% 7%;
 
-  --secondary: 228 20% 18%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 235 20% 20%;
+  --secondary-foreground: 214 42% 96%;
 
-  --muted: 228 20% 15%;
-  --muted-foreground: 220 18% 72%;
+  --muted: 232 21% 16%;
+  --muted-foreground: 218 18% 74%;
 
-  --accent: 232 22% 17%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 248 22% 18%;
+  --accent-foreground: 214 42% 96%;
 
   --destructive: 0 72% 56%;
   --destructive-foreground: 210 40% 98%;
 
-  --success: 145 63% 48%;
-  --success-foreground: 210 40% 98%;
+  --success: 154 61% 48%;
+  --success-foreground: 230 36% 7%;
 
-  --warning: 39 95% 58%;
-  --warning-foreground: 228 30% 8%;
+  --warning: 38 96% 60%;
+  --warning-foreground: 230 36% 7%;
 
-  --border: 228 16% 22%;
-  --input: 228 16% 18%;
-  --ring: 223 100% 68%;
+  --border: 231 18% 24%;
+  --input: 231 19% 18%;
+  --ring: 220 100% 72%;
 }
 
 * {
@@ -90,8 +90,9 @@ html {
 body {
   @apply bg-background text-foreground antialiased transition-colors duration-300;
   background-image:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.10), transparent 30%),
-    radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.08), transparent 24%),
+    radial-gradient(circle at 8% 0%, rgba(59, 130, 246, 0.10), transparent 26%),
+    radial-gradient(circle at 86% 10%, rgba(14, 165, 233, 0.08), transparent 26%),
+    radial-gradient(circle at 52% 110%, rgba(245, 158, 11, 0.06), transparent 26%),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 100%);
   background-attachment: fixed;
   text-rendering: optimizeLegibility;
@@ -397,10 +398,11 @@ html[data-language="ur"] .prose-mizan blockquote {
 
 .dark body {
   background-image:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 28%),
-    radial-gradient(circle at 85% 12%, rgba(139, 92, 246, 0.18), transparent 22%),
-    radial-gradient(circle at 20% 100%, rgba(6, 182, 212, 0.10), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+    radial-gradient(circle at 8% -6%, rgba(96, 165, 250, 0.22), transparent 28%),
+    radial-gradient(circle at 85% 8%, rgba(168, 85, 247, 0.18), transparent 24%),
+    radial-gradient(circle at 18% 108%, rgba(6, 182, 212, 0.14), transparent 28%),
+    radial-gradient(circle at 70% 94%, rgba(245, 158, 11, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0));
   background-color: hsl(var(--background));
   background-attachment: fixed;
 }
@@ -472,24 +474,26 @@ html[data-language="ur"] .prose-mizan blockquote {
   }
 
   .surface-card {
-    @apply rounded-2xl border border-border/70 bg-card;
+    @apply rounded-2xl border border-border/70 bg-card/95 backdrop-blur-sm;
     transition:
       transform 180ms ease,
       border-color 180ms ease,
       box-shadow 180ms ease,
       background-color 180ms ease;
     box-shadow:
-      0 1px 2px rgba(15, 23, 42, 0.04),
-      0 8px 24px rgba(15, 23, 42, 0.04);
+      0 1px 2px rgba(15, 23, 42, 0.05),
+      0 12px 34px rgba(15, 23, 42, 0.06);
   }
 
   .dark .surface-card {
     background:
-      linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.9));
+      linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.9)),
+      radial-gradient(circle at 8% 0%, rgba(96, 165, 250, 0.08), transparent 32%);
+    border-color: hsl(var(--border) / 0.8);
     box-shadow:
       0 1px 2px rgba(0, 0, 0, 0.24),
-      0 18px 48px rgba(0, 0, 0, 0.32),
-      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      0 22px 60px rgba(0, 0, 0, 0.36),
+      inset 0 1px 0 rgba(255, 255, 255, 0.045);
   }
 
   .soft-hover {
@@ -503,7 +507,7 @@ html[data-language="ur"] .prose-mizan blockquote {
   .soft-hover:hover {
     transform: translateY(-2px);
     box-shadow:
-      0 10px 28px rgba(15, 23, 42, 0.08),
+      0 14px 34px rgba(15, 23, 42, 0.10),
       0 1px 2px rgba(15, 23, 42, 0.06);
   }
 
@@ -568,6 +572,19 @@ html[data-language="ur"] .prose-mizan blockquote {
   .fade-in-up {
     animation: fade-in-up 280ms ease-out both;
   }
+
+  .premium-scroll {
+    scrollbar-gutter: stable;
+  }
+
+  .premium-divider {
+    @apply border-border/70;
+  }
+
+  .text-wrap-safe {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
 }
 
 @keyframes fade-in-up {
@@ -602,6 +619,18 @@ select {
   color-scheme: inherit;
 }
 
+select {
+  background-color: hsl(var(--card) / 0.92);
+  color: hsl(var(--foreground));
+}
+
+.dark select,
+.dark input,
+.dark textarea {
+  background-color: hsl(var(--input) / 0.82);
+  border-color: hsl(var(--border) / 0.82);
+}
+
 input::placeholder,
 textarea::placeholder {
   color: hsl(var(--muted-foreground) / 0.88);
@@ -612,7 +641,21 @@ textarea:focus-visible,
 select:focus-visible,
 button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18);
+  border-color: hsl(var(--ring) / 0.55);
+  box-shadow:
+    0 0 0 3px hsl(var(--ring) / 0.18),
+    0 10px 24px hsl(var(--ring) / 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Subtle scrollbar polish */
