@@ -415,7 +415,7 @@ export function CaseWorkspaceLive({
         </div>
       ) : null}
 
-      <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
+      <Card className="min-w-0 overflow-hidden border-border/70 bg-card/95 shadow-sm">
         <CardContent className="p-0">
           <div className="relative overflow-hidden border-b border-border/60 bg-muted/20 px-5 py-5 sm:px-7 sm:py-6">
             <div className="pointer-events-none absolute right-[-120px] top-[-140px] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
@@ -447,14 +447,14 @@ export function CaseWorkspaceLive({
                   <h1 className="break-words text-2xl font-semibold tracking-tight md:text-3xl">
                     {initialCase.title}
                   </h1>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                  <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-muted-foreground">
                     Live legal workspace for structured case handling, evidence review,
                     drafting, deadlines, and verified collaboration.
                   </p>
                 </div>
               </div>
 
-              <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4 xl:max-w-[520px]">
+              <div className="grid w-full min-w-0 grid-cols-2 gap-3 md:grid-cols-4 xl:max-w-[520px]">
                 <MetricCard label="Documents" value={documents.length} />
                 <MetricCard label="Deadlines" value={deadlines.length} />
                 <MetricCard label="Drafts" value={drafts.length} />
@@ -605,7 +605,7 @@ export function CaseWorkspaceLive({
                   <select
                     value={draftType}
                     onChange={(e) => setDraftType(e.target.value)}
-                    className="h-10 min-w-0 rounded-2xl border border-border bg-background px-4 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-primary/20 sm:w-[170px]"
+                    className="h-10 w-full min-w-0 rounded-2xl border border-border bg-background px-4 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-primary/20 sm:w-[170px]"
                   >
                     {[
                       "LEGAL_NOTICE",
@@ -837,7 +837,7 @@ function ScoreCard({
   }[tone];
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <p className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-muted-foreground">
           {label}
@@ -866,11 +866,11 @@ function DocumentCard({
   onDelete: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm transition hover:border-primary/20 hover:shadow-md">
-      <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm transition hover:border-primary/20 hover:shadow-md">
+      <div className="flex min-w-0 flex-col gap-4 md:flex-row md:flex-wrap md:items-start md:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="max-w-full truncate font-medium md:max-w-[420px]">
+            <p className="min-w-0 max-w-full break-words font-medium md:max-w-[420px]">
               {document.fileName}
             </p>
             {document.confidence ? (
@@ -907,7 +907,7 @@ function DocumentCard({
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 md:flex-col md:items-end">
+        <div className="flex min-w-0 flex-row flex-wrap items-center gap-2 md:flex-col md:items-end">
           <Button variant="outline" size="sm" onClick={onAsk}>
             Ask AI
           </Button>
@@ -935,17 +935,17 @@ function DeadlineRow({
   onDelete: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
           <p className="break-words font-medium">{deadline.title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 break-words text-sm text-muted-foreground">
             Due {formatDate(deadline.dueDate)}
             {deadline.notes ? ` · ${deadline.notes}` : ""}
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <SafePill
             variant={
               deadline.status === "COMPLETED"
@@ -996,19 +996,19 @@ function CollaborationPanel({
   onDelete
 }: any) {
   return (
-    <div>
+    <div className="min-w-0">
       <MiniSectionHeader icon={MessageSquare} title={title} description={description} />
 
       <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
         {comments.map((item: any) => (
-          <div key={item.id} className="rounded-2xl border border-border/70 bg-background/70 p-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div key={item.id} className="min-w-0 rounded-2xl border border-border/70 bg-background/70 p-4">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="truncate font-medium">{item.author?.name || "User"}</p>
                 <p className="text-xs text-muted-foreground">{relativeDate(item.createdAt)}</p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <SafePill variant="secondary">{item.visibility}</SafePill>
                 {item.authorId === currentUser.id ? (
                   <Button size="sm" variant="ghost" onClick={() => onDelete(item.id)}>
@@ -1048,7 +1048,7 @@ function InternalNotesPanel({
   onSave
 }: any) {
   return (
-    <div>
+    <div className="min-w-0">
       <MiniSectionHeader
         icon={ShieldCheck}
         title="Internal notes"
@@ -1057,7 +1057,7 @@ function InternalNotesPanel({
 
       <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
         {notes.map((note: any) => (
-          <div key={note.id} className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+          <div key={note.id} className="min-w-0 rounded-2xl border border-border/70 bg-muted/20 p-4">
             <p className="break-words text-sm leading-6 text-muted-foreground">{note.body}</p>
             <p className="mt-2 text-xs text-muted-foreground">
               {note.author?.name || "Lawyer"} · {relativeDate(note.createdAt)}
@@ -1102,11 +1102,11 @@ function ProposalCard({
   const contactsUnlocked = assignment.status === "ACCEPTED";
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="truncate font-medium">{assignment.lawyer?.user?.name || "Lawyer"}</p>
-          <p className="truncate text-sm text-muted-foreground">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-medium">{assignment.lawyer?.user?.name || "Lawyer"}</p>
+          <p className="break-words text-sm text-muted-foreground">
             {assignment.lawyer?.firmName || "Independent practice"}
           </p>
         </div>
@@ -1215,11 +1215,11 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
   const [content, setContent] = useState(draft.currentContent || "");
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="truncate font-medium">{draft.title}</p>
-          <p className="text-xs text-muted-foreground">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-medium">{draft.title}</p>
+          <p className="break-words text-xs text-muted-foreground">
             {toTitleCase(draft.type)} · {asArray(draft.versions).length} versions
           </p>
         </div>
