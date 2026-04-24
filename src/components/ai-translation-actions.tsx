@@ -12,10 +12,14 @@ export function AiTranslationActions({ text }: { text: string }) {
   const [targetLanguage, setTargetLanguage] = useState<AppLanguage | null>(null);
   const [loading, setLoading] = useState<AppLanguage | null>(null);
   const [error, setError] = useState("");
+  const [provider, setProvider] = useState("");
+  const [fallback, setFallback] = useState(false);
 
   async function translate(nextLanguage: AppLanguage) {
     setLoading(nextLanguage);
     setError("");
+    setProvider("");
+    setFallback(false);
 
     try {
       const response = await fetch("/api/ai/translate", {
@@ -29,11 +33,13 @@ export function AiTranslationActions({ text }: { text: string }) {
         })
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Translation failed.");
+      const data = await parseJsonResponse(response);
+      if (!response.ok) throw new Error(data?.error || "Translation failed.");
 
       setTranslatedText(data.translatedText || text);
       setTargetLanguage(nextLanguage);
+      setProvider(data.provider || "");
+      setFallback(Boolean(data.fallback));
     } catch (err: any) {
       setError(err.message || "Translation failed.");
     } finally {
@@ -63,12 +69,45 @@ export function AiTranslationActions({ text }: { text: string }) {
 
       {translatedText && targetLanguage ? (
         <div className="rounded-2xl border border-border/70 bg-background/75 p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {languageLabels[targetLanguage]}
-          </p>
-          <FormattedAiContent content={translatedText} />
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              {languageLabels[targetLanguage]}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {provider ? (
+                <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">
+                  {provider}
+                </span>
+              ) : null}
+              {fallback ? (
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-700 dark:text-amber-400">
+                  Fallback
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <div className="max-h-80 overflow-y-auto pr-2">
+            <FormattedAiContent content={translatedText} />
+          </div>
         </div>
       ) : null}
     </div>
   );
+}
+
+async function parseJsonResponse(response: Response) {
+  const raw = await response.text();
+  if (!raw) {
+    return response.ok ? {} : { error: "The translation service returned an empty response." };
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {
+      error: response.ok
+        ? "The translation service returned an unreadable response."
+        : raw.slice(0, 240) || "Translation failed."
+    };
+  }
 }

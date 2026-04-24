@@ -9,6 +9,10 @@ function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
 }
 
+function envApiKey(value: string | undefined) {
+  return (value || "").trim().replace(/^["']|["']$/g, "").replace(/\s+/g, "");
+}
+
 function isRetryableStatus(status: number) {
   return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
 }
@@ -18,7 +22,7 @@ function wait(ms: number) {
 }
 
 async function callOpenAI(body: any): Promise<OpenAIResult> {
-  const apiKey = envValue(process.env.OPENAI_API_KEY, "");
+  const apiKey = envApiKey(process.env.OPENAI_API_KEY);
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured.");
   }
@@ -45,7 +49,18 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
   }
 
   if (!response.ok) {
-    throw new Error(`OpenAI request failed with ${response.status}`);
+    const bodyText = await response.text();
+    const parsed = safeJsonParse(bodyText);
+    const remoteMessage =
+      parsed?.error?.message ||
+      parsed?.message ||
+      "";
+
+    throw new Error(
+      remoteMessage
+        ? `OpenAI request failed with ${response.status}: ${remoteMessage}`
+        : `OpenAI request failed with ${response.status}`
+    );
   }
 
   const data = await response.json();
@@ -56,6 +71,14 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
     confidence: 0.82,
     provider: "openai"
   };
+}
+
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 export async function generateOpenAIInsight(prompt: string, context?: string) {

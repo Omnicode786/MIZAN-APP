@@ -65,8 +65,7 @@ export async function POST(request: Request) {
     if (error instanceof AiProviderError) {
       return NextResponse.json(
         {
-          error:
-            "The AI provider could not return an answer. Please check the configured provider, model, and API key, then try again."
+          error: error.message
         },
         { status: 502 }
       );

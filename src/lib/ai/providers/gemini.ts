@@ -9,6 +9,10 @@ function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
 }
 
+function envApiKey(value: string | undefined) {
+  return (value || "").trim().replace(/^["']|["']$/g, "").replace(/\s+/g, "");
+}
+
 function isRetryableStatus(status: number) {
   return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
 }
@@ -18,7 +22,7 @@ function wait(ms: number) {
 }
 
 async function callGemini(parts: any[]): Promise<GeminiResult> {
-  const apiKey = envValue(process.env.GEMINI_API_KEY, "");
+  const apiKey = envApiKey(process.env.GEMINI_API_KEY);
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
@@ -52,7 +56,20 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
   }
 
   if (!response.ok) {
-    throw new Error(`Gemini request failed with ${response.status}`);
+    const bodyText = await response.text();
+    const parsed = safeJsonParse(bodyText);
+    const remoteMessage = parsed?.error?.message || "";
+    const remoteReason = parsed?.error?.details?.find((item: any) => item?.reason)?.reason || "";
+
+    if (remoteReason === "API_KEY_INVALID" || /api key not valid/i.test(remoteMessage)) {
+      throw new Error("Gemini rejected GEMINI_API_KEY as invalid. Replace it with a valid Gemini API key and restart the dev server.");
+    }
+
+    throw new Error(
+      remoteMessage
+        ? `Gemini request failed with ${response.status}: ${remoteMessage}`
+        : `Gemini request failed with ${response.status}`
+    );
   }
 
   const data = await response.json();
@@ -65,6 +82,14 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
     confidence: 0.82,
     provider: "gemini"
   };
+}
+
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 export async function generateGeminiInsight(prompt: string, context?: string) {
