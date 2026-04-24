@@ -12,8 +12,9 @@ import { FormattedAiContent } from "@/utils/ai-content";
 
 export default async function ClientEvidencePage() {
   const user = await getCurrentUserWithProfile();
+  const clientProfileId = user?.clientProfile?.id;
   const documents = await prisma.document.findMany({
-    where: { case: { clientProfileId: user?.clientProfile?.id } },
+    where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
     include: { case: true },
     orderBy: { createdAt: "desc" }
   });
@@ -28,7 +29,7 @@ export default async function ClientEvidencePage() {
       />
       <div className="grid gap-4">
         {documents.map((document) => (
-          <Card key={document.id}>
+          <Card key={document.id} className="soft-hover">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -47,6 +48,13 @@ export default async function ClientEvidencePage() {
             </CardContent>
           </Card>
         ))}
+        {!documents.length ? (
+          <Card>
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              No evidence documents found yet.
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </AppShell>
   );

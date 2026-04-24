@@ -7,7 +7,10 @@ import { prisma } from "@/lib/prisma";
 
 export default async function LawyerAnalyticsPage() {
   const user = await getCurrentUserWithProfile();
-  const assignments = await prisma.caseAssignment.findMany({ where: { lawyerProfileId: user?.lawyerProfile?.id } });
+  const lawyerProfileId = user?.lawyerProfile?.id;
+  const assignments = await prisma.caseAssignment.findMany({
+    where: lawyerProfileId ? { lawyerProfileId } : { id: "__NO_ACCESS__" }
+  });
   const accepted = assignments.filter((item) => item.status === 'ACCEPTED').length;
   const pending = assignments.filter((item) => item.status === 'PENDING').length;
   const avgProbability = assignments.length ? Math.round((assignments.reduce((sum, item) => sum + (item.probability || 0), 0) / assignments.length) * 100) : 0;
@@ -18,7 +21,6 @@ export default async function LawyerAnalyticsPage() {
         eyebrow="Analytics"
         title="Matter pipeline overview"
         description="A compact read on how many files you are reviewing, how many proposals are pending, and how strong your current matters look."
-        action={<div />}
       />
       <div className="grid gap-4 md:grid-cols-3">
         {[
@@ -26,7 +28,7 @@ export default async function LawyerAnalyticsPage() {
           ['Approved proposals', accepted],
           ['Average confidence', `${avgProbability}%`]
         ].map(([label, value]) => (
-          <Card key={label}><CardContent className="p-6"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-4xl font-semibold">{value}</p></CardContent></Card>
+          <Card key={label} className="soft-hover"><CardContent className="p-6"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-4xl font-semibold">{value}</p></CardContent></Card>
         ))}
       </div>
     </AppShell>
