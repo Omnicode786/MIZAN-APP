@@ -68,7 +68,7 @@ export function AiTranslationActions({ text }: { text: string }) {
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 
       {translatedText && targetLanguage ? (
-        <div className="rounded-2xl border border-border/70 bg-background/75 p-4">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-background/75 p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {languageLabels[targetLanguage]}
@@ -86,7 +86,7 @@ export function AiTranslationActions({ text }: { text: string }) {
               ) : null}
             </div>
           </div>
-          <div className="max-h-80 overflow-y-auto pr-2">
+          <div className="max-h-[20rem] min-h-0 overflow-y-auto overscroll-y-contain pr-2">
             <FormattedAiContent content={translatedText} />
           </div>
         </div>
