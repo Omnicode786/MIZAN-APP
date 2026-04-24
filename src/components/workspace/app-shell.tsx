@@ -19,9 +19,13 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar nav={nav} heading={heading} currentPath={currentPath} />
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Topbar user={user} />
-        <main className="flex-1 px-6 py-6">{children}</main>
+        <main className="flex-1">
+          <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

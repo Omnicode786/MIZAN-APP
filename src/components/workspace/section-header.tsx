@@ -13,18 +13,18 @@ export function SectionHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-      <div>
+    <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end md:gap-6">
+      <div className="max-w-3xl">
         {eyebrow ? (
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-        {description ? <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{description}</p> : null}
+        <h1 className="text-3xl font-semibold tracking-tight text-balance">{title}</h1>
+        {description ? <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">{description}</p> : null}
       </div>
       {action ?? (
-        <Button variant="outline" className="min-w-[140px]">
+        <Button variant="outline" className="min-w-[140px] self-start md:self-auto">
           Export Snapshot
         </Button>
       )}

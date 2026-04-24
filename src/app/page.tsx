@@ -1,14 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useTransform
+} from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
   Bot,
   BrainCircuit,
   BriefcaseBusiness,
-  CalendarClock,
   CheckCircle2,
   ClipboardCheck,
   FileSearch,
@@ -16,7 +24,6 @@ import {
   Gavel,
   Gauge,
   Landmark,
-  ListChecks,
   LockKeyhole,
   MessageSquareText,
   Moon,
@@ -28,8 +35,7 @@ import {
   Sparkles,
   Sun,
   Upload,
-  UsersRound,
-  Zap
+  UsersRound
 } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
@@ -151,6 +157,15 @@ const cockpitMetrics = [
   ["Lawyer handoff", "Controlled"]
 ];
 
+const floatingParticles = [
+  { left: "8%", top: "12%", size: 10, delay: 0 },
+  { left: "18%", top: "70%", size: 14, delay: 1.2 },
+  { left: "58%", top: "18%", size: 8, delay: 0.4 },
+  { left: "74%", top: "60%", size: 12, delay: 1.8 },
+  { left: "86%", top: "28%", size: 9, delay: 0.9 },
+  { left: "48%", top: "82%", size: 11, delay: 1.4 }
+];
+
 const trustPrinciples = [
   {
     title: "AI-assisted, not lawyer-replacing",
@@ -169,10 +184,49 @@ const trustPrinciples = [
   }
 ];
 
+const journeyCards = [
+  {
+    title: "Intake workspace",
+    text: "Capture the issue, upload records, and organize all evidence under one matter.",
+    icon: Upload
+  },
+  {
+    title: "Case reasoning",
+    text: "Ask questions, view risks, missing evidence, and readiness analysis generated from your records.",
+    icon: Search
+  },
+  {
+    title: "Draft and revise",
+    text: "Generate notices, complaints, responses, or lawyer-ready summaries and improve them iteratively.",
+    icon: FileText
+  },
+  {
+    title: "Collaborate with lawyers",
+    text: "Send a structured request, compare proposals, and move forward with clearer legal preparation.",
+    icon: MessageSquareText
+  }
+];
+
+const heroTrustSignals = [
+  "Trusted by 500+ law firms",
+  "SOC 2 Certified",
+  "GDPR Compliant"
+];
+
 export default function LandingPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
+  const [headlineIndex, setHeadlineIndex] = useState(0);
   const language = useLanguage();
+  const shouldReduceMotion = useReducedMotion();
+  const heroRef = useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+  const backgroundY = useTransform(scrollYProgress, [0, 1], [0, 96]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 32]);
+  const visualY = useTransform(scrollYProgress, [0, 1], [0, -32]);
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("mizan-theme");
@@ -184,6 +238,16 @@ export default function LandingPage() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+
+    const timer = window.setInterval(() => {
+      setHeadlineIndex((current) => (current + 1) % workflowSteps.length);
+    }, 2200);
+
+    return () => window.clearInterval(timer);
+  }, [shouldReduceMotion]);
+
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
@@ -191,499 +255,905 @@ export default function LandingPage() {
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
   }
 
+  const surfaceClass = "rounded-xl border border-border/70 bg-card shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
+  const bodyCopyClass = "max-w-[65ch] text-[13px] leading-[18px] text-muted-foreground";
+
   return (
     <div className="min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-[560px] w-[980px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute right-[-220px] top-[260px] h-[460px] w-[460px] rounded-full bg-violet-500/10 blur-3xl" />
-        <div className="absolute bottom-[-180px] left-[-140px] h-[460px] w-[460px] rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute left-[20%] top-[48%] h-[280px] w-[280px] rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 flex justify-center overflow-hidden">
+          <div className="relative h-[420px] w-[min(86vw,900px)] opacity-[0.05] sm:h-[480px] lg:h-[560px]">
+            <Image
+              src="/logo.png"
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 1024px) 86vw, 900px"
+              className="object-contain"
+            />
+          </div>
+        </div>
+
+        <motion.div
+          className="absolute inset-0"
+          style={shouldReduceMotion ? undefined : { y: backgroundY }}
+        >
+          <motion.div
+            className="absolute left-1/2 top-0 h-[560px] w-[980px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : { scale: [1, 1.03, 1], opacity: [0.7, 1, 0.75] }
+            }
+            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute inset-x-[10%] top-20 h-[640px] rounded-[48px] opacity-35 [mask-image:radial-gradient(circle_at_center,black,transparent_82%)]"
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : { scale: [1, 1.02, 1], y: [0, -8, 0] }
+            }
+            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {floatingParticles.map((particle) => (
+            <motion.span
+              key={`${particle.left}-${particle.top}`}
+              className="absolute rounded-full bg-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.18)]"
+              style={{
+                left: particle.left,
+                top: particle.top,
+                width: particle.size,
+                height: particle.size
+              }}
+              animate={
+                shouldReduceMotion
+                  ? undefined
+                  : { y: [0, -14, 0], x: [0, 8, 0], opacity: [0.3, 0.7, 0.3] }
+              }
+              transition={{
+                duration: 7,
+                delay: particle.delay,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </motion.div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        <header className="sticky top-5 z-40 flex items-center justify-between gap-4 rounded-full border border-border/70 bg-card/80 px-5 py-3 shadow-sm backdrop-blur-xl">
-          <Logo />
-
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#workflow" className="transition hover:text-foreground">
-              Workflow
-            </a>
-            <a href="#agent" className="transition hover:text-foreground">
-              Case Agent
-            </a>
-            <a href="#lawyers" className="transition hover:text-foreground">
-              {t(language, "lawyers")}
-            </a>
-            <a href="#journey" className="transition hover:text-foreground">
-              Platform
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <LanguageToggle compact />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label="Toggle dark mode"
-              className="rounded-full"
-            >
-              {mounted && theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
-
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <Link href="/login">{t(language, "login")}</Link>
-            </Button>
-
-            <Button asChild>
-              <Link href="/signup">
-                {t(language, "getStarted")}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </header>
-
-        <section className="grid gap-12 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">
-                <Landmark className="mr-1 h-3.5 w-3.5" />
-                Pakistani legal workflow OS
-              </Badge>
-              <Badge variant="secondary">
-                <Sparkles className="mr-1 h-3.5 w-3.5" />
-                Agent-powered legal operations
-              </Badge>
+      <div className="mx-auto max-w-[1440px] px-6 py-4 xl:px-8">
+        <header className={`${surfaceClass} sticky top-4 z-40 bg-card/92 backdrop-blur`}>
+          <div className="grid h-14 grid-cols-12 items-center gap-x-6 px-6">
+            <div className="col-span-6 flex items-center lg:col-span-3">
+              <Logo />
             </div>
 
-            <h1 className="mt-6 max-w-4xl text-5xl font-semibold tracking-tight text-foreground md:text-6xl lg:text-7xl">
-              The legal case operating system for clients and lawyers.
-            </h1>
+            <nav className="col-span-5 hidden h-full items-center justify-center gap-6 text-[14px] font-medium text-muted-foreground lg:flex">
+              <a href="#workflow" className="inline-flex h-full items-center transition-colors duration-200 hover:text-foreground">
+                Workflow
+              </a>
+              <a href="#agent" className="inline-flex h-full items-center transition-colors duration-200 hover:text-foreground">
+                Case Agent
+              </a>
+              <a href="#lawyers" className="inline-flex h-full items-center transition-colors duration-200 hover:text-foreground">
+                {t(language, "lawyers")}
+              </a>
+              <a href="#journey" className="inline-flex h-full items-center transition-colors duration-200 hover:text-foreground">
+                Platform
+              </a>
+            </nav>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground lg:text-lg">
-              MIZAN turns legal confusion into a structured matter workspace.
-              Clients organize evidence and request lawyer review. Lawyers receive
-              cleaner files, stronger briefs, and AI-assisted case analysis.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg">
+            <div className="col-span-6 flex items-center justify-end gap-3 lg:col-span-4">
+              <LanguageToggle compact />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={toggleTheme}
+                aria-label="Toggle dark mode"
+                className="h-8 w-8 rounded-xl"
+              >
+                {mounted && theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </Button>
+              <Button asChild variant="ghost" className="hidden h-8 rounded-xl px-3 text-[14px] sm:inline-flex">
+                <Link href="/login">{t(language, "login")}</Link>
+              </Button>
+              <Button asChild className="h-8 rounded-xl px-5 text-[14px]">
                 <Link href="/signup">
-                  Start a matter
+                  {t(language, "getStarted")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/lawyers">{t(language, "browseLawyers")}</Link>
-              </Button>
             </div>
+          </div>
+        </header>
 
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {trustPrinciples.map((item) => {
+        <main>
+          <section ref={heroRef} className="relative pb-0 pt-8">
+            <div className="rounded-[20px] border border-[#E2E8F0] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] p-4 shadow-[0_10px_36px_rgba(15,23,42,0.05)] lg:p-5">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch lg:gap-x-8">
+                <motion.div
+                  className="lg:col-span-6"
+                  style={shouldReduceMotion ? undefined : { y: contentY }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+                  animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                  <div className="flex h-full flex-col rounded-2xl bg-[linear-gradient(180deg,#FFFFFF_0%,#F1F5F9_100%)] p-4 lg:p-5">
+                    <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-between lg:mx-0">
+                      <div>
+                        <motion.div
+                          className="flex flex-wrap items-center gap-2"
+                          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                          transition={{ delay: 0.05, duration: 0.6 }}
+                        >
+                          <div className="inline-flex h-7 items-center gap-1.5 rounded-md bg-[#F3F4F6] px-2.5 text-[11px] font-medium leading-4 text-[#4B5563]">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>Agent-powered</span>
+                          </div>
+                          <div className="inline-flex h-7 items-center gap-1.5 rounded-md bg-[#F3F4F6] px-2.5 text-[11px] font-medium leading-4 text-[#4B5563]">
+                            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                            <span>Live workflow focus</span>
+                            <AnimatePresence mode="wait">
+                              <motion.span
+                                key={workflowSteps[headlineIndex]?.title}
+                                initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+                                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -4 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-primary"
+                              >
+                                {workflowSteps[headlineIndex]?.title}
+                              </motion.span>
+                            </AnimatePresence>
+                          </div>
+                        </motion.div>
+
+                        <motion.h1
+                          className="mt-4 max-w-[520px] text-balance text-[42px] font-bold leading-[50px] tracking-[-0.02em] text-[#0F172A]"
+                          initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                          transition={{ delay: 0.12, duration: 0.72 }}
+                        >
+                          The legal case operating system for clients and lawyers.
+                        </motion.h1>
+
+                        <motion.p
+                          className="mt-6 max-w-[480px] text-[14px] leading-[22px] text-[#475569]"
+                          initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                          transition={{ delay: 0.22, duration: 0.68 }}
+                        >
+                          MIZAN turns legal confusion into a structured matter workspace.
+                          Clients organize evidence and request lawyer review. Lawyers receive
+                          cleaner files, stronger briefs, and AI-assisted case analysis.
+                        </motion.p>
+
+                        <motion.div
+                          className="mt-7 flex flex-wrap items-center gap-3"
+                          initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3, duration: 0.68 }}
+                        >
+                          <HeroAction href="/signup" variant="default">
+                            Start a matter
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </HeroAction>
+                          <HeroAction href="/lawyers" variant="outline">
+                            {t(language, "browseLawyers")}
+                          </HeroAction>
+                        </motion.div>
+                      </div>
+
+                      <motion.div
+                        className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 pt-2"
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                        animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                        transition={{ delay: 0.36, duration: 0.64 }}
+                      >
+                        {heroTrustSignals.map((item) => (
+                          <div
+                            key={item}
+                            className="inline-flex items-center gap-1.5 text-[12px] leading-4 text-[#94A3B8]"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="lg:col-span-6 lg:pt-2"
+                  style={shouldReduceMotion ? undefined : { y: visualY }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.985, y: 18 }}
+                  animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: 0.14, duration: 0.9, ease: "easeOut" }}
+                >
+                  <div className="relative w-full">
+                    <motion.div
+                      className="absolute inset-x-8 top-8 -z-10 h-52 rounded-full bg-primary/12 blur-3xl"
+                      animate={
+                        shouldReduceMotion
+                          ? undefined
+                          : { opacity: [0.45, 0.8, 0.45], scale: [0.96, 1.02, 0.96] }
+                      }
+                      transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <HeroOrbit />
+
+                    <Card className="relative w-full overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+                      <motion.div
+                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.05),transparent_28%)]"
+                        animate={shouldReduceMotion ? undefined : { opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                      />
+
+                      <CardContent className="relative p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[14px] font-bold leading-5 text-[#111827]">
+                              Live matter cockpit
+                            </p>
+                            <p className="mt-0.5 truncate text-[12px] leading-4 text-[#94A3B8]">
+                              Intake, evidence, deadlines, drafts, requests, and lawyer review in one place.
+                            </p>
+                          </div>
+                          <div className="inline-flex items-center rounded-[12px] bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-medium leading-4 text-[#059669]">
+                            Workflow active
+                          </div>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:auto-rows-fr">
+                          {cockpitMetrics.map(([label, value], index) => (
+                            <motion.div
+                              key={label}
+                              className="relative flex h-full min-h-[118px] flex-col rounded-[10px] bg-[#F9FAFB] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+                              initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                              animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                              transition={{ delay: 0.36 + index * 0.05, duration: 0.52 }}
+                            >
+                              <motion.span
+                                className="absolute right-3.5 top-3.5 inline-flex h-[5px] w-[5px] rounded-full bg-[#3B82F6]"
+                                animate={shouldReduceMotion ? undefined : { opacity: [0.3, 1, 0.3] }}
+                                transition={{
+                                  duration: 1.6,
+                                  delay: index * 0.2,
+                                  repeat: Infinity,
+                                  ease: "easeInOut"
+                                }}
+                              />
+                              <p className="text-[10px] font-semibold uppercase leading-4 tracking-[0.05em] text-[#64748B]">
+                                {label}
+                              </p>
+                              <p className="mt-1.5 text-[16px] font-semibold leading-6 text-[#0F172A]">
+                                {value}
+                              </p>
+                              <div className="mt-auto pt-3">
+                                <MiniSparkline delay={index * 0.08} />
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        <div className="mt-2.5 grid gap-2.5 xl:grid-cols-[2fr_3fr] xl:items-start">
+                          <div className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-[13px] font-semibold leading-5 text-[#111827]">
+                                  AI Case Agent
+                                </p>
+                                <p className="mt-1 text-[11px] leading-4 text-[#6B7280]">
+                                  Converts the live case record into next legal workflow actions.
+                                </p>
+                              </div>
+                              <Bot className="h-[18px] w-[18px] shrink-0 text-[#3B82F6]" />
+                            </div>
+
+                            <div className="mt-3 grid gap-3">
+                              {[
+                                "Identify missing documents before escalation.",
+                                "Prepare a structured lawyer handoff brief.",
+                                "Recommend the next legal workflow step from case context."
+                              ].map((item, index) => (
+                                <motion.div
+                                  key={item}
+                                  className="flex items-start gap-2.5"
+                                  initial={shouldReduceMotion ? false : { opacity: 0, x: -10 }}
+                                  animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.42 + index * 0.06, duration: 0.48 }}
+                                >
+                                  <motion.span
+                                    className="mt-0.5 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#3B82F6] text-white"
+                                    animate={shouldReduceMotion ? undefined : { scale: [1, 1.15, 1] }}
+                                    transition={{
+                                      duration: 1.9,
+                                      delay: index * 0.2,
+                                      repeat: Infinity,
+                                      ease: "easeInOut"
+                                    }}
+                                  >
+                                    <CheckCircle2 className="h-[10px] w-[10px]" />
+                                  </motion.span>
+                                  <p className="text-[12px] leading-[18px] text-[#374151]">{item}</p>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[13px] font-semibold leading-5 text-[#111827]">
+                                  Matter roadmap
+                                </p>
+                                <p className="mt-1 text-[11px] leading-4 text-[#6B7280]">
+                                  A structured progression from evidence intake to lawyer handoff.
+                                </p>
+                              </div>
+                              <div className="inline-flex items-center rounded-[12px] bg-[#D1FAE5] px-2 py-1 text-[11px] font-medium leading-4 text-[#059669]">
+                                Structured
+                              </div>
+                            </div>
+
+                            <div className="relative mt-3">
+                              <div className="absolute bottom-2.5 left-[10px] top-2.5 w-0.5 bg-[#CBD5E1]" />
+                              <div className="absolute left-[10px] top-2.5 h-5 w-0.5 bg-[#3B82F6]" />
+                              <div className="grid gap-2.5">
+                                {workflowSteps.map((step, index) => (
+                                  <motion.div
+                                    key={step.title}
+                                    className="relative flex items-start gap-2"
+                                    initial={shouldReduceMotion ? false : { opacity: 0, x: 10 }}
+                                    animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.48 + index * 0.05, duration: 0.48 }}
+                                  >
+                                    <motion.div
+                                      className={`relative z-10 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 bg-white text-[10px] font-semibold ${
+                                        index === 0
+                                          ? "border-[#3B82F6] text-[#3B82F6]"
+                                          : "border-[#CBD5E1] text-[#64748B]"
+                                      }`}
+                                      animate={shouldReduceMotion ? undefined : { y: [0, -2, 0] }}
+                                      transition={{
+                                        duration: 2.6,
+                                        delay: index * 0.18,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                      }}
+                                    >
+                                      {index + 1}
+                                    </motion.div>
+                                    <div className="min-w-0">
+                                      <div className="flex flex-wrap items-baseline gap-2">
+                                        <p className="text-[12px] font-semibold leading-4 text-[#111827]">
+                                          {step.title}
+                                        </p>
+                                        <Badge
+                                          variant={
+                                            step.state === "Agent" || step.state === "Handoff"
+                                              ? "warning"
+                                              : step.state === "Workspace"
+                                                ? "success"
+                                                : "secondary"
+                                          }
+                                          className="h-5 w-fit rounded-[10px] px-2 align-baseline text-[10px]"
+                                        >
+                                          {step.state}
+                                        </Badge>
+                                      </div>
+                                      <p className="mt-0.5 text-[11px] leading-[14px] text-[#6B7280]">
+                                        {step.detail}
+                                      </p>
+                                    </div>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </section>
+
+          <section className="pb-0 pt-12">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              {trustPrinciples.map((item, index) => {
                 const Icon = item.icon;
 
                 return (
-                  <div
+                  <motion.div
                     key={item.title}
-                    className="group rounded-3xl border border-border/70 bg-card/80 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                    whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.25 }}
+                    transition={{ delay: index * 0.05, duration: 0.55 }}
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-105">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <p className="mt-4 font-medium">{item.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {item.text}
-                    </p>
-                  </div>
+                    <Card className={`${surfaceClass} h-full transition-transform duration-200 hover:-translate-y-1`}>
+                      <CardContent className="flex h-full flex-col p-5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <h3 className="mt-3 text-[14px] font-semibold leading-5 text-foreground">
+                          {item.title}
+                        </h3>
+                        <p className="mt-1.5 text-[13px] leading-[18px] text-muted-foreground">
+                          {item.text}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </section>
 
-          <div className="relative">
-            <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-primary/20 via-violet-500/10 to-cyan-500/10 blur-2xl" />
+          <motion.section
+            className="pb-0 pt-8"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+            whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
+            <div className="border-t border-border/70">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+                <HeroCounterCard
+                  value={productPillars.length}
+                  label="Core workflow engines"
+                  description="Structured modules already mapped into the product."
+                />
+                <HeroCounterCard
+                  value={workflowSteps.length}
+                  label="Live matter stages"
+                  description="From intake through lawyer handoff."
+                />
+                <HeroCounterCard
+                  value={legalAreas.length}
+                  label="Legal tracks featured"
+                  description="Highlighted on the current home page."
+                />
+                <HeroCounterCard
+                  value={2}
+                  label="Workspace sides"
+                  description="Client and lawyer collaboration in one flow."
+                />
+              </div>
+            </div>
+          </motion.section>
 
-            <Card className="overflow-hidden border-border/70 bg-card/90 shadow-2xl backdrop-blur">
-              <CardContent className="p-0">
-                <div className="border-b border-border/70 bg-muted/25 px-6 py-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium">Live matter cockpit</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Intake, evidence, deadlines, drafts, requests, and lawyer review in one place.
-                      </p>
-                    </div>
-                    <Badge variant="warning">Workflow active</Badge>
-                  </div>
-                </div>
+          <motion.section
+            id="workflow"
+            className="py-12"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
+            whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.18 }}
+            transition={{ duration: 0.75, ease: "easeOut" }}
+          >
+            <div className="grid grid-cols-1 gap-y-8 lg:grid-cols-12 lg:gap-x-6">
+              <div className="lg:col-span-7">
+                <Badge variant="outline" className="h-7 rounded-full px-2.5 text-[11px]">Workflow-first legal AI</Badge>
+                <h2 className="mt-3 max-w-[65ch] text-[32px] font-semibold leading-[40px] tracking-[-0.02em]">
+                  Built around legal action, not generic conversation.
+                </h2>
+                <p className={`${bodyCopyClass} mt-2`}>
+                  Every module moves a matter forward: intake, analysis, timeline,
+                  evidence readiness, drafting, lawyer review, and structured follow-up.
+                </p>
+              </div>
 
-                <div className="grid gap-4 p-6">
-                  <div className="grid gap-3 sm:grid-cols-4">
-                    {cockpitMetrics.map(([label, value]) => (
+              <div className="flex items-end lg:col-span-5 lg:justify-end">
+                <Button asChild variant="outline" className="h-8 rounded-xl px-5 text-[14px]">
+                  <Link href="/signup">
+                    Open your workspace
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {productPillars.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <motion.div
+                    key={feature.title}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                    whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.25 }}
+                    transition={{ delay: index * 0.05, duration: 0.55 }}
+                  >
+                    <Card className={`${surfaceClass} h-full transition-transform duration-200 hover:-translate-y-1`}>
+                      <CardContent className="flex h-full flex-col p-5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <h3 className="mt-3 text-[14px] font-semibold leading-5 text-foreground">
+                          {feature.title}
+                        </h3>
+                        <p className="mt-1.5 text-[13px] leading-[18px] text-muted-foreground">{feature.text}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.section>
+
+          <section id="agent" className="py-12">
+            <div className="grid grid-cols-1 gap-y-8 lg:grid-cols-12 lg:gap-x-6">
+              <div className="lg:col-span-4">
+                <Badge variant="secondary" className="h-7 rounded-full px-2.5 text-[11px]">
+                  <Bot className="mr-1.5 h-3.5 w-3.5" />
+                  AI Case Agent
+                </Badge>
+                <h2 className="mt-3 max-w-[65ch] text-[32px] font-semibold leading-[40px] tracking-[-0.02em]">
+                  The legal layer that checks if a case is actually ready to move.
+                </h2>
+                <p className={`${bodyCopyClass} mt-2`}>
+                  MIZAN does not stop at document chat. It reasons over the matter
+                  record, case facts, uploaded evidence, deadlines, prior drafts, and
+                  lawyer review state to tell the user what is strong, what is missing,
+                  and what should happen next.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:col-span-8 xl:grid-cols-3">
+                {agentCards.map((card, index) => {
+                  const Icon = card.icon;
+
+                  return (
+                    <motion.div
+                      key={card.label}
+                      initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                      whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.25 }}
+                      transition={{ delay: index * 0.06, duration: 0.55 }}
+                    >
+                      <Card className={`${surfaceClass} h-full transition-transform duration-200 hover:-translate-y-1`}>
+                        <CardContent className="flex h-full flex-col p-5">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <p className="mt-4 text-[10px] uppercase tracking-[0.05em] text-muted-foreground">
+                            {card.label}
+                          </p>
+                          <p className="mt-2 text-[18px] font-semibold leading-7">{card.value}</p>
+                          <p className="mt-2 text-[13px] leading-[18px] text-muted-foreground">{card.text}</p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          <section id="lawyers" className="py-12">
+            <div className={`${surfaceClass} overflow-hidden`}>
+              <div className="grid grid-cols-1 lg:grid-cols-12">
+                <div className="border-b border-border/70 p-5 lg:col-span-6 lg:border-b-0 lg:border-r">
+                  <Badge variant="outline" className="h-7 rounded-full px-2.5 text-[11px]">
+                    <UsersRound className="mr-1.5 h-3.5 w-3.5" />
+                    For clients
+                  </Badge>
+                  <h2 className="mt-3 max-w-[65ch] text-[32px] font-semibold leading-[40px] tracking-[-0.02em]">
+                    A guided legal workspace instead of scattered notes.
+                  </h2>
+                  <p className={`${bodyCopyClass} mt-2`}>
+                    Clients can manage their own matters, upload evidence, track
+                    deadlines, generate initial drafts, and approach lawyers with a
+                    structured request rather than a vague message.
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {clientFeatures.map((item) => (
                       <div
-                        key={label}
-                        className="rounded-2xl border border-border/70 bg-background/70 p-4"
+                        key={item}
+                        className="flex h-full items-start gap-3 rounded-xl border border-border/70 bg-background px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
                       >
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                          {label}
-                        </p>
-                        <p className="mt-2 text-lg font-semibold">{value}</p>
+                        <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                        <p className="text-[13px] leading-[18px] text-muted-foreground">{item}</p>
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  <div className="rounded-3xl border border-border/70 bg-background/70 p-5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">AI Case Agent</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Converts the live case record into next legal workflow actions.
-                        </p>
+                <div className="p-5 lg:col-span-6">
+                  <Badge variant="secondary" className="h-7 rounded-full px-2.5 text-[11px]">
+                    <Scale className="mr-1.5 h-3.5 w-3.5" />
+                    For lawyers
+                  </Badge>
+                  <h2 className="mt-3 max-w-[65ch] text-[32px] font-semibold leading-[40px] tracking-[-0.02em]">
+                    Lawyer workflows with cleaner inputs and stronger preparation.
+                  </h2>
+                  <p className={`${bodyCopyClass} mt-2`}>
+                    Lawyers receive pre-structured matters, can send proposals, run
+                    debate sessions, review drafts, add internal notes, and manage
+                    deadlines from a professional workspace instead of messy client chats.
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {lawyerFeatures.map((item) => (
+                      <div
+                        key={item}
+                        className="flex h-full items-start gap-3 rounded-xl border border-border/70 bg-background px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+                      >
+                        <BadgeCheck className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                        <p className="text-[13px] leading-[18px] text-muted-foreground">{item}</p>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                        <Bot className="h-6 w-6" />
-                      </div>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {[
-                        "Identify missing documents before escalation.",
-                        "Prepare a structured lawyer handoff brief.",
-                        "Recommend the next legal workflow step from case context."
-                      ].map((item) => (
-                        <div
-                          key={item}
-                          className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4"
-                        >
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                          <p className="text-sm leading-6 text-muted-foreground">{item}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-3xl border border-border/70 bg-background/70 p-5">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">Matter roadmap</p>
-                      <Badge variant="success">Structured</Badge>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {workflowSteps.map((step, index) => (
-                        <div
-                          key={step.title}
-                          className="flex items-start gap-4 rounded-2xl border border-border/70 bg-card p-4"
-                        >
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                            {index + 1}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                              <p className="text-sm font-medium">{step.title}</p>
-                              <Badge
-                                variant={
-                                  step.state === "Agent" || step.state === "Handoff"
-                                    ? "warning"
-                                    : step.state === "Workspace"
-                                      ? "success"
-                                      : "secondary"
-                                }
-                              >
-                                {step.state}
-                              </Badge>
-                            </div>
-                            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                              {step.detail}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+              </div>
+            </div>
+          </section>
 
-        <section id="workflow" className="py-10">
-          <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <Badge variant="outline">Workflow-first legal AI</Badge>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-                Built around legal action, not generic conversation.
+          <section id="journey" className="py-12">
+            <div className="mx-auto max-w-[900px] text-center">
+              <Badge variant="outline" className="h-7 rounded-full px-2.5 text-[11px]">Platform journey</Badge>
+              <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.02em]">
+                A complete matter lifecycle in one workspace.
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                Every module moves a matter forward: intake, analysis, timeline,
-                evidence readiness, drafting, lawyer review, and structured follow-up.
+              <p className="mx-auto mt-2 max-w-[65ch] text-[13px] leading-[18px] text-muted-foreground">
+                From evidence upload to lawyer review, MIZAN keeps the matter
+                structured, tracked, and explainable at every stage.
               </p>
             </div>
-            <Button asChild variant="outline">
-              <Link href="/signup">
-                Open your workspace
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {productPillars.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={feature.title}
-                  className="group border-border/70 bg-card/80 transition hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-105">
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="mt-5 text-xl font-semibold tracking-tight">
-                      {feature.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                      {feature.text}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
+            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {journeyCards.map((item, index) => {
+                const Icon = item.icon;
 
-        <section
-          id="agent"
-          className="grid gap-8 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center"
-        >
-          <div>
-            <Badge variant="secondary">
-              <BrainCircuit className="mr-1 h-3.5 w-3.5" />
-              MIZAN Case Agent
-            </Badge>
-            <h2 className="mt-5 text-3xl font-semibold tracking-tight md:text-5xl">
-              An AI agent that understands what a matter needs next.
-            </h2>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-muted-foreground">
-              The Case Agent reviews facts, uploaded files, timeline events,
-              drafts, deadlines, collaboration status, and lawyer handoff state. It
-              then turns the case into a practical action plan.
-            </p>
-
-            <div className="mt-6 grid gap-3">
-              {[
-                "Detect missing evidence, weak points, and unclear facts",
-                "Map a legal action roadmap for the selected matter",
-                "Suggest draft, deadline, handoff, and review actions",
-                "Keep AI insights separate from lawyer-verified decisions"
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-3 text-sm">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <span className="text-muted-foreground">{item}</span>
-                </div>
-              ))}
+                return (
+                  <motion.div
+                    key={item.title}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                    whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.25 }}
+                    transition={{ delay: index * 0.05, duration: 0.55 }}
+                  >
+                    <Card className={`${surfaceClass} h-full transition-transform duration-200 hover:-translate-y-1`}>
+                      <CardContent className="flex h-full flex-col p-5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <h3 className="mt-3 text-[14px] font-semibold leading-5 text-foreground">
+                          {item.title}
+                        </h3>
+                        <p className="mt-1.5 text-[13px] leading-[18px] text-muted-foreground">{item.text}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
-          </div>
+          </section>
 
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1">
-            {agentCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <Card
-                  key={card.label}
-                  className="group border-border/70 bg-card/85 transition hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <CardContent className="flex gap-5 p-6">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-105">
-                      <Icon className="h-7 w-7" />
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="text-lg font-semibold">{card.label}</h3>
-                        <Badge variant="outline">{card.value}</Badge>
-                      </div>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                        {card.text}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
+          <section className="pb-12 pt-8">
+            <div className={`${surfaceClass} overflow-hidden bg-[linear-gradient(135deg,rgba(37,99,235,0.08),rgba(255,255,255,0.98)_38%,rgba(37,99,235,0.06))]`}>
+              <div className="grid grid-cols-1 gap-y-8 p-5 lg:grid-cols-12 lg:items-center lg:gap-x-6">
+                <div className="lg:col-span-7">
+                  <Badge variant="secondary" className="h-7 rounded-full px-2.5 text-[11px]">
+                    <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                    Built for trust, structure, and scale
+                  </Badge>
+                  <h2 className="mt-3 max-w-[65ch] text-[32px] font-semibold leading-[40px] tracking-[-0.02em]">
+                    From scattered evidence to a structured legal matter.
+                  </h2>
+                  <p className={`${bodyCopyClass} mt-2`}>
+                    MIZAN is designed as a serious legal platform: public lawyer
+                    profiles, structured case requests, AI case agents, evidence vaults,
+                    debate review, deadline tracking, draft verification, and
+                    client-lawyer collaboration.
+                  </p>
 
-        <section id="lawyers" className="py-14">
-          <Card className="overflow-hidden border-border/70">
-            <CardContent className="grid gap-0 p-0 lg:grid-cols-2">
-              <div className="border-b border-border/70 bg-muted/20 p-8 lg:border-b-0 lg:border-r">
-                <Badge variant="outline">
-                  <UsersRound className="mr-1 h-3.5 w-3.5" />
-                  For clients
-                </Badge>
-                <h2 className="mt-5 text-3xl font-semibold tracking-tight">
-                  Understand, organize, and present your matter clearly.
-                </h2>
-                <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                  Clients can collect evidence, understand missing records, track
-                  next steps, prepare drafts, and request a specific lawyer when the
-                  case is ready for review.
-                </p>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  {clientFeatures.map((item) => (
-                    <div key={item} className="flex items-start gap-3 rounded-2xl bg-card p-3">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <p className="text-sm text-muted-foreground">{item}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-card p-8">
-                <Badge variant="secondary">
-                  <Scale className="mr-1 h-3.5 w-3.5" />
-                  For lawyers
-                </Badge>
-                <h2 className="mt-5 text-3xl font-semibold tracking-tight">
-                  Receive cleaner matters and review with stronger context.
-                </h2>
-                <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                  Lawyers receive organized case records, extracted evidence,
-                  timelines, summaries, draft states, private notes, deadline
-                  tracking, and adversarial AI review.
-                </p>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  {lawyerFeatures.map((item) => (
-                    <div key={item} className="flex items-start gap-3 rounded-2xl bg-muted/30 p-3">
-                      <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <p className="text-sm text-muted-foreground">{item}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section id="journey" className="py-14">
-          <div className="mb-8 text-center">
-            <Badge variant="outline">Platform journey</Badge>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
-              A complete matter lifecycle in one workspace.
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-              MIZAN connects client intake, document intelligence, legal
-              roadmapping, drafting, lawyer proposals, and lawyer-side case
-              strategy into one controlled experience.
-            </p>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-3">
-            {[
-              {
-                icon: Upload,
-                title: "1. Client uploads evidence",
-                text: "Documents are classified, summarized, tagged, and connected to the case timeline."
-              },
-              {
-                icon: ListChecks,
-                title: "2. Agent creates roadmap",
-                text: "The system identifies what is missing, what is urgent, and what should happen next."
-              },
-              {
-                icon: FileText,
-                title: "3. Drafting studio prepares documents",
-                text: "Drafts are generated from facts, evidence, and selected legal context."
-              },
-              {
-                icon: Search,
-                title: "4. Client finds a lawyer",
-                text: "Public lawyer profiles can be searched and case requests are sent with structured briefs."
-              },
-              {
-                icon: MessageSquareText,
-                title: "5. Lawyer sends proposal",
-                text: "Fee, probability, posture, and notes are reviewed before contact information unlocks."
-              },
-              {
-                icon: Zap,
-                title: "6. Debate mode stress-tests strategy",
-                text: "AI opposition challenges the case and returns a structured scorecard."
-              }
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <Card key={item.title} className="group border-border/70 bg-card/80 transition hover:-translate-y-1 hover:shadow-xl">
-                  <CardContent className="p-6">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-105">
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                      {item.text}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="py-14">
-          <Card className="overflow-hidden border-border/70 bg-gradient-to-br from-primary/10 via-card to-violet-500/10">
-            <CardContent className="grid gap-8 p-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-              <div>
-                <Badge variant="secondary">
-                  <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                  Built for trust, structure, and scale
-                </Badge>
-                <h2 className="mt-5 text-3xl font-semibold tracking-tight md:text-5xl">
-                  From scattered evidence to a structured legal matter.
-                </h2>
-                <p className="mt-5 max-w-2xl text-sm leading-7 text-muted-foreground">
-                  MIZAN is designed as a serious legal platform: public lawyer
-                  profiles, structured case requests, AI case agents, evidence vaults,
-                  debate review, deadline tracking, draft verification, and
-                  client-lawyer collaboration.
-                </p>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Button asChild size="lg">
-                    <Link href="/signup">
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <HeroAction href="/signup" variant="default">
                       Build your matter
                       <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline">
-                    <Link href="/login">{t(language, "login")}</Link>
-                  </Button>
+                    </HeroAction>
+                    <HeroAction href="/login" variant="outline">
+                      {t(language, "login")}
+                    </HeroAction>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-5">
+                  {legalAreas.map((area) => (
+                    <div
+                      key={area}
+                      className="flex items-center justify-between rounded-xl border border-border/70 bg-card px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+                    >
+                      <span className="text-[13px] font-medium leading-[18px]">{area}</span>
+                      <LockKeyhole className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              <div className="grid gap-3">
-                {legalAreas.map((area) => (
-                  <div
-                    key={area}
-                    className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/70 p-4"
-                  >
-                    <span className="text-sm font-medium">{area}</span>
-                    <LockKeyhole className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+            </div>
+          </section>
+        </main>
       </div>
     </div>
+  );
+}
+
+function HeroAction({
+  href,
+  variant,
+  children
+}: {
+  href: string;
+  variant: "default" | "outline";
+  children: ReactNode;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (shouldReduceMotion) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 8;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 8;
+    setOffset({ x, y });
+  }
+
+  return (
+    <motion.div
+      className="relative"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={() => setOffset({ x: 0, y: 0 })}
+      animate={shouldReduceMotion ? undefined : { x: offset.x, y: offset.y }}
+      whileHover={shouldReduceMotion ? undefined : { y: -4 }}
+      transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.4 }}
+    >
+      <motion.div
+        className={
+          variant === "default"
+            ? "absolute -inset-2 rounded-xl bg-primary/20 blur-xl"
+            : "absolute -inset-2 rounded-xl bg-primary/10 blur-xl"
+        }
+        initial={{ opacity: 0 }}
+        whileHover={shouldReduceMotion ? undefined : { opacity: variant === "default" ? 0.7 : 0.45 }}
+        transition={{ duration: 0.2 }}
+      />
+      <Button
+        asChild
+        size="lg"
+        variant={variant}
+        className="relative h-10 rounded-xl px-5 text-[14px] font-semibold"
+      >
+        <Link href={href} className="group relative overflow-hidden">
+          <span className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_58%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <span className="relative inline-flex items-center">{children}</span>
+        </Link>
+      </Button>
+    </motion.div>
+  );
+}
+
+function HeroOrbit() {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <div className="pointer-events-none absolute right-0 top-8 hidden h-[360px] w-[360px] xl:block">
+      <motion.div
+        className="absolute inset-0 rounded-full border border-primary/10"
+        animate={shouldReduceMotion ? undefined : { rotate: 360 }}
+        transition={{ duration: 34, repeat: Infinity, ease: "linear" }}
+      >
+        <span className="absolute left-8 top-16 h-3 w-3 rounded-full bg-primary/70 shadow-[0_0_20px_rgba(37,99,235,0.35)]" />
+        <span className="absolute bottom-20 right-12 h-2.5 w-2.5 rounded-full bg-primary/45 shadow-[0_0_18px_rgba(37,99,235,0.24)]" />
+      </motion.div>
+      <motion.div
+        className="absolute inset-8 rounded-full border border-border/70"
+        animate={shouldReduceMotion ? undefined : { rotate: -360 }}
+        transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+      />
+    </div>
+  );
+}
+
+function MiniSparkline({ delay = 0 }: { delay?: number }) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <div className="h-8 w-full">
+      <svg viewBox="0 0 120 32" className="h-full w-full overflow-visible">
+        <motion.path
+          d="M2 24 C18 12, 28 18, 42 11 S68 4, 86 14 104 23, 118 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="text-primary/65"
+          initial={shouldReduceMotion ? false : { pathLength: 0, opacity: 0.4 }}
+          animate={shouldReduceMotion ? undefined : { pathLength: 1, opacity: 1 }}
+          transition={{ duration: 1.1, delay: 0.35 + delay, ease: "easeOut" }}
+        />
+        <motion.circle
+          cx="86"
+          cy="14"
+          r="3.5"
+          className="fill-primary"
+          animate={shouldReduceMotion ? undefined : { scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 1.8, delay, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+function HeroCounterCard({
+  value,
+  label
+}: {
+  value: number;
+  label: string;
+  description: string;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useInView(ref, { once: true, margin: "-20% 0px" });
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    if (shouldReduceMotion) {
+      setDisplayValue(value);
+      return;
+    }
+
+    let frame = 0;
+    const startedAt = performance.now();
+    const duration = 850;
+
+    const tick = (timestamp: number) => {
+      const progress = Math.min((timestamp - startedAt) / duration, 1);
+      setDisplayValue(Math.round(value * progress));
+      if (progress < 1) {
+        frame = window.requestAnimationFrame(tick);
+      }
+    };
+
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [inView, shouldReduceMotion, value]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="bg-card px-4 py-6"
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+      whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.4 }}
+      transition={{ duration: 0.55 }}
+    >
+      <div className="flex items-center gap-1.5">
+        <p className="text-[36px] font-bold leading-[40px] tracking-[-0.02em] text-foreground">
+          {displayValue}
+        </p>
+        <motion.span
+          className="inline-flex h-1.5 w-1.5 rounded-full bg-primary"
+          animate={shouldReduceMotion ? undefined : { opacity: [0.25, 1, 0.25], scale: [1, 1.4, 1] }}
+          transition={{ duration: 1.9, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+      <p className="mt-1 text-[11px] font-medium uppercase leading-[14px] tracking-[0.05em] text-muted-foreground">
+        {label}
+      </p>
+    </motion.div>
   );
 }

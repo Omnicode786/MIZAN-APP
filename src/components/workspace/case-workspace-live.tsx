@@ -232,10 +232,10 @@ export function CaseWorkspaceLive({
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden border-border/70">
+    <div className="space-y-7">
+      <Card className="overflow-hidden border-border/70 shadow-sm">
         <CardContent className="p-0">
-          <div className="border-b border-border/60 bg-muted/20 px-6 py-5">
+          <div className="border-b border-border/60 bg-muted/20 px-6 py-5 sm:px-7 sm:py-6">
             <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
@@ -266,7 +266,7 @@ export function CaseWorkspaceLive({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:w-[480px]">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:w-[500px]">
                 <MetricCard label="Documents" value={initialCase.documents?.length || 0} />
                 <MetricCard label="Deadlines" value={initialCase.deadlines?.length || 0} />
                 <MetricCard label="Drafts" value={initialCase.drafts?.length || 0} />
@@ -275,8 +275,8 @@ export function CaseWorkspaceLive({
             </div>
           </div>
 
-          <div className="grid gap-6 p-6 lg:grid-cols-[1.35fr_0.85fr]">
-            <div className="space-y-4">
+          <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
+            <div className="space-y-5">
               <SectionHeader
                 icon={FolderOpen}
                 title="Case details"
@@ -290,7 +290,7 @@ export function CaseWorkspaceLive({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="h-10 rounded-2xl border border-border bg-background px-4 text-sm"
+                  className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm"
                 >
                   {["DRAFT", "INTAKE", "ACTIVE", "REVIEW", "ESCALATED", "CLOSED"].map((item) => (
                     <option key={item}>{item}</option>
@@ -300,7 +300,7 @@ export function CaseWorkspaceLive({
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="h-10 rounded-2xl border border-border bg-background px-4 text-sm"
+                  className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm"
                 >
                   {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((item) => (
                     <option key={item}>{item}</option>
@@ -353,10 +353,10 @@ export function CaseWorkspaceLive({
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
         <div className="space-y-6">
           <Card>
-            <CardContent className="p-5">
+            <CardContent className="p-5 sm:p-6">
               <SectionHeader
                 icon={Upload}
                 title="Document intake and evidence vault"
@@ -373,13 +373,13 @@ export function CaseWorkspaceLive({
                 }
               />
 
-              <div className="mt-4 space-y-3">
+              <div className="mt-5 space-y-3">
                 {initialCase.documents.map((document: any) => (
                   <div
                     key={document.id}
-                    className="rounded-2xl border border-border/70 bg-background p-4 transition hover:border-border"
+                    className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm transition hover:border-border"
                   >
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="font-medium">{document.fileName}</p>
@@ -421,7 +421,7 @@ export function CaseWorkspaceLive({
                         </p>
                       </div>
 
-                      <div className="flex shrink-0 flex-col items-end gap-2">
+                      <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 md:flex-col md:items-end">
                         <Button
                           variant="outline"
                           size="sm"
@@ -451,7 +451,7 @@ export function CaseWorkspaceLive({
 
           {(role === "CLIENT" || role === "LAWYER") && initialCase.assignments?.length ? (
             <Card>
-              <CardContent className="space-y-4 p-5">
+              <CardContent className="space-y-4 p-5 sm:p-6">
                 <SectionHeader
                   icon={Scale}
                   title="Lawyer request and proposal flow"
@@ -484,16 +484,16 @@ export function CaseWorkspaceLive({
           />
 
           <Card>
-            <CardContent className="p-5 w-120">
+            <CardContent className="p-5 sm:p-6">
               <SectionHeader
                 icon={FileText}
                 title={t(language, "draftingStudio")}
                 action={
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
                     <select
                       value={draftType}
                       onChange={(e) => setDraftType(e.target.value)}
-                      className="h-10 rounded-2xl border border-border bg-background px-4 text-sm"
+                      className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm sm:w-auto"
                     >
                       {[
                         "LEGAL_NOTICE",
@@ -514,10 +514,10 @@ export function CaseWorkspaceLive({
                       value={draftTitle}
                       onChange={(e) => setDraftTitle(e.target.value)}
                       placeholder="Draft title"
-                      className="w-56"
+                      className="w-full sm:w-56"
                     />
 
-                    <Button onClick={generateDraft} disabled={busy === "draft-generate"}>
+                    <Button onClick={generateDraft} disabled={busy === "draft-generate"} className="sm:self-auto">
                       {busy === "draft-generate" ? "Generating..." : t(language, "generate")}
                     </Button>
                   </div>
@@ -544,7 +544,7 @@ export function CaseWorkspaceLive({
           </Card>
 
           <Card>
-            <CardContent className="p-5">
+            <CardContent className="p-5 sm:p-6">
               <div className="grid gap-6 lg:grid-cols-2">
                 <div>
                   <SectionHeader
@@ -587,7 +587,7 @@ export function CaseWorkspaceLive({
                     ) : null}
                   </div>
 
-                  <div className="mt-3 flex gap-3">
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                     <Input
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
@@ -628,7 +628,7 @@ export function CaseWorkspaceLive({
                       ) : null}
                     </div>
 
-                    <div className="mt-3 flex gap-3">
+                    <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                       <Input
                         value={privateNote}
                         onChange={(e) => setPrivateNote(e.target.value)}
@@ -650,7 +650,7 @@ export function CaseWorkspaceLive({
 
         <div className="space-y-6">
           <Card>
-            <CardContent className="p-5">
+            <CardContent className="p-5 sm:p-6">
               <SectionHeader
                 icon={CalendarClock}
                 title={t(language, "timeline")}
@@ -663,7 +663,7 @@ export function CaseWorkspaceLive({
           </Card>
 
           <Card>
-            <CardContent className="p-5">
+            <CardContent className="p-5 sm:p-6">
               <SectionHeader
                 icon={CalendarClock}
                 title={t(language, "deadlineTracker")}
@@ -720,7 +720,7 @@ export function CaseWorkspaceLive({
                   </div>
                 ))}
 
-                <div className="grid gap-3 rounded-2xl border border-dashed border-border p-4 md:grid-cols-[1fr_180px_auto]">
+                <div className="grid gap-3 rounded-2xl border border-dashed border-border p-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
                   <Input
                     value={deadlineTitle}
                     onChange={(e) => setDeadlineTitle(e.target.value)}
@@ -740,7 +740,7 @@ export function CaseWorkspaceLive({
           </Card>
 
           <Card>
-            <CardContent className="p-5">
+            <CardContent className="p-5 sm:p-6">
               <SectionHeader
                 icon={Activity}
                 title={t(language, "activity")}
@@ -773,26 +773,26 @@ function SectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="flex items-start gap-3">
         <div className="rounded-2xl border border-border/70 bg-muted/30 p-2.5">
           <Icon className="h-4 w-4 text-foreground" />
         </div>
         <div>
-          <p className="text-sm font-medium">{title}</p>
+          <p className="text-sm font-medium tracking-tight">{title}</p>
           {description ? (
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">{description}</p>
           ) : null}
         </div>
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="shrink-0 self-start">{action}</div> : null}
     </div>
   );
 }
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-background px-4 py-3">
+    <div className="rounded-2xl border border-border/70 bg-background px-4 py-3 shadow-sm">
       <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </p>
@@ -820,7 +820,7 @@ function ScoreCard({
   }[tone];
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background p-4">
+    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
         <p className="text-sm font-semibold">{clamped}%</p>
@@ -868,8 +868,8 @@ function ProposalCard({
   const contactsUnlocked = assignment.status === "ACCEPTED";
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background p-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="font-medium">{assignment.lawyer.user.name}</p>
           <p className="text-sm text-muted-foreground">
@@ -983,8 +983,8 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
   const [content, setContent] = useState(draft.currentContent || "");
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background p-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-medium">{draft.title}</p>
           <p className="text-xs text-muted-foreground">

@@ -45,7 +45,7 @@ export default async function LawyerDashboardPage() {
             <div className="absolute left-[-120px] top-[30%] h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
           </div>
 
-          <div className="relative grid gap-6 p-6 lg:grid-cols-[1.25fr_0.75fr] lg:p-8">
+          <div className="relative grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
             <div>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline">
@@ -121,7 +121,7 @@ export default async function LawyerDashboardPage() {
 
         <RiskReadinessDashboard metrics={snapshot.metrics} />
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_420px]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,420px)]">
           <div className="space-y-6">
             <div className="flex items-end justify-between gap-4">
               <div>
