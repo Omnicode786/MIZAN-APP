@@ -4,6 +4,10 @@ type OpenAIResult = {
   provider: "openai";
   contextPreview?: string;
 };
+type AiTaskOptions = {
+  maxOutputTokens?: number;
+  temperature?: number;
+};
 
 function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
@@ -81,10 +85,14 @@ function safeJsonParse(value: string) {
   }
 }
 
-export async function generateOpenAIInsight(prompt: string, context?: string) {
+export async function generateOpenAIInsight(
+  prompt: string,
+  context?: string,
+  options: AiTaskOptions = {}
+) {
   return callOpenAI({
-    temperature: 0.25,
-    max_tokens: 4096,
+    temperature: options.temperature ?? 0.25,
+    max_tokens: options.maxOutputTokens ?? 4096,
     messages: [
       {
         role: "user",
@@ -97,11 +105,12 @@ export async function generateOpenAIInsight(prompt: string, context?: string) {
 export async function generateOpenAIVisionInsight(
   prompt: string,
   images: Array<{ mimeType: string; data: string }>,
-  context?: string
+  context?: string,
+  options: AiTaskOptions = {}
 ) {
   return callOpenAI({
-    temperature: 0.25,
-    max_tokens: 4096,
+    temperature: options.temperature ?? 0.25,
+    max_tokens: options.maxOutputTokens ?? 4096,
     messages: [
       {
         role: "user",

@@ -19,16 +19,20 @@ export async function POST(request: Request) {
     const targetLanguage = normalizeLanguage(body.targetLanguage);
 
     const prompt = [
-      "Translate the supplied legal-tech content into the target language.",
+      "Translate the complete supplied legal-tech content into the target language.",
       getLanguageInstruction(targetLanguage),
       "Do not summarize, omit, add advice, or change legal meaning.",
       "Preserve headings, bullets, legal references, names, dates, amounts, citations, and markdown structure.",
+      "Translate every part of the source text, including short labels, bullet points, and concluding notes.",
+      "The full source text is provided in Working context.",
       "Return only the translated content in Markdown.",
       "Do not wrap the answer in a code block.",
-      `Content:\n${body.text}`
     ].join("\n\n");
 
-    const result = await runAiTask(prompt, body.text);
+    const result = await runAiTask(prompt, body.text, {
+      maxOutputTokens: 8192,
+      temperature: 0.1
+    });
     const translatedText = result.provider === "mock" ? body.text : result.text;
 
     return NextResponse.json({

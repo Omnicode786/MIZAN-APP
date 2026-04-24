@@ -4,6 +4,10 @@ type GeminiResult = {
   provider: "gemini";
   contextPreview?: string;
 };
+type AiTaskOptions = {
+  maxOutputTokens?: number;
+  temperature?: number;
+};
 
 function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
@@ -21,7 +25,7 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function callGemini(parts: any[]): Promise<GeminiResult> {
+async function callGemini(parts: any[], options: AiTaskOptions = {}): Promise<GeminiResult> {
   const apiKey = envApiKey(process.env.GEMINI_API_KEY);
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured.");
@@ -39,9 +43,9 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
         body: JSON.stringify({
           contents: [{ role: "user", parts }],
           generationConfig: {
-            temperature: 0.25,
+            temperature: options.temperature ?? 0.25,
             topP: 0.9,
-            maxOutputTokens: 4096
+            maxOutputTokens: options.maxOutputTokens ?? 4096
           }
         })
       }
@@ -92,18 +96,23 @@ function safeJsonParse(value: string) {
   }
 }
 
-export async function generateGeminiInsight(prompt: string, context?: string) {
+export async function generateGeminiInsight(
+  prompt: string,
+  context?: string,
+  options: AiTaskOptions = {}
+) {
   return callGemini([
     {
       text: `${prompt}\n\nWorking context:\n${context || "No extra context supplied."}`
     }
-  ]);
+  ], options);
 }
 
 export async function generateGeminiVisionInsight(
   prompt: string,
   images: Array<{ mimeType: string; data: string }>,
-  context?: string
+  context?: string,
+  options: AiTaskOptions = {}
 ) {
   const parts = [
     {
@@ -117,5 +126,5 @@ export async function generateGeminiVisionInsight(
     }))
   ];
 
-  return callGemini(parts);
+  return callGemini(parts, options);
 }

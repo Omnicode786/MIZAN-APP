@@ -1,11 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type WheelEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { languageLabels, type AppLanguage } from "@/lib/language";
 import { FormattedAiContent } from "@/utils/ai-content";
 
-const targets: AppLanguage[] = ["ur", "en", "roman-ur"];
+const targets: AppLanguage[] = ["ur", "roman-ur"];
+
+function keepScrollInside(event: WheelEvent<HTMLDivElement>) {
+  const container = event.currentTarget;
+
+  if (container.scrollHeight <= container.clientHeight) return;
+
+  const scrollingDown = event.deltaY > 0;
+  const atTop = container.scrollTop <= 0;
+  const atBottom =
+    Math.ceil(container.scrollTop + container.clientHeight) >= container.scrollHeight;
+
+  if ((scrollingDown && !atBottom) || (!scrollingDown && !atTop)) {
+    event.stopPropagation();
+  }
+}
 
 export function AiTranslationActions({ text }: { text: string }) {
   const [translatedText, setTranslatedText] = useState("");
@@ -86,8 +101,14 @@ export function AiTranslationActions({ text }: { text: string }) {
               ) : null}
             </div>
           </div>
-          <div className="max-h-[20rem] min-h-0 overflow-y-auto overscroll-y-contain pr-2">
-            <FormattedAiContent content={translatedText} />
+          <div
+            className="max-h-[20rem] min-h-0 overflow-y-auto overscroll-y-contain pr-2"
+            onWheelCapture={keepScrollInside}
+            style={{ scrollbarGutter: "stable" }}
+          >
+            <div className="min-w-0">
+              <FormattedAiContent content={translatedText} />
+            </div>
           </div>
         </div>
       ) : null}
