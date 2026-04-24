@@ -10,8 +10,9 @@ import { prisma } from "@/lib/prisma";
 
 export default async function LawyerReviewPage() {
   const user = await getCurrentUserWithProfile();
+  const lawyerProfileId = user?.lawyerProfile?.id;
   const assignments = await prisma.caseAssignment.findMany({
-    where: { lawyerProfileId: user?.lawyerProfile?.id },
+    where: lawyerProfileId ? { lawyerProfileId } : { id: "__NO_ACCESS__" },
     include: { case: { include: { client: { include: { user: true } } } }, lawyer: { include: { user: true } } },
     orderBy: { updatedAt: "desc" }
   });
@@ -22,11 +23,10 @@ export default async function LawyerReviewPage() {
         eyebrow="Review Workspace"
         title="Proposal and review queue"
         description="These are the files where clients have already reached you. Open the case to review documents and send or update your proposal."
-        action={<div />}
       />
       <div className="grid gap-4">
         {assignments.map((assignment) => (
-          <Card key={assignment.id}>
+          <Card key={assignment.id} className="soft-hover">
             <CardContent className="p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -42,6 +42,13 @@ export default async function LawyerReviewPage() {
             </CardContent>
           </Card>
         ))}
+        {!assignments.length ? (
+          <Card>
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              No proposal requests found yet.
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </AppShell>
   );

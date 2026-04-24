@@ -9,8 +9,9 @@ import { prisma } from "@/lib/prisma";
 
 export default async function ClientTimelinePage() {
   const user = await getCurrentUserWithProfile();
+  const clientProfileId = user?.clientProfile?.id;
   const items = await prisma.timelineEvent.findMany({
-    where: { case: { clientProfileId: user?.clientProfile?.id } },
+    where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
     orderBy: { eventDate: 'asc' }
   });
 

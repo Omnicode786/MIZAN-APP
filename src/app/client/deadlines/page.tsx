@@ -9,8 +9,9 @@ import { prisma } from "@/lib/prisma";
 
 export default async function ClientDeadlinesPage() {
   const user = await getCurrentUserWithProfile();
+  const clientProfileId = user?.clientProfile?.id;
   const deadlines = await prisma.deadline.findMany({
-    where: { case: { clientProfileId: user?.clientProfile?.id } },
+    where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
     orderBy: { dueDate: "asc" }
   });
 

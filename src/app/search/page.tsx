@@ -10,10 +10,16 @@ export default async function SearchPage() {
   const user = await getCurrentUserWithProfile();
   if (!user) redirect("/login");
 
+  const lawyerProfileId = user.lawyerProfile?.id;
+  const clientProfileId = user.clientProfile?.id;
   const cases = await prisma.case.findMany({
-    where: user?.role === 'LAWYER'
-      ? { assignments: { some: { lawyerProfileId: user?.lawyerProfile?.id } } }
-      : { clientProfileId: user?.clientProfile?.id },
+    where: user.role === 'LAWYER'
+      ? lawyerProfileId
+        ? { assignments: { some: { lawyerProfileId } } }
+        : { id: "__NO_ACCESS__" }
+      : clientProfileId
+        ? { clientProfileId }
+        : { id: "__NO_ACCESS__" },
     select: {
       id: true,
       title: true,
@@ -36,7 +42,6 @@ export default async function SearchPage() {
         eyebrow="Evidence Search"
         title="Investigation-style search across uploaded evidence"
         description="Search mentions of payments, threats, dates, names, and clauses without defaulting to a generic chat flow."
-        action={<div />}
       />
       <SearchInvestigationPanel cases={cases} />
     </AppShell>

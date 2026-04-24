@@ -7,8 +7,11 @@ import { prisma } from "@/lib/prisma";
 
 export default async function LawyerDeadlinesPage() {
   const user = await getCurrentUserWithProfile();
+  const lawyerProfileId = user?.lawyerProfile?.id;
   const deadlines = await prisma.deadline.findMany({
-    where: { case: { assignments: { some: { lawyerProfileId: user?.lawyerProfile?.id } } } },
+    where: lawyerProfileId
+      ? { case: { assignments: { some: { lawyerProfileId } } } }
+      : { id: "__NO_ACCESS__" },
     orderBy: { dueDate: "asc" }
   });
 
@@ -18,7 +21,6 @@ export default async function LawyerDeadlinesPage() {
         eyebrow="Deadline Cockpit"
         title="Deadlines across active matters"
         description="All assigned-case deadlines in one board. Open a case to update them or add new manual actions."
-        action={<div />}
       />
       <DeadlineBoard deadlines={deadlines} />
     </AppShell>
