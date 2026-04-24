@@ -38,6 +38,7 @@ export function DebateWorkspacePage({
   const [duration, setDuration] = useState(8);
   const [argument, setArgument] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const selectedCase = useMemo(
     () => cases.find((item) => item.id === selectedCaseId) || null,
@@ -55,55 +56,67 @@ export function DebateWorkspacePage({
   async function startSession() {
     if (!selectedCase) return;
 
-    setLoading(true);
+    try {
+      setLoading(true);
+      setError("");
 
-    const res = await fetch("/api/debate/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ caseId: selectedCase.id, title, durationMinutes: duration, language })
-    });
+      const res = await fetch("/api/debate/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId: selectedCase.id, title, durationMinutes: duration, language })
+      });
 
-    setLoading(false);
-
-    if (res.ok) {
+      await requireOk(res, "Unable to start debate.");
       router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to start debate.");
+    } finally {
+      setLoading(false);
     }
   }
 
   async function sendTurn() {
     if (!activeSession || !argument.trim()) return;
 
-    setLoading(true);
+    try {
+      setLoading(true);
+      setError("");
 
-    const res = await fetch(`/api/debate/session/${activeSession.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: argument, language })
-    });
+      const res = await fetch(`/api/debate/session/${activeSession.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: argument, language })
+      });
 
-    setLoading(false);
-
-    if (res.ok) {
+      await requireOk(res, "Unable to submit argument.");
       setArgument("");
       router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to submit argument.");
+    } finally {
+      setLoading(false);
     }
   }
 
   async function finalize() {
     if (!activeSession) return;
 
-    setLoading(true);
+    try {
+      setLoading(true);
+      setError("");
 
-    const res = await fetch(`/api/debate/session/${activeSession.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language })
-    });
+      const res = await fetch(`/api/debate/session/${activeSession.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language })
+      });
 
-    setLoading(false);
-
-    if (res.ok) {
+      await requireOk(res, "Unable to finalize debate.");
       router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to finalize debate.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -127,7 +140,13 @@ export function DebateWorkspacePage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-2">
+      {error ? (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
+
       <Card className="overflow-hidden border-border/70">
         <CardContent className="p-0">
           <div className="border-b border-border/60 bg-muted/20 px-6 py-6">
@@ -506,4 +525,10 @@ function DebateStat({ label, value }: { label: string; value: string | number })
       <p className="mt-2 text-sm font-medium leading-6">{value}</p>
     </div>
   );
+}
+
+async function requireOk(response: Response, fallback: string) {
+  if (response.ok) return;
+  const data = await response.json().catch(() => null);
+  throw new Error(data?.error || fallback);
 }
