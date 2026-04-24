@@ -9,6 +9,14 @@ function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
 }
 
+function isRetryableStatus(status: number) {
+  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function callOpenAI(body: any): Promise<OpenAIResult> {
   const apiKey = envValue(process.env.OPENAI_API_KEY, "");
   if (!apiKey) {
@@ -16,14 +24,25 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
   }
 
   const model = envValue(process.env.OPENAI_MODEL, "gpt-4.1-mini");
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({ model, ...body })
-  });
+  let response: Response | null = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ model, ...body })
+    });
+
+    if (response.ok || !isRetryableStatus(response.status) || attempt === 2) break;
+    await wait(650 * (attempt + 1));
+  }
+
+  if (!response) {
+    throw new Error("OpenAI request did not return a response.");
+  }
 
   if (!response.ok) {
     throw new Error(`OpenAI request failed with ${response.status}`);

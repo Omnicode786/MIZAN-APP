@@ -9,6 +9,14 @@ function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
 }
 
+function isRetryableStatus(status: number) {
+  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function callGemini(parts: any[]): Promise<GeminiResult> {
   const apiKey = envValue(process.env.GEMINI_API_KEY, "");
   if (!apiKey) {
@@ -16,21 +24,32 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
   }
 
   const model = envValue(process.env.GEMINI_MODEL, "gemini-2.5-flash");
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts }],
-        generationConfig: {
-          temperature: 0.25,
-          topP: 0.9,
-          maxOutputTokens: 1800
-        }
-      })
-    }
-  );
+  let response: Response | null = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts }],
+          generationConfig: {
+            temperature: 0.25,
+            topP: 0.9,
+            maxOutputTokens: 1800
+          }
+        })
+      }
+    );
+
+    if (response.ok || !isRetryableStatus(response.status) || attempt === 2) break;
+    await wait(650 * (attempt + 1));
+  }
+
+  if (!response) {
+    throw new Error("Gemini request did not return a response.");
+  }
 
   if (!response.ok) {
     throw new Error(`Gemini request failed with ${response.status}`);
