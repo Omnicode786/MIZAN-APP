@@ -3,6 +3,10 @@ import { generateMockInsight, generateMockVisionInsight } from "@/lib/ai/provide
 import { generateOpenAIInsight, generateOpenAIVisionInsight } from "@/lib/ai/providers/openai";
 
 type AiProvider = "gemini" | "openai" | "mock";
+type AiTaskOptions = {
+  maxOutputTokens?: number;
+  temperature?: number;
+};
 
 export class AiProviderError extends Error {
   provider: AiProvider;
@@ -57,12 +61,16 @@ function rejectPromptEcho<T extends { text: string }>(result: T, prompt: string)
   return result;
 }
 
-export async function runAiTask(prompt: string, context?: string) {
+export async function runAiTask(prompt: string, context?: string, options?: AiTaskOptions) {
   const provider = normalizeProvider(process.env.AI_PROVIDER);
 
   try {
-    if (provider === "openai") return rejectPromptEcho(await generateOpenAIInsight(prompt, context), prompt);
-    if (provider === "gemini") return rejectPromptEcho(await generateGeminiInsight(prompt, context), prompt);
+    if (provider === "openai") {
+      return rejectPromptEcho(await generateOpenAIInsight(prompt, context, options), prompt);
+    }
+    if (provider === "gemini") {
+      return rejectPromptEcho(await generateGeminiInsight(prompt, context, options), prompt);
+    }
     return await generateMockInsight(prompt, context);
   } catch (error) {
     console.error(`AI provider "${provider}" failed.`, error);

@@ -4,9 +4,17 @@ type GeminiResult = {
   provider: "gemini";
   contextPreview?: string;
 };
+type AiTaskOptions = {
+  maxOutputTokens?: number;
+  temperature?: number;
+};
 
 function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
+}
+
+function envApiKey(value: string | undefined) {
+  return (value || "").trim().replace(/^["']|["']$/g, "").replace(/\s+/g, "");
 }
 
 function isRetryableStatus(status: number) {
@@ -17,8 +25,8 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function callGemini(parts: any[]): Promise<GeminiResult> {
-  const apiKey = envValue(process.env.GEMINI_API_KEY, "");
+async function callGemini(parts: any[], options: AiTaskOptions = {}): Promise<GeminiResult> {
+  const apiKey = envApiKey(process.env.GEMINI_API_KEY);
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
@@ -35,9 +43,9 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
         body: JSON.stringify({
           contents: [{ role: "user", parts }],
           generationConfig: {
-            temperature: 0.25,
+            temperature: options.temperature ?? 0.25,
             topP: 0.9,
-            maxOutputTokens: 4096
+            maxOutputTokens: options.maxOutputTokens ?? 4096
           }
         })
       }
@@ -52,7 +60,20 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
   }
 
   if (!response.ok) {
-    throw new Error(`Gemini request failed with ${response.status}`);
+    const bodyText = await response.text();
+    const parsed = safeJsonParse(bodyText);
+    const remoteMessage = parsed?.error?.message || "";
+    const remoteReason = parsed?.error?.details?.find((item: any) => item?.reason)?.reason || "";
+
+    if (remoteReason === "API_KEY_INVALID" || /api key not valid/i.test(remoteMessage)) {
+      throw new Error("Gemini rejected GEMINI_API_KEY as invalid. Replace it with a valid Gemini API key and restart the dev server.");
+    }
+
+    throw new Error(
+      remoteMessage
+        ? `Gemini request failed with ${response.status}: ${remoteMessage}`
+        : `Gemini request failed with ${response.status}`
+    );
   }
 
   const data = await response.json();
@@ -67,18 +88,31 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
   };
 }
 
-export async function generateGeminiInsight(prompt: string, context?: string) {
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+export async function generateGeminiInsight(
+  prompt: string,
+  context?: string,
+  options: AiTaskOptions = {}
+) {
   return callGemini([
     {
       text: `${prompt}\n\nWorking context:\n${context || "No extra context supplied."}`
     }
-  ]);
+  ], options);
 }
 
 export async function generateGeminiVisionInsight(
   prompt: string,
   images: Array<{ mimeType: string; data: string }>,
-  context?: string
+  context?: string,
+  options: AiTaskOptions = {}
 ) {
   const parts = [
     {
@@ -92,5 +126,5 @@ export async function generateGeminiVisionInsight(
     }))
   ];
 
-  return callGemini(parts);
+  return callGemini(parts, options);
 }

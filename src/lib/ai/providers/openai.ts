@@ -4,9 +4,17 @@ type OpenAIResult = {
   provider: "openai";
   contextPreview?: string;
 };
+type AiTaskOptions = {
+  maxOutputTokens?: number;
+  temperature?: number;
+};
 
 function envValue(value: string | undefined, fallback: string) {
   return (value || fallback).trim().replace(/^["']|["']$/g, "");
+}
+
+function envApiKey(value: string | undefined) {
+  return (value || "").trim().replace(/^["']|["']$/g, "").replace(/\s+/g, "");
 }
 
 function isRetryableStatus(status: number) {
@@ -18,7 +26,7 @@ function wait(ms: number) {
 }
 
 async function callOpenAI(body: any): Promise<OpenAIResult> {
-  const apiKey = envValue(process.env.OPENAI_API_KEY, "");
+  const apiKey = envApiKey(process.env.OPENAI_API_KEY);
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured.");
   }
@@ -45,7 +53,18 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
   }
 
   if (!response.ok) {
-    throw new Error(`OpenAI request failed with ${response.status}`);
+    const bodyText = await response.text();
+    const parsed = safeJsonParse(bodyText);
+    const remoteMessage =
+      parsed?.error?.message ||
+      parsed?.message ||
+      "";
+
+    throw new Error(
+      remoteMessage
+        ? `OpenAI request failed with ${response.status}: ${remoteMessage}`
+        : `OpenAI request failed with ${response.status}`
+    );
   }
 
   const data = await response.json();
@@ -58,10 +77,22 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
   };
 }
 
-export async function generateOpenAIInsight(prompt: string, context?: string) {
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+export async function generateOpenAIInsight(
+  prompt: string,
+  context?: string,
+  options: AiTaskOptions = {}
+) {
   return callOpenAI({
-    temperature: 0.25,
-    max_tokens: 4096,
+    temperature: options.temperature ?? 0.25,
+    max_tokens: options.maxOutputTokens ?? 4096,
     messages: [
       {
         role: "user",
@@ -74,11 +105,12 @@ export async function generateOpenAIInsight(prompt: string, context?: string) {
 export async function generateOpenAIVisionInsight(
   prompt: string,
   images: Array<{ mimeType: string; data: string }>,
-  context?: string
+  context?: string,
+  options: AiTaskOptions = {}
 ) {
   return callOpenAI({
-    temperature: 0.25,
-    max_tokens: 4096,
+    temperature: options.temperature ?? 0.25,
+    max_tokens: options.maxOutputTokens ?? 4096,
     messages: [
       {
         role: "user",
