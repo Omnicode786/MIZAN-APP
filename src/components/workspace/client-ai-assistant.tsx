@@ -151,7 +151,6 @@ export function ClientAiAssistant({
           threadId: activeThread?.id,
           caseId: mode === "case" ? contextCaseId : undefined,
           question: text,
-          title: text.slice(0, 80),
           language
         })
       });
@@ -570,7 +569,7 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
     <div className={cn("flex", isAi ? "justify-start" : "justify-end")}>
       <div
         className={cn(
-          "max-w-[92%] rounded-[1.5rem] border p-4 md:max-w-[82%]",
+          "max-w-[92%] overflow-visible rounded-[1.5rem] border p-4 break-words md:max-w-[82%]",
           isAi
             ? "border-primary/20 bg-primary/5"
             : "border-primary bg-primary text-primary-foreground shadow-soft"
@@ -588,12 +587,12 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
         </div>
 
         {isAi ? (
-          <>
+          <div className="max-w-none overflow-visible">
             <FormattedAiContent content={message.content} />
             <div className="mt-3">
               <AiTranslationActions text={message.content} />
             </div>
-          </>
+          </div>
         ) : (
           <p className="whitespace-pre-wrap text-sm leading-6">{message.content}</p>
         )}

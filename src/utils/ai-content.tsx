@@ -32,7 +32,7 @@ function isShortHeading(line: string, nextLine?: string) {
   if (clean.length > 80) return false;
   if (/[:.!?]$/.test(clean)) return false;
   if (/^[-*•]\s+/.test(clean)) return false;
-  if (/^\d+\.\s+/.test(clean)) return false;
+  if (/^\d+[\.)]\s+/.test(clean)) return false;
   if (/^#{1,4}\s+/.test(clean)) return false;
   if (!nextLine?.trim()) return false;
 
@@ -102,12 +102,12 @@ export function parseAiContent(raw: string): ContentBlock[] {
       continue;
     }
 
-    if (/^\d+\.\s+/.test(line)) {
-      const items: string[] = [line.replace(/^\d+\.\s+/, "").trim()];
+    if (/^\d+[\.)]\s+/.test(line)) {
+      const items: string[] = [line.replace(/^\d+[\.)]\s+/, "").trim()];
       let j = i + 1;
 
-      while (j < lines.length && /^\d+\.\s+/.test(lines[j].trim())) {
-        items.push(lines[j].trim().replace(/^\d+\.\s+/, "").trim());
+      while (j < lines.length && /^\d+[\.)]\s+/.test(lines[j].trim())) {
+        items.push(lines[j].trim().replace(/^\d+[\.)]\s+/, "").trim());
         j += 1;
       }
 
@@ -132,7 +132,7 @@ export function parseAiContent(raw: string): ContentBlock[] {
       if (/^#{1,4}\s+/.test(candidate)) break;
       if (/^>\s+/.test(candidate)) break;
       if (/^[-*•]\s+/.test(candidate)) break;
-      if (/^\d+\.\s+/.test(candidate)) break;
+      if (/^\d+[\.)]\s+/.test(candidate)) break;
       if (isShortHeading(candidate, lines[j + 1]?.trim())) break;
 
       paragraphLines.push(candidate);

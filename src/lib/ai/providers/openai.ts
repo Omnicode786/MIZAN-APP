@@ -61,6 +61,7 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
 export async function generateOpenAIInsight(prompt: string, context?: string) {
   return callOpenAI({
     temperature: 0.25,
+    max_tokens: 4096,
     messages: [
       {
         role: "user",
@@ -77,6 +78,7 @@ export async function generateOpenAIVisionInsight(
 ) {
   return callOpenAI({
     temperature: 0.25,
+    max_tokens: 4096,
     messages: [
       {
         role: "user",

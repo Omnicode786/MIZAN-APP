@@ -13,6 +13,20 @@ function compact(text: string | null | undefined, fallback = "") {
   return (text || fallback).replace(/\s+/g, " ").trim();
 }
 
+function cleanThreadTitle(value: string, fallback: string) {
+  const cleaned = value
+    .replace(/```[\s\S]*?```/g, "")
+    .split("\n")[0]
+    .replace(/^title\s*:\s*/i, "")
+    .replace(/^["'`]+|["'`]+$/g, "")
+    .replace(/[.!?]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) return fallback;
+  return cleaned.slice(0, 64);
+}
+
 export async function buildCaseContext(caseId: string) {
   const legalCase = await prisma.case.findUnique({
     where: { id: caseId },
@@ -162,6 +176,40 @@ export async function answerPakistaniLegalQuestion({
     ...response,
     sources: Array.from(new Set(sources)).slice(0, 8)
   };
+}
+
+export async function generateAssistantThreadTitle({
+  question,
+  caseTitle,
+  language
+}: {
+  question: string;
+  caseTitle?: string;
+  language?: AppLanguage;
+}) {
+  const fallback = cleanThreadTitle(question, "Legal question");
+  const outputLanguage = normalizeLanguage(language);
+
+  try {
+    const result = await runAiTask(
+      [
+        "Create a short, useful chat title for a MIZAN legal assistant conversation.",
+        "Infer the user's real topic from the first message instead of copying the first words.",
+        "Return only the title, with no quotes, no markdown, and no punctuation at the end.",
+        "Use 3 to 7 words.",
+        "Keep the title in the user's selected language.",
+        getLanguageInstruction(outputLanguage),
+        caseTitle ? `Selected case: ${caseTitle}` : "No case selected.",
+        `First user message: ${question}`
+      ].join("\n\n"),
+      question
+    );
+
+    return cleanThreadTitle(result.text, fallback);
+  } catch (error) {
+    console.error("Unable to generate assistant thread title.", error);
+    return fallback;
+  }
 }
 
 export async function summarizeDocumentWithAi(

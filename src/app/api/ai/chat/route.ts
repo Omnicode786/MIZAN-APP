@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AiProviderError } from "@/lib/ai";
 import { getCurrentUserWithProfile } from "@/lib/auth";
-import { answerPakistaniLegalQuestion } from "@/lib/legal-ai";
+import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/lib/legal-ai";
 import { normalizeLanguage } from "@/lib/language";
 import { getAccessibleCase } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -22,9 +22,12 @@ export async function POST(request: Request) {
 
   const body = schema.parse(await request.json());
   const language = normalizeLanguage(body.language);
+  let caseTitle: string | undefined;
+
   if (body.caseId) {
     const { legalCase } = await getAccessibleCase(body.caseId);
     if (!legalCase) return NextResponse.json({ error: "Case not found." }, { status: 404 });
+    caseTitle = legalCase.title;
   }
 
   let threadId = body.threadId;
@@ -73,12 +76,18 @@ export async function POST(request: Request) {
   }
 
   if (!threadId) {
+    const threadTitle = await generateAssistantThreadTitle({
+      question: body.question,
+      caseTitle,
+      language
+    });
+
     const thread = await prisma.assistantThread.create({
       data: {
         createdById: user.id,
         caseId: body.caseId,
         documentId: body.documentId,
-        title: body.title || body.question.slice(0, 80),
+        title: threadTitle,
         scope: body.documentId ? "DOCUMENT" : body.caseId ? "CASE" : "GENERAL"
       }
     });

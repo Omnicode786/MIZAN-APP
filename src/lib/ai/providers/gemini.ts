@@ -37,7 +37,7 @@ async function callGemini(parts: any[]): Promise<GeminiResult> {
           generationConfig: {
             temperature: 0.25,
             topP: 0.9,
-            maxOutputTokens: 1800
+            maxOutputTokens: 4096
           }
         })
       }
