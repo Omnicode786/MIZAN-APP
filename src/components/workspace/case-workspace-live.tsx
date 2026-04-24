@@ -55,6 +55,7 @@ export function CaseWorkspaceLive({
   const [draftTitle, setDraftTitle] = useState("Legal notice draft");
   const [draftType, setDraftType] = useState("LEGAL_NOTICE");
   const [busy, setBusy] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const pendingAssignments = useMemo(
     () => (initialCase.assignments || []).filter((item: any) => item.status === "PENDING"),
@@ -65,23 +66,55 @@ export function CaseWorkspaceLive({
     router.refresh();
   }
 
-  async function saveCase() {
-    setBusy("case");
-    await fetch(`/api/cases/${initialCase.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, stage, status, priority })
+  async function requireOk(response: Response, fallback: string) {
+    if (response.ok) return;
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.error || fallback);
+  }
+
+  function showSuccess(text: string) {
+    setNotice({ type: "success", text });
+  }
+
+  function showError(error: unknown, fallback: string) {
+    setNotice({
+      type: "error",
+      text: error instanceof Error ? error.message : fallback
     });
-    setBusy(null);
-    refresh();
+  }
+
+  async function saveCase() {
+    try {
+      setBusy("case");
+      setNotice(null);
+      const res = await fetch(`/api/cases/${initialCase.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, stage, status, priority })
+      });
+      await requireOk(res, "Unable to save case changes.");
+      showSuccess("Case changes saved.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to save case changes.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function deleteCase() {
     if (!confirm("Delete this case and all its records?")) return;
-    setBusy("delete-case");
-    const res = await fetch(`/api/cases/${initialCase.id}`, { method: "DELETE" });
-    setBusy(null);
-    if (res.ok) router.push(role === "CLIENT" ? "/client/cases" : "/lawyer/cases");
+    try {
+      setBusy("delete-case");
+      setNotice(null);
+      const res = await fetch(`/api/cases/${initialCase.id}`, { method: "DELETE" });
+      await requireOk(res, "Unable to delete case.");
+      router.push(role === "CLIENT" ? "/client/cases" : "/lawyer/cases");
+    } catch (error) {
+      showError(error, "Unable to delete case.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function uploadDocument(file: File) {
@@ -89,119 +122,199 @@ export function CaseWorkspaceLive({
     form.append("caseId", initialCase.id);
     form.append("file", file);
     form.append("language", language);
-    setUploading(true);
-    await fetch("/api/documents/upload", { method: "POST", body: form });
-    setUploading(false);
-    refresh();
+    try {
+      setUploading(true);
+      setNotice(null);
+      const res = await fetch("/api/documents/upload", { method: "POST", body: form });
+      await requireOk(res, "Unable to upload document.");
+      showSuccess("Document uploaded and queued for analysis.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to upload document.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function removeDocument(id: string) {
-    setBusy(`doc-${id}`);
-    await fetch(`/api/documents/${id}`, { method: "DELETE" });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`doc-${id}`);
+      setNotice(null);
+      const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      await requireOk(res, "Unable to delete document.");
+      showSuccess("Document deleted.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to delete document.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function addComment(visibility: "SHARED" | "PRIVATE" = "SHARED") {
     const body = visibility === "PRIVATE" ? privateNote : comment;
     if (!body.trim()) return;
 
-    setBusy("comment");
-    await fetch(visibility === "PRIVATE" ? "/api/internal-notes" : "/api/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ caseId: initialCase.id, body })
-    });
-    setBusy(null);
-    setComment("");
-    setPrivateNote("");
-    refresh();
+    try {
+      setBusy("comment");
+      setNotice(null);
+      const res = await fetch(visibility === "PRIVATE" ? "/api/internal-notes" : "/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId: initialCase.id, body })
+      });
+      await requireOk(res, "Unable to save message.");
+      setComment("");
+      setPrivateNote("");
+      showSuccess(visibility === "PRIVATE" ? "Internal note saved." : "Comment added.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to save message.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function removeComment(id: string) {
-    setBusy(`comment-${id}`);
-    await fetch("/api/comments", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`comment-${id}`);
+      setNotice(null);
+      const res = await fetch("/api/comments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      await requireOk(res, "Unable to delete comment.");
+      showSuccess("Comment deleted.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to delete comment.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function addDeadline() {
     if (!deadlineTitle.trim() || !deadlineDate) return;
 
-    setBusy("deadline");
-    await fetch("/api/deadlines", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        caseId: initialCase.id,
-        title: deadlineTitle,
-        dueDate: deadlineDate,
-        importance: "HIGH"
-      })
-    });
-    setBusy(null);
-    setDeadlineTitle("");
-    setDeadlineDate("");
-    refresh();
+    try {
+      setBusy("deadline");
+      setNotice(null);
+      const res = await fetch("/api/deadlines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caseId: initialCase.id,
+          title: deadlineTitle,
+          dueDate: deadlineDate,
+          importance: "HIGH"
+        })
+      });
+      await requireOk(res, "Unable to create deadline.");
+      setDeadlineTitle("");
+      setDeadlineDate("");
+      showSuccess("Deadline added.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to create deadline.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function updateDeadline(id: string, statusValue: string) {
-    setBusy(`deadline-${id}`);
-    await fetch("/api/deadlines", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: statusValue })
-    });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`deadline-${id}`);
+      setNotice(null);
+      const res = await fetch("/api/deadlines", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: statusValue })
+      });
+      await requireOk(res, "Unable to update deadline.");
+      showSuccess("Deadline updated.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to update deadline.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function deleteDeadline(id: string) {
-    setBusy(`deadline-${id}`);
-    await fetch("/api/deadlines", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`deadline-${id}`);
+      setNotice(null);
+      const res = await fetch("/api/deadlines", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      await requireOk(res, "Unable to delete deadline.");
+      showSuccess("Deadline deleted.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to delete deadline.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function generateDraft() {
-    setBusy("draft-generate");
-    await fetch("/api/drafts/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ caseId: initialCase.id, title: draftTitle, type: draftType, language })
-    });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy("draft-generate");
+      setNotice(null);
+      const res = await fetch("/api/drafts/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId: initialCase.id, title: draftTitle, type: draftType, language })
+      });
+      await requireOk(res, "Unable to generate draft.");
+      showSuccess("Draft generated.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to generate draft.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function saveDraft(draft: any, content: string, verificationStatus?: string) {
-    setBusy(`draft-${draft.id}`);
-    await fetch(`/api/drafts/${draft.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content,
-        verificationStatus,
-        changeSummary: verificationStatus ? `Marked ${verificationStatus}` : "Edited draft content"
-      })
-    });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`draft-${draft.id}`);
+      setNotice(null);
+      const res = await fetch(`/api/drafts/${draft.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content,
+          verificationStatus,
+          changeSummary: verificationStatus ? `Marked ${verificationStatus}` : "Edited draft content"
+        })
+      });
+      await requireOk(res, "Unable to save draft.");
+      showSuccess("Draft saved.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to save draft.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function deleteDraft(id: string) {
-    setBusy(`draft-delete-${id}`);
-    await fetch(`/api/drafts/${id}`, { method: "DELETE" });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`draft-delete-${id}`);
+      setNotice(null);
+      const res = await fetch(`/api/drafts/${id}`, { method: "DELETE" });
+      await requireOk(res, "Unable to delete draft.");
+      showSuccess("Draft deleted.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to delete draft.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function sendProposal(
@@ -210,29 +323,58 @@ export function CaseWorkspaceLive({
     probability: number,
     proposalNotes: string
   ) {
-    setBusy(`proposal-${assignmentId}`);
-    await fetch(`/api/assignments/${assignmentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "proposal", feeProposal, probability, proposalNotes })
-    });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`proposal-${assignmentId}`);
+      setNotice(null);
+      const res = await fetch(`/api/assignments/${assignmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "proposal", feeProposal, probability, proposalNotes })
+      });
+      await requireOk(res, "Unable to send proposal.");
+      showSuccess("Proposal sent.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to send proposal.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function decideProposal(assignmentId: string, decision: "ACCEPTED" | "DECLINED") {
-    setBusy(`decision-${assignmentId}`);
-    await fetch(`/api/assignments/${assignmentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "decision", decision })
-    });
-    setBusy(null);
-    refresh();
+    try {
+      setBusy(`decision-${assignmentId}`);
+      setNotice(null);
+      const res = await fetch(`/api/assignments/${assignmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "decision", decision })
+      });
+      await requireOk(res, "Unable to update proposal.");
+      showSuccess(decision === "ACCEPTED" ? "Proposal approved." : "Proposal declined.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to update proposal.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
     <div className="space-y-7">
+      {notice ? (
+        <div
+          className={cn(
+            "rounded-2xl border p-4 text-sm shadow-sm animate-in fade-in-0 slide-in-from-top-1",
+            notice.type === "success"
+              ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              : "border-destructive/30 bg-destructive/10 text-destructive"
+          )}
+        >
+          {notice.text}
+        </div>
+      ) : null}
+
       <Card className="overflow-hidden border-border/70 shadow-sm">
         <CardContent className="p-0">
           <div className="border-b border-border/60 bg-muted/20 px-6 py-5 sm:px-7 sm:py-6">

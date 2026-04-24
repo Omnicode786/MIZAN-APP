@@ -20,6 +20,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
   const [duration, setDuration] = useState(6);
   const [argument, setArgument] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const active = useMemo(
     () => sessions.find((item) => item.status === "ACTIVE") || sessions[0],
@@ -27,49 +28,66 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
   );
 
   async function startSession() {
-    setLoading(true);
-    const res = await fetch("/api/debate/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ caseId, title, durationMinutes: duration, language })
-    });
-    setLoading(false);
-    if (res.ok) router.refresh();
+    try {
+      setLoading(true);
+      setError("");
+      const res = await fetch("/api/debate/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId, title, durationMinutes: duration, language })
+      });
+      await requireOk(res, "Unable to start debate.");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to start debate.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function sendTurn() {
     if (!active || !argument.trim()) return;
 
-    setLoading(true);
-    const res = await fetch(`/api/debate/session/${active.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: argument, language })
-    });
-    setLoading(false);
-
-    if (res.ok) {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await fetch(`/api/debate/session/${active.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: argument, language })
+      });
+      await requireOk(res, "Unable to submit argument.");
       setArgument("");
       router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to submit argument.");
+    } finally {
+      setLoading(false);
     }
   }
 
   async function finalize() {
     if (!active) return;
 
-    setLoading(true);
-    const res = await fetch(`/api/debate/session/${active.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language })
-    });
-    setLoading(false);
-
-    if (res.ok) router.refresh();
+    try {
+      setLoading(true);
+      setError("");
+      const res = await fetch(`/api/debate/session/${active.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language })
+      });
+      await requireOk(res, "Unable to finalize debate.");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to finalize debate.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Card>
+    <Card className="animate-in fade-in-0 slide-in-from-bottom-2">
       <CardContent className="p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -84,6 +102,12 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
             </Badge>
           ) : null}
         </div>
+
+        {error ? (
+          <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
 
         {!active || active.status !== "ACTIVE" ? (
           <div className="grid gap-3 md:grid-cols-[1fr_120px_auto]">
@@ -175,4 +199,10 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
       </CardContent>
     </Card>
   );
+}
+
+async function requireOk(response: Response, fallback: string) {
+  if (response.ok) return;
+  const data = await response.json().catch(() => null);
+  throw new Error(data?.error || fallback);
 }
