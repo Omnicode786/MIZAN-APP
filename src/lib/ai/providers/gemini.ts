@@ -5,13 +5,17 @@ type GeminiResult = {
   contextPreview?: string;
 };
 
+function envValue(value: string | undefined, fallback: string) {
+  return (value || fallback).trim().replace(/^["']|["']$/g, "");
+}
+
 async function callGemini(parts: any[]): Promise<GeminiResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = envValue(process.env.GEMINI_API_KEY, "");
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
 
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const model = envValue(process.env.GEMINI_MODEL, "gemini-2.5-flash");
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {

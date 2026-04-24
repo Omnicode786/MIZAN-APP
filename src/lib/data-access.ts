@@ -46,7 +46,7 @@ export async function getCaseDetail(caseId?: string) {
   const user = await getCurrentUserWithProfile();
   if (!user) return null;
 
-  return prisma.case.findFirst({
+  const detail = await prisma.case.findFirst({
     where:
       user.role === "LAWYER"
         ? {
@@ -79,6 +79,49 @@ export async function getCaseDetail(caseId?: string) {
       }
     }
   });
+
+  if (!detail) return null;
+
+  return {
+    ...detail,
+    assistantThreads: sanitizeAssistantThreads(detail.assistantThreads)
+  };
+}
+
+function sanitizeAssistantThreads<
+  T extends Array<{ messages: Array<{ role: string; content: string; confidence: number | null }> }>
+>(threads: T): T {
+  return threads.map((thread) => ({
+    ...thread,
+    messages: thread.messages.map((message) => {
+      if (message.role !== "AI" || !containsInternalPromptText(message.content)) {
+        return message;
+      }
+
+      return {
+        ...message,
+        content:
+          "Previous assistant response was hidden because it contained internal prompt text. Please ask the question again to generate a fresh answer.",
+        confidence: null
+      };
+    })
+  })) as T;
+}
+
+function containsInternalPromptText(content: string) {
+  const markers = [
+    "You are MIZAN's Pakistani legal workflow assistant.",
+    "You are LawSphere's Pakistani legal workflow assistant.",
+    "You are assistive, careful, and structured like a professional Pakistani lawyer",
+    "say you are trained on laws",
+    "Pakistan-law context:",
+    "Grounded case/document context:",
+    "Grounded context preview: Case workspace context:",
+    "User question:"
+  ];
+
+  const matchCount = markers.filter((marker) => content.includes(marker)).length;
+  return matchCount >= 2;
 }
 
 function average(values: number[]) {

@@ -42,6 +42,7 @@ export function AssistantPanel({
   const language = useLanguage();
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(threads[0]?.id || null);
 
   const activeThread = useMemo(
@@ -54,6 +55,7 @@ export function AssistantPanel({
 
     try {
       setLoading(true);
+      setError(null);
 
       const res = await fetch("/api/ai/chat", {
         method: "POST",
@@ -68,12 +70,14 @@ export function AssistantPanel({
         })
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (res.ok) {
         setQuestion("");
         setActiveThreadId(data.thread.id);
         router.refresh();
+      } else {
+        setError(data?.error || "The AI assistant could not answer right now.");
       }
     } finally {
       setLoading(false);
@@ -106,6 +110,12 @@ export function AssistantPanel({
             </select>
           ) : null}
         </div>
+
+        {error ? (
+          <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
 
         <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
           {(activeThread?.messages || []).map((message) => (

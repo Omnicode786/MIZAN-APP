@@ -4,10 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
-  BadgeCheck,
   BrainCircuit,
   BriefcaseBusiness,
-  FileText,
   LockKeyhole,
   Moon,
   Scale,
@@ -24,29 +22,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-const workspaceHighlights = [
+const highlights = [
   {
-    title: "Client workspace",
-    text: "Access your legal matters, documents, evidence, deadlines, drafts, lawyer requests, and case activity.",
+    title: "For clients",
+    text: "Open your legal matters, documents, drafts, deadlines, and lawyer requests.",
     icon: UserRoundCheck
   },
   {
-    title: "Lawyer workspace",
-    text: "Review assigned matters, send proposals, verify drafts, manage internal notes, and run case strategy tools.",
+    title: "For lawyers",
+    text: "Review assigned cases, proposals, evidence, notes, and case strategy tools.",
     icon: BriefcaseBusiness
   },
   {
-    title: "AI Case Agent",
-    text: "Use document-aware assistance, case readiness checks, evidence gap detection, and legal workflow recommendations.",
+    title: "AI-assisted workflow",
+    text: "Continue with document-aware help, case readiness checks, and structured guidance.",
     icon: BrainCircuit
   }
-];
-
-const trustItems = [
-  "Role-based account access",
-  "Case-specific legal workspaces",
-  "Document-aware AI assistance",
-  "Lawyer verification workflow"
 ];
 
 export default function LoginPage() {
@@ -57,7 +48,8 @@ export default function LoginPage() {
   useEffect(() => {
     const storedTheme = localStorage.getItem("mizan-theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const nextTheme = storedTheme === "dark" || (!storedTheme && prefersDark) ? "dark" : "light";
+    const nextTheme =
+      storedTheme === "dark" || (!storedTheme && prefersDark) ? "dark" : "light";
 
     setTheme(nextTheme);
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
@@ -75,14 +67,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-1/2 top-[-220px] h-[560px] w-[980px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute right-[-220px] top-[260px] h-[460px] w-[460px] rounded-full bg-violet-500/10 blur-3xl" />
-        <div className="absolute bottom-[-180px] left-[-140px] h-[460px] w-[460px] rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute left-[22%] top-[48%] h-[280px] w-[280px] rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="absolute left-1/2 top-[-260px] h-[620px] w-[1000px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute right-[-240px] top-[220px] h-[480px] w-[480px] rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute bottom-[-220px] left-[-160px] h-[520px] w-[520px] rounded-full bg-cyan-500/10 blur-3xl" />
       </div>
 
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8">
-        <header className="sticky top-5 z-40 flex items-center justify-between gap-4 rounded-full border border-border/70 bg-card/80 px-5 py-3 shadow-sm backdrop-blur-xl">
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-5 py-6 md:px-6 md:py-8">
+        <header className="flex items-center justify-between gap-4 rounded-full border border-border/70 bg-card/80 px-5 py-3 shadow-sm backdrop-blur-xl">
           <Logo />
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
@@ -97,8 +88,9 @@ export default function LoginPage() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2">
             <LanguageToggle compact />
+
             <Button
               type="button"
               variant="outline"
@@ -114,11 +106,7 @@ export default function LoginPage() {
               )}
             </Button>
 
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <Link href="/">Home</Link>
-            </Button>
-
-            <Button asChild>
+            <Button asChild className="hidden sm:inline-flex">
               <Link href="/signup">
                 {t(language, "signup")}
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -127,115 +115,87 @@ export default function LoginPage() {
           </div>
         </header>
 
-        <main className="grid flex-1 gap-10 py-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
-          <section className="space-y-8">
-            <div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">
-                  <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                  Secure legal workspace
-                </Badge>
-                <Badge variant="secondary">
-                  <Scale className="mr-1 h-3.5 w-3.5" />
-                  Client and lawyer access
-                </Badge>
-              </div>
-
-              <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-                Sign in to your structured legal workspace.
-              </h1>
-
-              <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-                Continue your legal work inside MIZAN. Manage matters, review
-                documents, track deadlines, prepare drafts, collaborate through
-                structured case records, and use AI assistance grounded in your case
-                context.
-              </p>
+        <main className="grid flex-1 gap-10 py-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-14">
+          <section className="mx-auto w-full max-w-2xl lg:mx-0">
+            <div className="inline-flex flex-wrap gap-2">
+              <Badge variant="outline">
+                <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                Secure legal workspace
+              </Badge>
+              <Badge variant="secondary">
+                <Scale className="mr-1 h-3.5 w-3.5" />
+                Client and lawyer access
+              </Badge>
             </div>
 
-            <div className="grid gap-4">
-              {workspaceHighlights.map((item) => {
+            <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
+              Welcome back to MIZAN.
+            </h1>
+
+            <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
+              Sign in to continue managing matters, documents, deadlines, drafts,
+              lawyer requests, and structured legal workflows.
+            </p>
+
+            <div className="mt-8 grid gap-3">
+              {highlights.map((item) => {
                 const Icon = item.icon;
 
                 return (
-                  <Card
+                  <div
                     key={item.title}
-                    className="group border-border/70 bg-card/80 transition hover:-translate-y-1 hover:shadow-xl"
+                    className="group rounded-3xl border border-border/70 bg-card/75 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
                   >
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-105">
-                          <Icon className="h-5 w-5" />
-                        </div>
-
-                        <div>
-                          <h2 className="font-medium">{item.title}</h2>
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                            {item.text}
-                          </p>
-                        </div>
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-105">
+                        <Icon className="h-5 w-5" />
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      <div>
+                        <h2 className="text-sm font-medium">{item.title}</h2>
+                        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                          {item.text}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {trustItems.map((item) => (
-                <div key={item} className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <BadgeCheck className="h-4 w-4 shrink-0 text-primary" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-3xl border border-border/70 bg-card/75 p-5 shadow-sm backdrop-blur">
+            <div className="mt-8 rounded-3xl border border-border/70 bg-card/70 p-5 shadow-sm backdrop-blur">
               <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <LockKeyhole className="h-5 w-5" />
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium">Your role controls your workspace.</p>
+                  <p className="text-sm font-medium">Role-aware access</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    Clients only access their own matters. Lawyers only access assigned
-                    cases, private notes, proposals, and review tools connected to their profile.
+                    Clients access their own matters. Lawyers access only assigned
+                    cases, private notes, proposals, and review tools connected to
+                    their profile.
                   </p>
                 </div>
               </div>
-
-              <p className="mt-5 text-sm text-muted-foreground">
-                Need an account?{" "}
-                <Link href="/signup" className="font-medium text-primary underline underline-offset-4">
-                  Create one
-                </Link>
-              </p>
             </div>
           </section>
 
           <section className="grid place-items-center">
-            <div className="w-full max-w-xl">
-              <Card className="overflow-hidden border-border/70 bg-card/85 shadow-2xl backdrop-blur">
+            <div className="w-full max-w-lg">
+              <Card className="overflow-hidden border-border/70 bg-card/90 shadow-2xl backdrop-blur">
                 <CardContent className="p-0">
                   <div className="border-b border-border/70 bg-muted/20 p-6">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline">
-                        <FileText className="mr-1 h-3.5 w-3.5" />
-                        Case access
-                      </Badge>
-                      <Badge variant="secondary">
-                        <LockKeyhole className="mr-1 h-3.5 w-3.5" />
-                        Protected session
-                      </Badge>
-                    </div>
+                    <Badge variant="outline">
+                      <LockKeyhole className="mr-1 h-3.5 w-3.5" />
+                      Protected session
+                    </Badge>
 
                     <h2 className="mt-4 text-2xl font-semibold tracking-tight">
-                      Welcome back
+                      Sign in
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Sign in to continue from your saved cases, drafts, deadlines,
-                      lawyer requests, proposals, and activity history.
+                      Continue from your saved workspace and active legal matters.
                     </p>
                   </div>
 
@@ -245,37 +205,31 @@ export default function LoginPage() {
                 </CardContent>
               </Card>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/lawyers"
-                  className="group rounded-3xl border border-border/70 bg-card/70 p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
+                  href="/signup"
+                  className="group flex flex-1 items-center justify-between rounded-3xl border border-border/70 bg-card/70 p-4 text-sm transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <BriefcaseBusiness className="h-5 w-5" />
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+                  <div>
+                    <p className="font-medium">Create workspace</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Join as a client or lawyer.
+                    </p>
                   </div>
-                  <p className="mt-4 text-sm font-medium">Explore lawyers</p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    View public lawyer profiles before sending a case request.
-                  </p>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
                 </Link>
 
                 <Link
-                  href="/signup"
-                  className="group rounded-3xl border border-border/70 bg-card/70 p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
+                  href="/lawyers"
+                  className="group flex flex-1 items-center justify-between rounded-3xl border border-border/70 bg-card/70 p-4 text-sm transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <UserRoundCheck className="h-5 w-5" />
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+                  <div>
+                    <p className="font-medium">Explore lawyers</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      View public profiles.
+                    </p>
                   </div>
-                  <p className="mt-4 text-sm font-medium">Create workspace</p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    Join as a client or lawyer and start with the right workflow.
-                  </p>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
                 </Link>
               </div>
             </div>

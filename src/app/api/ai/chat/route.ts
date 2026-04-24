@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { AiProviderError } from "@/lib/ai";
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { answerPakistaniLegalQuestion } from "@/lib/legal-ai";
 import { normalizeLanguage } from "@/lib/language";
@@ -26,8 +27,40 @@ export async function POST(request: Request) {
     if (!legalCase) return NextResponse.json({ error: "Case not found." }, { status: 404 });
   }
 
+  let ai;
+  try {
+    ai = await answerPakistaniLegalQuestion({
+      question: body.question,
+      caseId: body.caseId,
+      documentId: body.documentId,
+      role: user.role,
+      simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
+      language
+    });
+  } catch (error) {
+    if (error instanceof AiProviderError) {
+      return NextResponse.json(
+        {
+          error:
+            "The AI provider could not return an answer. Please check the configured provider, model, and API key, then try again."
+        },
+        { status: 502 }
+      );
+    }
+
+    throw error;
+  }
+
   let threadId = body.threadId;
-  if (!threadId) {
+  if (threadId) {
+    const existingThread = await prisma.assistantThread.findFirst({
+      where: { id: threadId, createdById: user.id }
+    });
+
+    if (!existingThread) {
+      return NextResponse.json({ error: "Thread not found." }, { status: 404 });
+    }
+  } else {
     const thread = await prisma.assistantThread.create({
       data: {
         createdById: user.id,
@@ -40,32 +73,28 @@ export async function POST(request: Request) {
     threadId = thread.id;
   }
 
-  await prisma.assistantMessage.create({
-    data: {
-      threadId,
-      role: "USER",
-      content: body.question
-    }
-  });
-
-  const ai = await answerPakistaniLegalQuestion({
-    question: body.question,
-    caseId: body.caseId,
-    documentId: body.documentId,
-    role: user.role,
-    simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
-    language
-  });
-
-  const message = await prisma.assistantMessage.create({
-    data: {
-      threadId,
-      role: "AI",
-      content: ai.text,
-      confidence: ai.confidence,
-      sources: ai.sources
-    }
-  });
+  const [, message] = await prisma.$transaction([
+    prisma.assistantMessage.create({
+      data: {
+        threadId,
+        role: "USER",
+        content: body.question
+      }
+    }),
+    prisma.assistantMessage.create({
+      data: {
+        threadId,
+        role: "AI",
+        content: ai.text,
+        confidence: ai.confidence,
+        sources: ai.sources
+      }
+    }),
+    prisma.assistantThread.update({
+      where: { id: threadId },
+      data: { updatedAt: new Date() }
+    })
+  ]);
 
   const thread = await prisma.assistantThread.findUnique({
     where: { id: threadId },

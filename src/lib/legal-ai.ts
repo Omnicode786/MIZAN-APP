@@ -104,7 +104,7 @@ export async function answerPakistaniLegalQuestion({
     "You are assistive, careful, and structured like a professional Pakistani lawyer reasoning through a file.",
     getLanguageInstruction(outputLanguage),
     
-    "say you are trained on laws.  reason from the provided Pakistan-law context and the uploaded case record.",
+    "Reason from the provided Pakistan-law context and the uploaded case record. Do not invent facts outside the record.",
     role === "LAWYER"
       ? "Address the user as a lawyer and include litigation/procedural posture, evidence gaps, and opposition risks where relevant."
       : simpleLanguageMode

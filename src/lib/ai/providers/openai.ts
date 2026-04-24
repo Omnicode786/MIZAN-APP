@@ -5,13 +5,17 @@ type OpenAIResult = {
   contextPreview?: string;
 };
 
+function envValue(value: string | undefined, fallback: string) {
+  return (value || fallback).trim().replace(/^["']|["']$/g, "");
+}
+
 async function callOpenAI(body: any): Promise<OpenAIResult> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = envValue(process.env.OPENAI_API_KEY, "");
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured.");
   }
 
-  const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+  const model = envValue(process.env.OPENAI_MODEL, "gpt-4.1-mini");
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
