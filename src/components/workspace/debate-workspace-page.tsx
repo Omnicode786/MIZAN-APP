@@ -435,7 +435,7 @@ export function DebateWorkspacePage({
                               onClick={sendTurn}
                               disabled={loading || !argument.trim()}
                             >
-                              {loading ? "Submitting…" : "Submit argument"}
+                              {loading ? "Submitting..." : "Submit argument"}
                             </Button>
                             <Button
                               variant="outline"

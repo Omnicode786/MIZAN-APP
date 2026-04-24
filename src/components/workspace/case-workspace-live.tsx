@@ -459,7 +459,7 @@ export function CaseWorkspaceLive({
 
               <div className="flex flex-wrap gap-3">
                 <Button onClick={saveCase} disabled={busy === "case"}>
-                  {busy === "case" ? "Saving…" : "Save case changes"}
+                  {busy === "case" ? "Saving..." : "Save case changes"}
                 </Button>
                 {role === "CLIENT" ? (
                   <Button variant="outline" onClick={deleteCase} disabled={busy === "delete-case"}>
@@ -760,7 +760,7 @@ export function CaseWorkspaceLive({
                         >
                           <p className="text-sm leading-6 text-muted-foreground">{note.body}</p>
                           <p className="mt-2 text-xs text-muted-foreground">
-                            {note.author?.name} · {relativeDate(note.createdAt)}
+                            {note.author?.name} - {relativeDate(note.createdAt)}
                           </p>
                         </div>
                       ))}
@@ -820,7 +820,7 @@ export function CaseWorkspaceLive({
                         <p className="font-medium">{deadline.title}</p>
                         <p className="text-sm text-muted-foreground">
                           Due {formatDate(deadline.dueDate)}
-                          {deadline.notes ? ` · ${deadline.notes}` : ""}
+                          {deadline.notes ? ` - ${deadline.notes}` : ""}
                         </p>
                       </div>
 
@@ -874,7 +874,7 @@ export function CaseWorkspaceLive({
                     onChange={(e) => setDeadlineDate(e.target.value)}
                   />
                   <Button onClick={addDeadline} disabled={busy === "deadline"}>
-                    {busy === "deadline" ? "Adding…" : "Add"}
+                    {busy === "deadline" ? "Adding..." : "Add"}
                   </Button>
                 </div>
               </div>
@@ -1062,7 +1062,7 @@ function ProposalCard({
               }
               disabled={busy === `proposal-${assignment.id}`}
             >
-              {busy === `proposal-${assignment.id}` ? "Sending…" : "Send proposal"}
+              {busy === `proposal-${assignment.id}` ? "Sending..." : "Send proposal"}
             </Button>
           </div>
         </div>
@@ -1113,8 +1113,8 @@ function ProposalCard({
         <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-muted-foreground">
           Contact unlocked for off-platform discussion. Lawyer email:{" "}
           {assignment.lawyer.user.email}
-          {caseContact?.email ? ` · Client email: ${caseContact.email}` : ""}
-          {clientProfile?.phone ? ` · Client phone: ${clientProfile.phone}` : ""}
+          {caseContact?.email ? ` - Client email: ${caseContact.email}` : ""}
+          {clientProfile?.phone ? ` - Client phone: ${clientProfile.phone}` : ""}
         </div>
       ) : null}
     </div>
@@ -1130,7 +1130,7 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
         <div>
           <p className="font-medium">{draft.title}</p>
           <p className="text-xs text-muted-foreground">
-            {toTitleCase(draft.type)} · {draft.versions?.length || 0} versions
+            {toTitleCase(draft.type)} - {draft.versions?.length || 0} versions
           </p>
         </div>
 

@@ -69,7 +69,7 @@ export function LiveCaseCreate() {
         </div>
         <div className="mt-4 flex items-center gap-3">
           <Button onClick={submit} disabled={loading || title.trim().length < 3}>
-            {loading ? "Creating…" : "Create case"}
+            {loading ? "Creating..." : "Create case"}
           </Button>
           {message ? <p className="text-sm text-rose-500">{message}</p> : null}
         </div>

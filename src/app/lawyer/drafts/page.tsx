@@ -35,7 +35,7 @@ export default async function LawyerDraftsPage() {
                 </div>
                 <Badge variant={draft.verificationStatus === 'VERIFIED' ? 'success' : draft.verificationStatus === 'NEEDS_CORRECTION' ? 'destructive' : 'warning'}>{draft.verificationStatus}</Badge>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">{draft.currentContent.slice(0, 280)}{draft.currentContent.length > 280 ? '…' : ''}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{draft.currentContent.slice(0, 280)}{draft.currentContent.length > 280 ? '...' : ''}</p>
               <div className="mt-4 flex justify-end">
                 <Button asChild variant="outline"><Link href={`/lawyer/cases/${draft.caseId}`}>Open case</Link></Button>
               </div>

@@ -168,7 +168,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
 
             <div className="flex gap-3">
               <Button onClick={sendTurn} disabled={loading || !argument.trim()}>
-                {loading ? "Submitting…" : "Submit argument"}
+                {loading ? "Submitting..." : "Submit argument"}
               </Button>
               <Button variant="outline" onClick={finalize} disabled={loading}>
                 {t(language, "endAndScore")}

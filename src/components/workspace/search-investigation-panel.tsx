@@ -300,7 +300,7 @@ function SearchResultCard({
             </h3>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Case: {item.caseTitle} · {item.caseCategory ? toTitleCase(item.caseCategory) : "Uncategorized"} ·{" "}
+              Case: {item.caseTitle} - {item.caseCategory ? toTitleCase(item.caseCategory) : "Uncategorized"} -{" "}
               {relativeDate(item.createdAt)}
             </p>
 

@@ -410,7 +410,7 @@ function TimelinePanel({ items }: { items: any[] }) {
 
                       {date ? (
                         <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                          {formatDate(date)} · {relativeDate(date)}
+                          {formatDate(date)} - {relativeDate(date)}
                         </p>
                       ) : null}
                     </div>
