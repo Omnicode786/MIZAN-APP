@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,
   CalendarClock,
+  CheckCircle2,
   FileText,
   FolderOpen,
   MessageSquare,
@@ -26,6 +27,34 @@ import { t } from "@/lib/translations";
 import { TimelineView } from "@/components/workspace/timeline-view";
 import { FormattedAiContent } from "@/utils/ai-content";
 import { cn, formatDate, relativeDate, toTitleCase } from "@/lib/utils";
+
+function asArray<T = any>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function SafePill({
+  children,
+  variant = "secondary",
+  className
+}: {
+  children: ReactNode;
+  variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
+  className?: string;
+}) {
+  return (
+    <Badge
+      variant={variant}
+      className={cn(
+        "max-w-full rounded-full px-2.5 py-1 text-[11px] leading-none",
+        className
+      )}
+    >
+      <span className="block max-w-[170px] truncate sm:max-w-[220px]">
+        {children}
+      </span>
+    </Badge>
+  );
+}
 
 export function CaseWorkspaceLive({
   initialCase,
@@ -57,9 +86,18 @@ export function CaseWorkspaceLive({
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  const documents = asArray(initialCase.documents);
+  const deadlines = asArray(initialCase.deadlines);
+  const drafts = asArray(initialCase.drafts);
+  const comments = asArray(initialCase.comments);
+  const internalNotes = asArray(initialCase.internalNotes);
+  const activityLogs = asArray(initialCase.activityLogs);
+  const timelineEvents = asArray(initialCase.timelineEvents);
+  const assignments = asArray(initialCase.assignments);
+
   const pendingAssignments = useMemo(
-    () => (initialCase.assignments || []).filter((item: any) => item.status === "PENDING"),
-    [initialCase.assignments]
+    () => assignments.filter((item: any) => item.status === "PENDING"),
+    [assignments]
   );
 
   async function refresh() {
@@ -104,6 +142,7 @@ export function CaseWorkspaceLive({
 
   async function deleteCase() {
     if (!confirm("Delete this case and all its records?")) return;
+
     try {
       setBusy("delete-case");
       setNotice(null);
@@ -122,6 +161,7 @@ export function CaseWorkspaceLive({
     form.append("caseId", initialCase.id);
     form.append("file", file);
     form.append("language", language);
+
     try {
       setUploading(true);
       setNotice(null);
@@ -365,7 +405,7 @@ export function CaseWorkspaceLive({
       {notice ? (
         <div
           className={cn(
-            "rounded-2xl border p-4 text-sm shadow-sm animate-in fade-in-0 slide-in-from-top-1",
+            "rounded-2xl border p-4 text-sm shadow-sm transition-all",
             notice.type === "success"
               ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
               : "border-destructive/30 bg-destructive/10 text-destructive"
@@ -375,51 +415,57 @@ export function CaseWorkspaceLive({
         </div>
       ) : null}
 
-      <Card className="overflow-hidden border-border/70 shadow-sm">
+      <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
         <CardContent className="p-0">
-          <div className="border-b border-border/60 bg-muted/20 px-6 py-5 sm:px-7 sm:py-6">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">{toTitleCase(initialCase.category)}</Badge>
-                  <Badge variant="secondary">{status}</Badge>
-                  <Badge
+          <div className="relative overflow-hidden border-b border-border/60 bg-muted/20 px-5 py-5 sm:px-7 sm:py-6">
+            <div className="pointer-events-none absolute right-[-120px] top-[-140px] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+            <div className="pointer-events-none absolute bottom-[-160px] left-[20%] h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
+
+            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+              <div className="min-w-0 space-y-4">
+                <div className="flex max-w-full flex-wrap gap-2">
+                  <SafePill variant="outline">{toTitleCase(initialCase.category || "Uncategorized")}</SafePill>
+                  <SafePill variant="secondary">{status}</SafePill>
+                  <SafePill
                     variant={
                       priority === "HIGH" || priority === "CRITICAL" ? "destructive" : "warning"
                     }
                   >
                     {priority}
-                  </Badge>
-                  <Badge variant="success">
-                    <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                    Health {Math.round(initialCase.caseHealthScore)}%
-                  </Badge>
-                  {!!pendingAssignments.length && (
-                    <Badge variant="warning">{pendingAssignments.length} pending request(s)</Badge>
-                  )}
+                  </SafePill>
+                  <SafePill variant="success">
+                    Health {Math.round(Number(initialCase.caseHealthScore) || 0)}%
+                  </SafePill>
+                  {!!pendingAssignments.length ? (
+                    <SafePill variant="warning">
+                      {pendingAssignments.length} pending request{pendingAssignments.length === 1 ? "" : "s"}
+                    </SafePill>
+                  ) : null}
                 </div>
 
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">{initialCase.title}</h1>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Live legal workspace for structured case handling, evidence review, drafting,
-                    deadlines, and verified collaboration.
+                <div className="min-w-0">
+                  <h1 className="break-words text-2xl font-semibold tracking-tight md:text-3xl">
+                    {initialCase.title}
+                  </h1>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                    Live legal workspace for structured case handling, evidence review,
+                    drafting, deadlines, and verified collaboration.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:w-[500px]">
-                <MetricCard label="Documents" value={initialCase.documents?.length || 0} />
-                <MetricCard label="Deadlines" value={initialCase.deadlines?.length || 0} />
-                <MetricCard label="Drafts" value={initialCase.drafts?.length || 0} />
-                <MetricCard label="Activity" value={initialCase.activityLogs?.length || 0} />
+              <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4 xl:max-w-[520px]">
+                <MetricCard label="Documents" value={documents.length} />
+                <MetricCard label="Deadlines" value={deadlines.length} />
+                <MetricCard label="Drafts" value={drafts.length} />
+                <MetricCard label="Activity" value={activityLogs.length} />
               </div>
             </div>
           </div>
 
-          <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
+          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
             <div className="space-y-5">
-              <SectionHeader
+              <MiniSectionHeader
                 icon={FolderOpen}
                 title="Case details"
                 description="Edit the live matter record, current stage, and case posture."
@@ -432,7 +478,7 @@ export function CaseWorkspaceLive({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm"
+                  className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-primary/20"
                 >
                   {["DRAFT", "INTAKE", "ACTIVE", "REVIEW", "ESCALATED", "CLOSED"].map((item) => (
                     <option key={item}>{item}</option>
@@ -442,7 +488,7 @@ export function CaseWorkspaceLive({
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm"
+                  className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-primary/20"
                 >
                   {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((item) => (
                     <option key={item}>{item}</option>
@@ -470,26 +516,10 @@ export function CaseWorkspaceLive({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <ScoreCard
-                label="Evidence strength"
-                value={initialCase.evidenceStrength}
-                tone="blue"
-              />
-              <ScoreCard
-                label="Evidence completeness"
-                value={initialCase.evidenceCompleteness}
-                tone="emerald"
-              />
-              <ScoreCard
-                label="Draft readiness"
-                value={initialCase.draftReadiness}
-                tone="amber"
-              />
-              <ScoreCard
-                label="Escalation readiness"
-                value={initialCase.escalationReadiness}
-                tone="violet"
-              />
+              <ScoreCard label="Evidence strength" value={initialCase.evidenceStrength} tone="blue" />
+              <ScoreCard label="Evidence completeness" value={initialCase.evidenceCompleteness} tone="emerald" />
+              <ScoreCard label="Draft readiness" value={initialCase.draftReadiness} tone="amber" />
+              <ScoreCard label="Escalation readiness" value={initialCase.escalationReadiness} tone="violet" />
             </div>
           </div>
         </CardContent>
@@ -497,110 +527,50 @@ export function CaseWorkspaceLive({
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
         <div className="space-y-6">
-          <Card>
-            <CardContent className="p-5 sm:p-6">
-              <SectionHeader
-                icon={Upload}
-                title="Document intake and evidence vault"
-                description="Upload files, generate grounded summaries, and turn them into searchable evidence."
-                action={
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => e.target.files?.[0] && uploadDocument(e.target.files[0])}
-                    />
-                    {uploading ? "Uploading..." : t(language, "uploadDocument")}
-                  </label>
-                }
+          <PanelCard>
+            <MiniSectionHeader
+              icon={Upload}
+              title="Document intake and evidence vault"
+              description="Upload files, generate grounded summaries, and turn them into searchable evidence."
+              action={
+                <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 sm:w-auto">
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => e.target.files?.[0] && uploadDocument(e.target.files[0])}
+                  />
+                  {uploading ? "Uploading..." : t(language, "uploadDocument")}
+                </label>
+              }
+            />
+
+            <div className="mt-5 space-y-3">
+              {documents.map((document: any) => (
+                <DocumentCard
+                  key={document.id}
+                  document={document}
+                  busy={busy}
+                  onAsk={() => setSelectedDocumentId(document.id)}
+                  onDelete={() => removeDocument(document.id)}
+                />
+              ))}
+
+              {!documents.length ? (
+                <EmptyState text="No documents yet. Upload a contract, screenshot, PDF, email export, or notice to activate the workflow." />
+              ) : null}
+            </div>
+          </PanelCard>
+
+          {assignments.length ? (
+            <PanelCard>
+              <MiniSectionHeader
+                icon={Scale}
+                title="Lawyer request and proposal flow"
+                description="Clients initiate the request. Lawyers review the live record, send a proposal, and contact details unlock only after approval."
               />
 
-              <div className="mt-5 space-y-3">
-                {initialCase.documents.map((document: any) => (
-                  <div
-                    key={document.id}
-                    className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm transition hover:border-border"
-                  >
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium">{document.fileName}</p>
-                          {document.confidence ? (
-                            <Badge variant="secondary">
-                              {Math.round(document.confidence * 100)}%
-                            </Badge>
-                          ) : null}
-                          {document.probableCategory ? (
-                            <Badge variant="outline">{document.probableCategory}</Badge>
-                          ) : null}
-                        </div>
-
-                        <div className="mt-3 rounded-xl bg-muted/25 p-3">
-                          {document.aiSummary ? (
-                            <>
-                              <FormattedAiContent content={document.aiSummary} />
-                              <AiTranslationActions text={document.aiSummary} />
-                            </>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">
-                              Summary not ready yet.
-                            </p>
-                          )}
-                        </div>
-
-                        {(document.tags || []).length ? (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {(document.tags || []).map((tag: string) => (
-                              <Badge key={tag} variant="outline">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        <p className="mt-3 text-xs text-muted-foreground">
-                          Uploaded {relativeDate(document.createdAt)}
-                        </p>
-                      </div>
-
-                      <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 md:flex-col md:items-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedDocumentId(document.id)}
-                        >
-                          Ask AI about this
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeDocument(document.id)}
-                          disabled={busy === `doc-${document.id}`}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {!initialCase.documents.length ? (
-                  <EmptyState text="No documents yet. Upload a contract, screenshot, PDF, email export, or notice to activate the workflow." />
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
-
-          {(role === "CLIENT" || role === "LAWYER") && initialCase.assignments?.length ? (
-            <Card>
-              <CardContent className="space-y-4 p-5 sm:p-6">
-                <SectionHeader
-                  icon={Scale}
-                  title="Lawyer request and proposal flow"
-                  description="Clients initiate the request. Lawyers review the live record, send a proposal, and contact details unlock only after approval."
-                />
-
-                {initialCase.assignments.map((assignment: any) => (
+              <div className="mt-4 space-y-4">
+                {assignments.map((assignment: any) => (
                   <ProposalCard
                     key={assignment.id}
                     assignment={assignment}
@@ -613,8 +583,8 @@ export function CaseWorkspaceLive({
                     clientProfile={initialCase.client}
                   />
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </PanelCard>
           ) : null}
 
           <AssistantPanel
@@ -625,274 +595,157 @@ export function CaseWorkspaceLive({
             simpleLanguageMode={simpleLanguageMode}
           />
 
-          <Card>
-            <CardContent className="p-5 sm:p-6">
-              <SectionHeader
-                icon={FileText}
-                title={t(language, "draftingStudio")}
-                action={
-                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
-                    <select
-                      value={draftType}
-                      onChange={(e) => setDraftType(e.target.value)}
-                      className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm sm:w-auto"
-                    >
-                      {[
-                        "LEGAL_NOTICE",
-                        "COMPLAINT_LETTER",
-                        "WARNING_LETTER",
-                        "RESPONSE_LETTER",
-                        "REFUND_REQUEST",
-                        "GRIEVANCE_SUBMISSION",
-                        "CONTRACT_REVISION",
-                        "OPINION_BRIEF",
-                        "OTHER"
-                      ].map((item) => (
-                        <option key={item}>{item}</option>
-                      ))}
-                    </select>
+          <PanelCard>
+            <MiniSectionHeader
+              icon={FileText}
+              title={t(language, "draftingStudio")}
+              description="Generate, edit, version, and verify legal drafts connected to this matter."
+              action={
+                <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[170px_220px_auto]">
+                  <select
+                    value={draftType}
+                    onChange={(e) => setDraftType(e.target.value)}
+                    className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-primary/20"
+                  >
+                    {[
+                      "LEGAL_NOTICE",
+                      "COMPLAINT_LETTER",
+                      "WARNING_LETTER",
+                      "RESPONSE_LETTER",
+                      "REFUND_REQUEST",
+                      "GRIEVANCE_SUBMISSION",
+                      "CONTRACT_REVISION",
+                      "OPINION_BRIEF",
+                      "OTHER"
+                    ].map((item) => (
+                      <option key={item}>{item}</option>
+                    ))}
+                  </select>
 
-                    <Input
-                      value={draftTitle}
-                      onChange={(e) => setDraftTitle(e.target.value)}
-                      placeholder="Draft title"
-                      className="w-full sm:w-56"
-                    />
+                  <Input
+                    value={draftTitle}
+                    onChange={(e) => setDraftTitle(e.target.value)}
+                    placeholder="Draft title"
+                  />
 
-                    <Button onClick={generateDraft} disabled={busy === "draft-generate"} className="sm:self-auto">
-                      {busy === "draft-generate" ? "Generating..." : t(language, "generate")}
-                    </Button>
-                  </div>
-                }
+                  <Button onClick={generateDraft} disabled={busy === "draft-generate"}>
+                    {busy === "draft-generate" ? "Generating..." : t(language, "generate")}
+                  </Button>
+                </div>
+              }
+            />
+
+            <div className="mt-4 space-y-4">
+              {drafts.map((draft: any) => (
+                <EditableDraftCard
+                  key={draft.id}
+                  draft={draft}
+                  role={role}
+                  busy={busy}
+                  onSave={saveDraft}
+                  onDelete={deleteDraft}
+                />
+              ))}
+
+              {!drafts.length ? (
+                <EmptyState text="No draft exists yet. Generate a legal notice, complaint, or response from the live case record." />
+              ) : null}
+            </div>
+          </PanelCard>
+
+          <PanelCard>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <CollaborationPanel
+                title={t(language, "sharedCollaboration")}
+                description="Visible to both sides once the matter is being handled in the shared workspace."
+                comments={comments}
+                currentUser={currentUser}
+                comment={comment}
+                setComment={setComment}
+                busy={busy}
+                onSend={() => addComment("SHARED")}
+                onDelete={removeComment}
               />
 
-              <div className="mt-4 space-y-4">
-                {initialCase.drafts.map((draft: any) => (
-                  <EditableDraftCard
-                    key={draft.id}
-                    draft={draft}
-                    role={role}
-                    busy={busy}
-                    onSave={saveDraft}
-                    onDelete={deleteDraft}
-                  />
-                ))}
-
-                {!initialCase.drafts.length ? (
-                  <EmptyState text="No draft exists yet. Generate a legal notice, complaint, or response from the live case record." />
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-5 sm:p-6">
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div>
-                  <SectionHeader
-                    icon={MessageSquare}
-                    title={t(language, "sharedCollaboration")}
-                    description="Visible to both sides once the matter is being handled in the shared workspace."
-                  />
-
-                  <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
-                    {initialCase.comments.map((item: any) => (
-                      <div key={item.id} className="rounded-2xl border border-border/70 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="font-medium">{item.author?.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {relativeDate(item.createdAt)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{item.visibility}</Badge>
-                            {item.authorId === currentUser.id ? (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => removeComment(item.id)}
-                              >
-                                Delete
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                          {item.body}
-                        </p>
-                      </div>
-                    ))}
-
-                    {!initialCase.comments.length ? (
-                      <EmptyState text="No shared messages yet." compact />
-                    ) : null}
-                  </div>
-
-                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                    <Input
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="Add a shared case comment"
-                    />
-                    <Button
-                      onClick={() => addComment("SHARED")}
-                      disabled={busy === "comment" || !comment.trim()}
-                    >
-                      Send
-                    </Button>
-                  </div>
-                </div>
-
-                {role === "LAWYER" ? (
-                  <div>
-                    <SectionHeader
-                      icon={ShieldCheck}
-                      title={t(language, "internalNotes")}
-                      description="Visible only to the lawyer side of the case."
-                    />
-
-                    <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
-                      {initialCase.internalNotes.map((note: any) => (
-                        <div
-                          key={note.id}
-                          className="rounded-2xl border border-border/70 bg-muted/20 p-4"
-                        >
-                          <p className="text-sm leading-6 text-muted-foreground">{note.body}</p>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            {note.author?.name} - {relativeDate(note.createdAt)}
-                          </p>
-                        </div>
-                      ))}
-
-                      {!initialCase.internalNotes.length ? (
-                        <EmptyState text="No internal notes yet." compact />
-                      ) : null}
-                    </div>
-
-                    <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                      <Input
-                        value={privateNote}
-                        onChange={(e) => setPrivateNote(e.target.value)}
-                        placeholder="Add a lawyer-only internal note"
-                      />
-                      <Button
-                        onClick={() => addComment("PRIVATE")}
-                        disabled={busy === "comment" || !privateNote.trim()}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
+              {role === "LAWYER" ? (
+                <InternalNotesPanel
+                  notes={internalNotes}
+                  privateNote={privateNote}
+                  setPrivateNote={setPrivateNote}
+                  busy={busy}
+                  onSave={() => addComment("PRIVATE")}
+                />
+              ) : null}
+            </div>
+          </PanelCard>
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardContent className="p-5 sm:p-6">
-              <SectionHeader
-                icon={CalendarClock}
-                title={t(language, "timeline")}
-                description="hello event log with key evidence dates and recommended next steps."
-              />
-              <div className="mt-4">
-                <TimelineView items={initialCase.timelineEvents || []} />
+          <PanelCard>
+            <MiniSectionHeader
+              icon={CalendarClock}
+              title={t(language, "timeline")}
+              description="Live event log with key evidence dates and recommended next steps."
+            />
+            <div className="mt-4">
+              <TimelineView items={timelineEvents} />
+            </div>
+          </PanelCard>
+
+          <PanelCard>
+            <MiniSectionHeader
+              icon={CalendarClock}
+              title={t(language, "deadlineTracker")}
+              description="Track AI-detected and manual deadlines from the live file."
+            />
+
+            <div className="mt-4 space-y-3">
+              {deadlines.map((deadline: any) => (
+                <DeadlineRow
+                  key={deadline.id}
+                  deadline={deadline}
+                  onToggle={() =>
+                    updateDeadline(
+                      deadline.id,
+                      deadline.status === "COMPLETED" ? "UPCOMING" : "COMPLETED"
+                    )
+                  }
+                  onDelete={() => deleteDeadline(deadline.id)}
+                />
+              ))}
+
+              {!deadlines.length ? (
+                <EmptyState compact text="No deadlines yet. Add one manually or upload a document for AI-detected dates." />
+              ) : null}
+
+              <div className="grid gap-3 rounded-2xl border border-dashed border-border p-4 md:grid-cols-[minmax(0,1fr)_170px_auto]">
+                <Input
+                  value={deadlineTitle}
+                  onChange={(e) => setDeadlineTitle(e.target.value)}
+                  placeholder="New deadline title"
+                />
+                <Input
+                  type="date"
+                  value={deadlineDate}
+                  onChange={(e) => setDeadlineDate(e.target.value)}
+                />
+                <Button onClick={addDeadline} disabled={busy === "deadline" || !deadlineTitle.trim() || !deadlineDate}>
+                  {busy === "deadline" ? "Adding..." : "Add"}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </PanelCard>
 
-          <Card>
-            <CardContent className="p-5 sm:p-6">
-              <SectionHeader
-                icon={CalendarClock}
-                title={t(language, "deadlineTracker")}
-                description="Track AI-detected and manual deadlines from the live file."
-              />
-
-              <div className="mt-4 space-y-3">
-                {(initialCase.deadlines || []).map((deadline: any) => (
-                  <div key={deadline.id} className="rounded-2xl border border-border/70 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-medium">{deadline.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Due {formatDate(deadline.dueDate)}
-                          {deadline.notes ? ` - ${deadline.notes}` : ""}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={
-                            deadline.status === "COMPLETED"
-                              ? "success"
-                              : deadline.status === "OVERDUE"
-                                ? "destructive"
-                                : "warning"
-                          }
-                        >
-                          {deadline.status}
-                        </Badge>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            updateDeadline(
-                              deadline.id,
-                              deadline.status === "COMPLETED" ? "UPCOMING" : "COMPLETED"
-                            )
-                          }
-                        >
-                          {deadline.status === "COMPLETED" ? "Reopen" : "Complete"}
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteDeadline(deadline.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="grid gap-3 rounded-2xl border border-dashed border-border p-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
-                  <Input
-                    value={deadlineTitle}
-                    onChange={(e) => setDeadlineTitle(e.target.value)}
-                    placeholder="New deadline title"
-                  />
-                  <Input
-                    type="date"
-                    value={deadlineDate}
-                    onChange={(e) => setDeadlineDate(e.target.value)}
-                  />
-                  <Button onClick={addDeadline} disabled={busy === "deadline"}>
-                    {busy === "deadline" ? "Adding..." : "Add"}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-5 sm:p-6">
-              <SectionHeader
-                icon={Activity}
-                title={t(language, "activity")}
-                description="Recent structured actions taken on the case."
-              />
-              <div className="mt-4">
-                <ActivityFeed items={initialCase.activityLogs || []} />
-              </div>
-            </CardContent>
-          </Card>
+          <PanelCard>
+            <MiniSectionHeader
+              icon={Activity}
+              title={t(language, "activity")}
+              description="Recent structured actions taken on the case."
+            />
+            <div className="mt-4">
+              <ActivityFeed items={activityLogs} />
+            </div>
+          </PanelCard>
 
           {role === "LAWYER" ? (
             <DebatePanel caseId={initialCase.id} sessions={initialCase.debateSessions || []} />
@@ -903,7 +756,15 @@ export function CaseWorkspaceLive({
   );
 }
 
-function SectionHeader({
+function PanelCard({ children }: { children: ReactNode }) {
+  return (
+    <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm transition hover:shadow-md">
+      <CardContent className="p-5 sm:p-6">{children}</CardContent>
+    </Card>
+  );
+}
+
+function MiniSectionHeader({
   icon: Icon,
   title,
   description,
@@ -912,30 +773,33 @@ function SectionHeader({
   icon: any;
   title: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <div className="flex items-start gap-3">
-        <div className="rounded-2xl border border-border/70 bg-muted/30 p-2.5">
+    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-muted/30">
           <Icon className="h-4 w-4 text-foreground" />
         </div>
-        <div>
-          <p className="text-sm font-medium tracking-tight">{title}</p>
+        <div className="min-w-0">
+          <p className="break-words text-sm font-medium tracking-tight">{title}</p>
           {description ? (
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">{description}</p>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+              {description}
+            </p>
           ) : null}
         </div>
       </div>
-      {action ? <div className="shrink-0 self-start">{action}</div> : null}
+
+      {action ? <div className="w-full shrink-0 sm:w-auto">{action}</div> : null}
     </div>
   );
 }
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-background px-4 py-3 shadow-sm">
-      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 shadow-sm">
+      <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </p>
       <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
@@ -962,16 +826,135 @@ function ScoreCard({
   }[tone];
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm">
+    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-        <p className="text-sm font-semibold">{clamped}%</p>
+        <p className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="shrink-0 text-sm font-semibold">{clamped}%</p>
       </div>
       <div className="mt-3 h-2 rounded-full bg-muted">
         <div
-          className={cn("h-2 rounded-full transition-all", barClass)}
+          className={cn("h-2 rounded-full transition-all duration-500", barClass)}
           style={{ width: `${clamped}%` }}
         />
+      </div>
+    </div>
+  );
+}
+
+function DocumentCard({
+  document,
+  busy,
+  onAsk,
+  onDelete
+}: {
+  document: any;
+  busy: string | null;
+  onAsk: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm transition hover:border-primary/20 hover:shadow-md">
+      <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="max-w-full truncate font-medium md:max-w-[420px]">
+              {document.fileName}
+            </p>
+            {document.confidence ? (
+              <SafePill variant="secondary">{Math.round(document.confidence * 100)}%</SafePill>
+            ) : null}
+            {document.probableCategory ? (
+              <SafePill variant="outline">{document.probableCategory}</SafePill>
+            ) : null}
+          </div>
+
+          <div className="mt-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
+            {document.aiSummary ? (
+              <>
+                <FormattedAiContent content={document.aiSummary} />
+                <AiTranslationActions text={document.aiSummary} />
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Summary not ready yet.</p>
+            )}
+          </div>
+
+          {asArray<string>(document.tags).length ? (
+            <div className="mt-3 flex max-w-full flex-wrap gap-2">
+              {asArray<string>(document.tags).map((tag) => (
+                <SafePill key={tag} variant="outline">
+                  {tag}
+                </SafePill>
+              ))}
+            </div>
+          ) : null}
+
+          <p className="mt-3 text-xs text-muted-foreground">
+            Uploaded {relativeDate(document.createdAt)}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 md:flex-col md:items-end">
+          <Button variant="outline" size="sm" onClick={onAsk}>
+            Ask AI
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            disabled={busy === `doc-${document.id}`}
+          >
+            Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeadlineRow({
+  deadline,
+  onToggle,
+  onDelete
+}: {
+  deadline: any;
+  onToggle: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="break-words font-medium">{deadline.title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Due {formatDate(deadline.dueDate)}
+            {deadline.notes ? ` · ${deadline.notes}` : ""}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <SafePill
+            variant={
+              deadline.status === "COMPLETED"
+                ? "success"
+                : deadline.status === "OVERDUE"
+                  ? "destructive"
+                  : "warning"
+            }
+          >
+            {deadline.status}
+          </SafePill>
+
+          <Button size="sm" variant="ghost" onClick={onToggle}>
+            {deadline.status === "COMPLETED" ? "Reopen" : "Complete"}
+          </Button>
+
+          <Button size="sm" variant="ghost" onClick={onDelete}>
+            Delete
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -981,11 +964,109 @@ function EmptyState({ text, compact = false }: { text: string; compact?: boolean
   return (
     <div
       className={cn(
-        "rounded-2xl border border-dashed border-border text-sm text-muted-foreground",
+        "rounded-2xl border border-dashed border-border bg-muted/10 text-sm leading-6 text-muted-foreground",
         compact ? "p-4" : "p-5"
       )}
     >
       {text}
+    </div>
+  );
+}
+
+function CollaborationPanel({
+  title,
+  description,
+  comments,
+  currentUser,
+  comment,
+  setComment,
+  busy,
+  onSend,
+  onDelete
+}: any) {
+  return (
+    <div>
+      <MiniSectionHeader icon={MessageSquare} title={title} description={description} />
+
+      <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
+        {comments.map((item: any) => (
+          <div key={item.id} className="rounded-2xl border border-border/70 bg-background/70 p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{item.author?.name || "User"}</p>
+                <p className="text-xs text-muted-foreground">{relativeDate(item.createdAt)}</p>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <SafePill variant="secondary">{item.visibility}</SafePill>
+                {item.authorId === currentUser.id ? (
+                  <Button size="sm" variant="ghost" onClick={() => onDelete(item.id)}>
+                    Delete
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
+              {item.body}
+            </p>
+          </div>
+        ))}
+
+        {!comments.length ? <EmptyState text="No shared messages yet." compact /> : null}
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+        <Input
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Add a shared case comment"
+        />
+        <Button onClick={onSend} disabled={busy === "comment" || !comment.trim()}>
+          Send
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function InternalNotesPanel({
+  notes,
+  privateNote,
+  setPrivateNote,
+  busy,
+  onSave
+}: any) {
+  return (
+    <div>
+      <MiniSectionHeader
+        icon={ShieldCheck}
+        title="Internal notes"
+        description="Visible only to the lawyer side of the case."
+      />
+
+      <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
+        {notes.map((note: any) => (
+          <div key={note.id} className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+            <p className="break-words text-sm leading-6 text-muted-foreground">{note.body}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {note.author?.name || "Lawyer"} · {relativeDate(note.createdAt)}
+            </p>
+          </div>
+        ))}
+
+        {!notes.length ? <EmptyState text="No internal notes yet." compact /> : null}
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+        <Input
+          value={privateNote}
+          onChange={(e) => setPrivateNote(e.target.value)}
+          placeholder="Add a lawyer-only internal note"
+        />
+        <Button onClick={onSave} disabled={busy === "comment" || !privateNote.trim()}>
+          Save
+        </Button>
+      </div>
     </div>
   );
 }
@@ -1006,19 +1087,19 @@ function ProposalCard({
   );
   const [proposalNotes, setProposalNotes] = useState(assignment.proposalNotes || "");
 
-  const canEditProposal = role === "LAWYER" && assignment.lawyer.userId === currentUser.id;
+  const canEditProposal = role === "LAWYER" && assignment.lawyer?.userId === currentUser.id;
   const contactsUnlocked = assignment.status === "ACCEPTED";
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="font-medium">{assignment.lawyer.user.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {assignment.lawyer.firmName || "Independent practice"}
+    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="truncate font-medium">{assignment.lawyer?.user?.name || "Lawyer"}</p>
+          <p className="truncate text-sm text-muted-foreground">
+            {assignment.lawyer?.firmName || "Independent practice"}
           </p>
         </div>
-        <Badge
+        <SafePill
           variant={
             assignment.status === "ACCEPTED"
               ? "success"
@@ -1028,7 +1109,7 @@ function ProposalCard({
           }
         >
           {assignment.status}
-        </Badge>
+        </SafePill>
       </div>
 
       {canEditProposal ? (
@@ -1047,15 +1128,13 @@ function ProposalCard({
             onChange={(e) => setProbability(Number(e.target.value || 50))}
             placeholder="Win probability %"
           />
-          <div className="md:col-span-2">
-            <Textarea
-              value={proposalNotes}
-              onChange={(e) => setProposalNotes(e.target.value)}
-              placeholder="Explain the fee, posture, and why you are a fit."
-              className="min-h-[120px]"
-            />
-          </div>
-          <div className="md:col-span-2 flex justify-end">
+          <Textarea
+            value={proposalNotes}
+            onChange={(e) => setProposalNotes(e.target.value)}
+            placeholder="Explain the fee, posture, and why you are a fit."
+            className="min-h-[120px] md:col-span-2"
+          />
+          <div className="flex justify-end md:col-span-2">
             <Button
               onClick={() =>
                 onSendProposal(assignment.id, feeProposal, probability / 100, proposalNotes)
@@ -1068,7 +1147,7 @@ function ProposalCard({
         </div>
       ) : (
         <>
-          <div className="mt-3 rounded-xl bg-muted/25 p-3">
+          <div className="mt-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
             {assignment.proposalNotes ? (
               <FormattedAiContent content={assignment.proposalNotes} />
             ) : (
@@ -1076,21 +1155,21 @@ function ProposalCard({
             )}
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex max-w-full flex-wrap gap-2">
             {assignment.feeProposal ? (
-              <Badge variant="outline">
+              <SafePill variant="outline">
                 PKR {Number(assignment.feeProposal).toLocaleString()}
-              </Badge>
+              </SafePill>
             ) : null}
             {assignment.probability ? (
-              <Badge variant="secondary">
+              <SafePill variant="secondary">
                 {Math.round(Number(assignment.probability) * 100)}% probability
-              </Badge>
+              </SafePill>
             ) : null}
           </div>
 
           {role === "CLIENT" && assignment.status === "PENDING" ? (
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-wrap gap-3">
               <Button
                 onClick={() => onDecision(assignment.id, "ACCEPTED")}
                 disabled={busy === `decision-${assignment.id}`}
@@ -1110,11 +1189,11 @@ function ProposalCard({
       )}
 
       {contactsUnlocked ? (
-        <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-muted-foreground">
+        <div className="mt-4 break-words rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm leading-6 text-muted-foreground">
           Contact unlocked for off-platform discussion. Lawyer email:{" "}
-          {assignment.lawyer.user.email}
-          {caseContact?.email ? ` - Client email: ${caseContact.email}` : ""}
-          {clientProfile?.phone ? ` - Client phone: ${clientProfile.phone}` : ""}
+          {assignment.lawyer?.user?.email || "Not available"}
+          {caseContact?.email ? ` · Client email: ${caseContact.email}` : ""}
+          {clientProfile?.phone ? ` · Client phone: ${clientProfile.phone}` : ""}
         </div>
       ) : null}
     </div>
@@ -1125,16 +1204,16 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
   const [content, setContent] = useState(draft.currentContent || "");
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-medium">{draft.title}</p>
+    <div className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="truncate font-medium">{draft.title}</p>
           <p className="text-xs text-muted-foreground">
-            {toTitleCase(draft.type)} - {draft.versions?.length || 0} versions
+            {toTitleCase(draft.type)} · {asArray(draft.versions).length} versions
           </p>
         </div>
 
-        <Badge
+        <SafePill
           variant={
             draft.verificationStatus === "VERIFIED"
               ? "success"
@@ -1143,8 +1222,8 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
                 : "warning"
           }
         >
-          {draft.verificationStatus}
-        </Badge>
+          {draft.verificationStatus || "AI_GENERATED"}
+        </SafePill>
       </div>
 
       <Textarea
@@ -1157,16 +1236,18 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
         <Button onClick={() => onSave(draft, content)} disabled={busy === `draft-${draft.id}`}>
           Save version
         </Button>
+
         {role === "LAWYER" ? (
-          <Button variant="outline" onClick={() => onSave(draft, content, "VERIFIED")}>
-            Mark verified
-          </Button>
+          <>
+            <Button variant="outline" onClick={() => onSave(draft, content, "VERIFIED")}>
+              Mark verified
+            </Button>
+            <Button variant="outline" onClick={() => onSave(draft, content, "NEEDS_CORRECTION")}>
+              Needs correction
+            </Button>
+          </>
         ) : null}
-        {role === "LAWYER" ? (
-          <Button variant="outline" onClick={() => onSave(draft, content, "NEEDS_CORRECTION")}>
-            Needs correction
-          </Button>
-        ) : null}
+
         <Button
           variant="ghost"
           onClick={() => onDelete(draft.id)}
@@ -1176,13 +1257,15 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
         </Button>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {(draft.versions || []).slice(0, 4).map((version: any) => (
-          <Badge key={version.id} variant="outline">
-            v{version.versionNumber}
-          </Badge>
-        ))}
-      </div>
+      {asArray(draft.versions).length ? (
+        <div className="mt-4 flex max-w-full flex-wrap gap-2">
+          {asArray(draft.versions).slice(0, 4).map((version: any) => (
+            <SafePill key={version.id} variant="outline">
+              v{version.versionNumber}
+            </SafePill>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
