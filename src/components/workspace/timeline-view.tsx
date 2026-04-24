@@ -19,20 +19,28 @@ function formatSourceLabel(value?: string) {
 
 function TimelineBadge({
   children,
-  variant = "outline"
+  variant = "outline",
+  compact = false
 }: {
   children: React.ReactNode;
   variant?: "secondary" | "outline" | "warning" | "success" | "destructive";
+  compact?: boolean;
 }) {
   return (
     <Badge
       variant={variant as any}
       className={cn(
-        "inline-flex h-8 max-w-[112px] shrink-0 items-center justify-center overflow-hidden rounded-full px-3",
-        "text-[11px] font-semibold leading-none"
+        "inline-flex min-h-7 max-w-full shrink items-center justify-center overflow-hidden rounded-full px-2.5 py-1",
+        "text-center text-[11px] font-semibold leading-4",
+        compact ? "w-auto shrink-0 whitespace-nowrap" : "min-w-0"
       )}
     >
-      <span className="block min-w-0 max-w-full truncate whitespace-nowrap">
+      <span
+        className={cn(
+          "block min-w-0 max-w-full",
+          compact ? "whitespace-nowrap" : "whitespace-normal [overflow-wrap:anywhere]"
+        )}
+      >
         {children}
       </span>
     </Badge>
@@ -71,9 +79,9 @@ export function TimelineView({ items }: { items: any[] }) {
         return (
           <div
             key={item.id || index}
-            className="grid grid-cols-[78px_16px_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[92px_16px_minmax(0,1fr)]"
+            className="grid grid-cols-[68px_14px_minmax(0,1fr)] items-start gap-2 sm:grid-cols-[76px_14px_minmax(0,1fr)] sm:gap-3"
           >
-            <div className="pt-3 text-right text-xs text-muted-foreground">
+            <div className="pt-3 text-right text-[11px] leading-5 text-muted-foreground sm:text-xs">
               {date ? formatDate(date, "dd MMM yyyy") : "No date"}
             </div>
 
@@ -82,25 +90,26 @@ export function TimelineView({ items }: { items: any[] }) {
                 <div className="absolute bottom-[-18px] top-6 w-px bg-border" />
               ) : null}
 
-              <div className="relative z-10 mt-3 h-3.5 w-3.5 rounded-full bg-primary ring-4 ring-background" />
+              <div className="relative z-10 mt-3 h-3 w-3 rounded-full bg-primary ring-4 ring-background sm:h-3.5 sm:w-3.5" />
             </div>
 
             <Card className="min-w-0 overflow-hidden border-border/70 bg-background/85 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-              <CardContent className="p-4">
-                <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_112px]">
-                  <div className="min-w-0">
-                    <p className="break-words text-sm font-semibold leading-6">
-                      {item.title || "Timeline event"}
+              <CardContent className="p-3.5 sm:p-4">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold leading-6">
+                    {item.title || "Timeline event"}
+                  </p>
+
+                  {item.description ? (
+                    <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
+                      {item.description}
                     </p>
+                  ) : null}
+                </div>
 
-                    {item.description ? (
-                      <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
-                        {item.description}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="flex min-w-0 flex-row flex-wrap items-start gap-2 sm:flex-col sm:items-end">
+                {(sourceLabel ||
+                  (confidence !== null && String(item.sourceLabel).toLowerCase() !== "roadmap")) ? (
+                  <div className="mt-3 flex min-w-0 max-w-full flex-wrap items-center gap-2">
                     {sourceLabel ? (
                       <TimelineBadge variant={tone(item.sourceLabel) as any}>
                         {sourceLabel}
@@ -108,12 +117,12 @@ export function TimelineView({ items }: { items: any[] }) {
                     ) : null}
 
                     {confidence !== null && String(item.sourceLabel).toLowerCase() !== "roadmap" ? (
-                      <TimelineBadge variant="secondary">
+                      <TimelineBadge variant="secondary" compact>
                         {confidence}%
                       </TimelineBadge>
                     ) : null}
                   </div>
-                </div>
+                ) : null}
               </CardContent>
             </Card>
           </div>

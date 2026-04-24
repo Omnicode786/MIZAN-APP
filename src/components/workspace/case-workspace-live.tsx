@@ -45,11 +45,11 @@ function SafePill({
     <Badge
       variant={variant}
       className={cn(
-        "max-w-full rounded-full px-2.5 py-1 text-[11px] leading-none",
+        "inline-flex min-h-7 max-w-full min-w-0 items-center justify-center overflow-hidden rounded-full px-2.5 py-1 text-center text-[11px] leading-4",
         className
       )}
     >
-      <span className="block max-w-[170px] truncate sm:max-w-[220px]">
+      <span className="block min-w-0 max-w-full whitespace-normal [overflow-wrap:anywhere]">
         {children}
       </span>
     </Badge>
@@ -463,8 +463,8 @@ export function CaseWorkspaceLive({
             </div>
           </div>
 
-          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
-            <div className="space-y-5">
+          <div className="grid min-w-0 gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
+            <div className="min-w-0 space-y-5">
               <MiniSectionHeader
                 icon={FolderOpen}
                 title="Case details"
@@ -515,7 +515,7 @@ export function CaseWorkspaceLive({
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1">
               <ScoreCard label="Evidence strength" value={initialCase.evidenceStrength} tone="blue" />
               <ScoreCard label="Evidence completeness" value={initialCase.evidenceCompleteness} tone="emerald" />
               <ScoreCard label="Draft readiness" value={initialCase.draftReadiness} tone="amber" />
@@ -525,8 +525,8 @@ export function CaseWorkspaceLive({
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-        <div className="space-y-6">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        <div className="min-w-0 space-y-6">
           <PanelCard>
             <MiniSectionHeader
               icon={Upload}
@@ -601,11 +601,11 @@ export function CaseWorkspaceLive({
               title={t(language, "draftingStudio")}
               description="Generate, edit, version, and verify legal drafts connected to this matter."
               action={
-                <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[170px_220px_auto]">
+                <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                   <select
                     value={draftType}
                     onChange={(e) => setDraftType(e.target.value)}
-                    className="h-10 w-full rounded-2xl border border-border bg-background px-4 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-primary/20"
+                    className="h-10 min-w-0 rounded-2xl border border-border bg-background px-4 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-primary/20 sm:w-[170px]"
                   >
                     {[
                       "LEGAL_NOTICE",
@@ -626,9 +626,14 @@ export function CaseWorkspaceLive({
                     value={draftTitle}
                     onChange={(e) => setDraftTitle(e.target.value)}
                     placeholder="Draft title"
+                    className="min-w-0 sm:w-[220px]"
                   />
 
-                  <Button onClick={generateDraft} disabled={busy === "draft-generate"}>
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={generateDraft}
+                    disabled={busy === "draft-generate"}
+                  >
                     {busy === "draft-generate" ? "Generating..." : t(language, "generate")}
                   </Button>
                 </div>
@@ -680,7 +685,7 @@ export function CaseWorkspaceLive({
           </PanelCard>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <PanelCard>
             <MiniSectionHeader
               icon={CalendarClock}
@@ -718,18 +723,24 @@ export function CaseWorkspaceLive({
                 <EmptyState compact text="No deadlines yet. Add one manually or upload a document for AI-detected dates." />
               ) : null}
 
-              <div className="grid gap-3 rounded-2xl border border-dashed border-border p-4 md:grid-cols-[minmax(0,1fr)_170px_auto]">
+              <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-dashed border-border p-4 sm:flex-row sm:flex-wrap sm:items-center">
                 <Input
                   value={deadlineTitle}
                   onChange={(e) => setDeadlineTitle(e.target.value)}
                   placeholder="New deadline title"
+                  className="min-w-0 flex-1 sm:min-w-[180px]"
                 />
                 <Input
                   type="date"
                   value={deadlineDate}
                   onChange={(e) => setDeadlineDate(e.target.value)}
+                  className="min-w-0 sm:w-[165px]"
                 />
-                <Button onClick={addDeadline} disabled={busy === "deadline" || !deadlineTitle.trim() || !deadlineDate}>
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={addDeadline}
+                  disabled={busy === "deadline" || !deadlineTitle.trim() || !deadlineDate}
+                >
                   {busy === "deadline" ? "Adding..." : "Add"}
                 </Button>
               </div>
@@ -758,7 +769,7 @@ export function CaseWorkspaceLive({
 
 function PanelCard({ children }: { children: ReactNode }) {
   return (
-    <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm transition hover:shadow-md">
+    <Card className="min-w-0 overflow-hidden border-border/70 bg-card/95 shadow-sm transition hover:shadow-md">
       <CardContent className="p-5 sm:p-6">{children}</CardContent>
     </Card>
   );
@@ -776,22 +787,22 @@ function MiniSectionHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="flex min-w-0 items-start gap-3">
+    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-muted/30">
           <Icon className="h-4 w-4 text-foreground" />
         </div>
         <div className="min-w-0">
           <p className="break-words text-sm font-medium tracking-tight">{title}</p>
           {description ? (
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+            <p className="mt-1 max-w-2xl break-words text-xs leading-5 text-muted-foreground">
               {description}
             </p>
           ) : null}
         </div>
       </div>
 
-      {action ? <div className="w-full shrink-0 sm:w-auto">{action}</div> : null}
+      {action ? <div className="min-w-0 max-w-full sm:ml-auto">{action}</div> : null}
     </div>
   );
 }
