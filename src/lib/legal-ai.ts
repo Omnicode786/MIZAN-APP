@@ -27,6 +27,19 @@ function cleanThreadTitle(value: string, fallback: string) {
   return cleaned.slice(0, 64);
 }
 
+const LEGAL_MARKDOWN_RESPONSE_INSTRUCTIONS = [
+  "Return Markdown only.",
+  "Use these exact Markdown headings in this order:",
+  "## Position",
+  "## Why It Matters",
+  "## Evidence Gaps",
+  "## Suggested Next Steps",
+  "## Caution",
+  "Use short paragraphs and bullet points where helpful.",
+  "Bold important dates, deadlines, risks, evidence names, and actions with **bold**.",
+  "Do not wrap the answer in a code block."
+].join("\n");
+
 export async function buildCaseContext(caseId: string) {
   const legalCase = await prisma.case.findUnique({
     where: { id: caseId },
@@ -165,7 +178,7 @@ export async function answerPakistaniLegalQuestion({
       : simpleLanguageMode
         ? "Use plain language first, then give a short legal framing and practical next steps."
         : "Use clear client-safe language, but keep the analysis professional and structured.",
-    "Answer in this structure: 1) Position, 2) Why it matters, 3) Evidence gaps, 4) Suggested next steps, 5) Caution.",
+    LEGAL_MARKDOWN_RESPONSE_INSTRUCTIONS,
     `Pakistan-law context:\n${law.context}`,
     context ? `Grounded case/document context:\n${context}` : "No case file was supplied.",
     `User question: ${question}`
@@ -224,7 +237,13 @@ export async function summarizeDocumentWithAi(
   if (mimeType.startsWith("image/")) {
     const bytes = await fs.readFile(filePath);
     const response = await runVisionAiTask(
-      `You are reading an uploaded legal document or screenshot from Pakistan. Extract the key legal facts, the parties, dates, deadlines, money amounts, and any threats or demands. Keep it concise and professional.\n\n${languageInstruction}`,
+      [
+        "You are reading an uploaded legal document or screenshot from Pakistan.",
+        "Return Markdown only. Use concise headings, bullets, and **bold** for important dates, parties, deadlines, money amounts, threats, and demands.",
+        "Do not wrap the answer in a code block.",
+        "Extract the key legal facts, the parties, dates, deadlines, money amounts, and any threats or demands. Keep it concise and professional.",
+        languageInstruction
+      ].join("\n\n"),
       [{ mimeType, data: bytes.toString("base64") }],
       fallbackText
     );
@@ -232,7 +251,13 @@ export async function summarizeDocumentWithAi(
   }
 
   return runAiTask(
-    `Summarize the uploaded legal document. Extract parties, dates, obligations, breach points, and what the document is most useful for in a Pakistani legal workflow.\n\n${languageInstruction}`,
+    [
+      "Summarize the uploaded legal document.",
+      "Return Markdown only. Use concise headings, bullets, and **bold** for important parties, dates, obligations, breach points, and next actions.",
+      "Do not wrap the answer in a code block.",
+      "Extract parties, dates, obligations, breach points, and what the document is most useful for in a Pakistani legal workflow.",
+      languageInstruction
+    ].join("\n\n"),
     fallbackText
   );
 }
@@ -260,8 +285,8 @@ export async function generateDebateOpposition({
     `Pakistan-law context:\n${law.context}`,
     `Case record:\n${built?.text || "No case context found."}`,
     `Lawyer's argument:\n${lawyerArgument}`,
-    "Return a sharp but professional opposing submission in 1-3 paragraphs.",
-    'Give Response In markdown format'
+    "Return Markdown only. Use short headings, bullets where useful, and **bold** for the strongest risks or missing evidence.",
+    "Return a sharp but professional opposing submission in 1-3 paragraphs. Do not wrap the answer in a code block."
   ].join("\n\n");
 
   return runAiTask(prompt, built?.text || lawyerArgument);
