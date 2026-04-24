@@ -40,6 +40,54 @@ const LEGAL_MARKDOWN_RESPONSE_INSTRUCTIONS = [
   "Do not wrap the answer in a code block."
 ].join("\n");
 
+const CONVERSATIONAL_MARKDOWN_RESPONSE_INSTRUCTIONS = [
+  "Return Markdown only.",
+  "For greetings, simple app questions, thanks, or casual messages, reply naturally in 1-3 short paragraphs.",
+  "Do not use the legal-analysis headings unless the user asks for legal rights, risks, evidence, procedure, drafting, documents, deadlines, or case strategy.",
+  "You may use a short bullet list only if it makes the answer easier to scan.",
+  "Do not wrap the answer in a code block."
+].join("\n");
+
+function isSmallTalkQuestion(question: string) {
+  const q = question.toLowerCase().replace(/[^\p{L}\p{N}\s?]/gu, " ").replace(/\s+/g, " ").trim();
+
+  return [
+    /^(hi|hello|hey|salam|assalam o alaikum|assalamu alaikum|aoa)$/,
+    /^(how are you|how r u|how are u|kaise ho|kese ho|kia haal hai|kya haal hai)\??$/,
+    /^(thanks|thank you|shukriya|ok|okay|cool|great|nice)$/,
+    /^(who are you|what are you|what do you do|what can you do|help|can you help me)\??$/,
+    /^(test|testing|are you there|hello there)\??$/
+  ].some((pattern) => pattern.test(q));
+}
+
+function needsLegalAnalysisFormat(question: string, hasCaseOrDocumentContext: boolean) {
+  const q = question.toLowerCase();
+
+  const legalSignals = [
+    "law", "legal", "right", "rights", "case", "claim", "sue", "court", "judge",
+    "lawyer", "advocate", "notice", "contract", "agreement", "breach", "evidence",
+    "deadline", "limitation", "fir", "police", "bail", "criminal", "civil",
+    "tenant", "rent", "property", "inheritance", "divorce", "khula", "custody",
+    "maintenance", "consumer", "refund", "fraud", "cheque", "payment", "salary",
+    "employment", "company", "tax", "damages", "appeal", "petition", "draft",
+    "document", "clause", "risk", "procedure", "proof", "witness", "hearing",
+    "next step", "what should i do", "what can i do", "what is my position"
+  ];
+
+  const caseContextSignals = [
+    "this case", "my case", "this matter", "this document", "this file", "uploaded",
+    "timeline", "evidence", "deadline", "draft", "opponent", "client", "vendor",
+    "landlord", "tenant", "employer", "employee", "payment", "delivery"
+  ];
+
+  if (legalSignals.some((signal) => q.includes(signal))) return true;
+  if (hasCaseOrDocumentContext && caseContextSignals.some((signal) => q.includes(signal))) {
+    return true;
+  }
+
+  return q.length > 180 && !isSmallTalkQuestion(question);
+}
+
 export async function buildCaseContext(caseId: string) {
   const legalCase = await prisma.case.findUnique({
     where: { id: caseId },
@@ -139,9 +187,11 @@ export async function answerPakistaniLegalQuestion({
   const outputLanguage = normalizeLanguage(language);
   let context = "";
   let sources: string[] = [];
-  const lawyerDirectoryContext = await buildMizanLawyerDirectoryContext();
+  const useLegalAnalysisFormat = needsLegalAnalysisFormat(question, Boolean(caseId || documentId));
+  const asksAboutLawyers = /\b(lawyer|advocate|attorney|counsel|hire|find|proposal|represent|representation)\b/i.test(question);
+  const lawyerDirectoryContext = asksAboutLawyers ? await buildMizanLawyerDirectoryContext() : "";
 
-  if (caseId) {
+  if (caseId && useLegalAnalysisFormat) {
     const built = await buildCaseContext(caseId);
     if (built) {
       context += `Case workspace context:\n${built.text}\n\n`;
@@ -149,7 +199,7 @@ export async function answerPakistaniLegalQuestion({
     }
   }
 
-  if (documentId) {
+  if (documentId && useLegalAnalysisFormat) {
     const document = await prisma.document.findUnique({ where: { id: documentId } });
     if (document) {
       context += `Focused document context (${document.fileName}):\n${compact(document.extractedText || document.aiSummary, document.fileName)}\n\n`;
@@ -162,24 +212,33 @@ export async function answerPakistaniLegalQuestion({
     sources.push("MIZAN lawyer directory");
   }
 
-  const law = buildPakistanLawContext(`${question}\n${context}`);
+  const law = useLegalAnalysisFormat
+    ? buildPakistanLawContext(`${question}\n${context}`)
+    : { context: "", matches: [] };
   sources.push(...law.matches.map((item) => item.title));
 
   const prompt = [
     "You are MIZAN's in-app Pakistani legal assistant for clients and lawyers.",
     "Be personal, direct, and practical: speak as MIZAN's AI assistant, help the client feel oriented, and keep the tone professional.",
     "MIZAN has lawyer profile and directory data in the supplied context. You may use it to suggest how the client can find a suitable lawyer in MIZAN, but do not invent licensing, bar enrolment, availability, fees, or outcomes.",
-    "You are assistive, careful, and structured like a professional Pakistani lawyer reasoning through a file.",
+    "For non-legal greetings, app-capability questions, thanks, or casual messages, answer like a helpful product assistant instead of forcing a legal memo.",
+    "For law-related or case-specific questions, be assistive, careful, and structured like a professional Pakistani lawyer reasoning through a file.",
     getLanguageInstruction(outputLanguage),
-    
-    "Reason from the provided Pakistan-law context, MIZAN platform context, and uploaded case record. Do not invent facts outside the record.",
-    role === "LAWYER"
-      ? "Address the user as a lawyer and include litigation/procedural posture, evidence gaps, and opposition risks where relevant."
-      : simpleLanguageMode
-        ? "Use plain language first, then give a short legal framing and practical next steps."
-        : "Use clear client-safe language, but keep the analysis professional and structured.",
-    LEGAL_MARKDOWN_RESPONSE_INSTRUCTIONS,
-    `Pakistan-law context:\n${law.context}`,
+
+    useLegalAnalysisFormat
+      ? "Reason from the provided Pakistan-law context, MIZAN platform context, and uploaded case record. Do not invent facts outside the record."
+      : "Answer the user's simple message directly. Do not pretend to have reviewed legal materials unless the user asks a legal or case-specific question.",
+    useLegalAnalysisFormat
+      ? role === "LAWYER"
+        ? "Address the user as a lawyer and include litigation/procedural posture, evidence gaps, and opposition risks where relevant."
+        : simpleLanguageMode
+          ? "Use plain language first, then give a short legal framing and practical next steps."
+          : "Use clear client-safe language, but keep the analysis professional and structured."
+      : "Keep the reply warm, concise, and natural. Mention that you can help with rights, documents, cases, deadlines, drafts, and lawyer discovery only when useful.",
+    useLegalAnalysisFormat
+      ? LEGAL_MARKDOWN_RESPONSE_INSTRUCTIONS
+      : CONVERSATIONAL_MARKDOWN_RESPONSE_INSTRUCTIONS,
+    useLegalAnalysisFormat ? `Pakistan-law context:\n${law.context}` : "Pakistan-law context was not attached because this is not a legal-analysis question.",
     context ? `Grounded case/document context:\n${context}` : "No case file was supplied.",
     `User question: ${question}`
   ].join("\n\n");
