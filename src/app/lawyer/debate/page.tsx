@@ -28,6 +28,11 @@ function getBaseUrl() {
   );
 }
 
+function debateErrorUrl(caseId: string, code: string) {
+  const suffix = caseId ? `caseId=${encodeURIComponent(caseId)}&` : "";
+  return `/lawyer/debate?${suffix}error=${code}`;
+}
+
 async function startDebateAction(formData: FormData) {
   "use server";
 
@@ -37,11 +42,24 @@ async function startDebateAction(formData: FormData) {
 
   if (!caseId) return;
 
-  await fetch(`${getBaseUrl()}/api/debate/session`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ caseId, title, durationMinutes })
-  });
+  let failed = false;
+  try {
+    const response = await fetch(`${getBaseUrl()}/api/debate/session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ caseId, title, durationMinutes })
+    });
+
+    if (!response.ok) {
+      console.error("[LAWYER_DEBATE_START_ACTION]", await response.text());
+      failed = true;
+    }
+  } catch (error) {
+    console.error("[LAWYER_DEBATE_START_ACTION]", error);
+    failed = true;
+  }
+
+  if (failed) redirect(debateErrorUrl(caseId, "start"));
 
   revalidatePath("/lawyer/debate");
   redirect(`/lawyer/debate?caseId=${caseId}`);
@@ -56,11 +74,24 @@ async function submitTurnAction(formData: FormData) {
 
   if (!caseId || !sessionId || !content.trim()) return;
 
-  await fetch(`${getBaseUrl()}/api/debate/session/${sessionId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content })
-  });
+  let failed = false;
+  try {
+    const response = await fetch(`${getBaseUrl()}/api/debate/session/${sessionId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content })
+    });
+
+    if (!response.ok) {
+      console.error("[LAWYER_DEBATE_TURN_ACTION]", await response.text());
+      failed = true;
+    }
+  } catch (error) {
+    console.error("[LAWYER_DEBATE_TURN_ACTION]", error);
+    failed = true;
+  }
+
+  if (failed) redirect(debateErrorUrl(caseId, "turn"));
 
   revalidatePath("/lawyer/debate");
   redirect(`/lawyer/debate?caseId=${caseId}`);
@@ -74,9 +105,22 @@ async function finalizeDebateAction(formData: FormData) {
 
   if (!caseId || !sessionId) return;
 
-  await fetch(`${getBaseUrl()}/api/debate/session/${sessionId}`, {
-    method: "PATCH"
-  });
+  let failed = false;
+  try {
+    const response = await fetch(`${getBaseUrl()}/api/debate/session/${sessionId}`, {
+      method: "PATCH"
+    });
+
+    if (!response.ok) {
+      console.error("[LAWYER_DEBATE_FINALIZE_ACTION]", await response.text());
+      failed = true;
+    }
+  } catch (error) {
+    console.error("[LAWYER_DEBATE_FINALIZE_ACTION]", error);
+    failed = true;
+  }
+
+  if (failed) redirect(debateErrorUrl(caseId, "finalize"));
 
   revalidatePath("/lawyer/debate");
   redirect(`/lawyer/debate?caseId=${caseId}`);
@@ -85,7 +129,7 @@ async function finalizeDebateAction(formData: FormData) {
 export default async function LawyerDebatePage({
   searchParams
 }: {
-  searchParams?: { caseId?: string | string[] };
+  searchParams?: { caseId?: string | string[]; error?: string | string[] };
 }) {
   const user = await getCurrentUserWithProfile();
   if (!user) return null;
@@ -142,6 +186,16 @@ export default async function LawyerDebatePage({
         : cases[0]?.id || "";
 
   const selectedCase = cases.find((item) => item.id === selectedCaseId) || cases[0] || null;
+  const rawError = searchParams?.error;
+  const errorCode = typeof rawError === "string" ? rawError : Array.isArray(rawError) ? rawError[0] : "";
+  const errorMessage =
+    errorCode === "start"
+      ? "Unable to start debate. Please try again."
+      : errorCode === "turn"
+        ? "Unable to submit argument. Please try again."
+        : errorCode === "finalize"
+          ? "Unable to finalize debate. Please try again."
+          : "";
 
   const activeSession = selectedCase?.debateSessions?.find((item: any) => item.status === "ACTIVE");
   const latestSession = selectedCase?.debateSessions?.[0] || null;
@@ -154,6 +208,12 @@ export default async function LawyerDebatePage({
       currentPath="/lawyer/debate"
       user={user}
     >
+      {errorMessage ? (
+        <div className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {errorMessage}
+        </div>
+      ) : null}
+
       {!cases.length ? (
         <Card>
           <CardContent className="p-10">

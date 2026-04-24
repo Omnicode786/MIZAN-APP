@@ -63,6 +63,9 @@ function rejectPromptEcho<T extends { text: string }>(result: T, prompt: string)
 
 export async function runAiTask(prompt: string, context?: string, options?: AiTaskOptions) {
   const provider = normalizeProvider(process.env.AI_PROVIDER);
+  if (!prompt.trim()) {
+    throw new AiProviderError(provider, new Error("AI prompt is empty."));
+  }
 
   try {
     if (provider === "openai") {
@@ -85,6 +88,13 @@ export async function runVisionAiTask(
   context?: string
 ) {
   const provider = normalizeProvider(process.env.AI_PROVIDER);
+  if (!prompt.trim()) {
+    throw new AiProviderError(provider, new Error("AI prompt is empty."));
+  }
+
+  if (!Array.isArray(images) || images.some((image) => !image?.mimeType || !image?.data)) {
+    throw new AiProviderError(provider, new Error("AI image input is invalid."));
+  }
 
   try {
     if (provider === "openai") return rejectPromptEcho(await generateOpenAIVisionInsight(prompt, images, context), prompt);
