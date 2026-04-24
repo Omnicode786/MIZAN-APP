@@ -84,6 +84,7 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -94,6 +95,80 @@ body {
     linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 100%);
   background-attachment: fixed;
   text-rendering: optimizeLegibility;
+}
+
+main,
+section,
+article,
+aside,
+header,
+nav,
+div {
+  min-width: 0;
+}
+
+.grid > *,
+.flex > * {
+  min-width: 0;
+}
+
+button,
+a,
+label,
+select,
+input,
+textarea {
+  max-width: 100%;
+}
+
+button,
+[role="button"],
+.inline-flex {
+  min-width: 0;
+}
+
+.language-toggle {
+  inline-size: 160px;
+  min-inline-size: 160px;
+  max-inline-size: 160px;
+}
+
+.language-toggle.w-\[144px\] {
+  inline-size: 144px;
+  min-inline-size: 144px;
+  max-inline-size: 144px;
+}
+
+.language-toggle select {
+  inline-size: 100%;
+}
+
+.language-toggle[title] {
+  overflow: hidden;
+}
+
+.topbar-actions {
+  margin-inline-start: auto;
+}
+
+.topbar-search-icon {
+  inset-inline-start: 0.75rem;
+  left: auto;
+}
+
+.topbar-search-input {
+  padding-inline-start: 2.5rem;
+  padding-inline-end: 0.75rem;
+}
+
+html[dir="rtl"] .topbar-actions {
+  margin-left: 0;
+  margin-inline-start: auto;
+}
+
+html[dir="rtl"] .app-sidebar {
+  border-right-width: 0;
+  border-left-width: 1px;
 }
 
 html[lang="ur"],

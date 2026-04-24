@@ -68,7 +68,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "hidden border-r border-border/70 bg-card/80 transition-all duration-300 lg:block",
+        "app-sidebar hidden border-r border-border/70 bg-card/80 transition-all duration-300 lg:block",
         collapsed ? "w-[76px] px-2.5 py-5" : "w-72 p-5"
       )}
     >

@@ -18,16 +18,16 @@ export function Topbar({
   const language = useLanguage();
 
   return (
-    <div className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border/70 bg-background/80 px-6 py-4 backdrop-blur">
-      <div className="relative hidden max-w-md flex-1 md:block">
-        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+    <div className="app-topbar sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border/70 bg-background/80 px-6 py-4 backdrop-blur">
+      <div className="topbar-search relative hidden max-w-md flex-1 md:block">
+        <Search className="topbar-search-icon pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
-          className="pl-10"
+          className="topbar-search-input pl-10"
           placeholder={t(language, "searchPlaceholder")}
         />
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="topbar-actions ml-auto flex min-w-0 items-center gap-3">
         <ThemeToggle />
         <LanguageToggle compact />
         <Button variant="outline" size="icon" asChild>

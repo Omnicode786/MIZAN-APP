@@ -45,8 +45,8 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
   return (
     <label
       className={cn(
-        "inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-background/75 px-3 text-sm text-foreground shadow-sm backdrop-blur transition hover:bg-muted/70",
-        compact && "h-9 px-2"
+        "language-toggle inline-flex h-10 w-[160px] shrink-0 items-center gap-2 rounded-2xl border border-border bg-background/75 px-3 text-sm text-foreground shadow-sm backdrop-blur transition hover:bg-muted/70",
+        compact && "h-9 w-[144px] px-2"
       )}
       title="Language"
     >
@@ -56,8 +56,7 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
         value={mounted ? language : DEFAULT_LANGUAGE}
         onChange={(event) => updateLanguage(normalizeLanguage(event.target.value))}
         className={cn(
-          "h-full bg-transparent text-sm outline-none",
-          compact ? "max-w-[104px]" : "max-w-[128px]"
+          "h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
         )}
       >
         {Object.entries(languageLabels).map(([value, label]) => (
