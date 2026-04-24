@@ -96,14 +96,6 @@ async function callGemini(parts: any[], options: AiTaskOptions = {}): Promise<Ge
   };
 }
 
-function safeJsonParse(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
 export async function generateGeminiInsight(
   prompt: string,
   context?: string,

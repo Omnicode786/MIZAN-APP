@@ -59,22 +59,13 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
 
   if (!response.ok) {
     const bodyText = await response.text();
-    const parsed = safeJsonParse(bodyText);
-    const remoteMessage =
-      parsed?.error?.message ||
-      parsed?.message ||
-      "";
     console.error("[OPENAI_PROVIDER_ERROR]", {
       status: response.status,
       model,
       body: bodyText
     });
 
-    throw new Error(
-      remoteMessage
-        ? `OpenAI request failed with ${response.status}: ${remoteMessage}`
-        : `OpenAI request failed with ${response.status}`
-    );
+    throw new Error(`OpenAI request failed with ${response.status}.`);
   }
 
   const data = await response.json();
@@ -85,14 +76,6 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
     confidence: 0.82,
     provider: "openai"
   };
-}
-
-function safeJsonParse(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
 }
 
 export async function generateOpenAIInsight(
