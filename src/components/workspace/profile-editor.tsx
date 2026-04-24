@@ -19,30 +19,45 @@ export function LawyerProfileEditor({ profile }: { profile: any }) {
   const [city, setCity] = useState(profile.city || "");
   const [isPublic, setIsPublic] = useState(Boolean(profile.isPublic));
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function save() {
-    setSaving(true);
-    await fetch("/api/lawyer-profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        firmName,
-        bio,
-        specialties: specialties.split(",").map((item: string) => item.trim()).filter(Boolean),
-        yearsExperience: Number(yearsExperience || 0),
-        hourlyRate: Number(hourlyRate || 0),
-        fixedFeeFrom: Number(fixedFeeFrom || 0),
-        city,
-        isPublic
-      })
-    });
-    setSaving(false);
-    router.refresh();
+    try {
+      setSaving(true);
+      setMessage(null);
+      const res = await fetch("/api/lawyer-profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          firmName,
+          bio,
+          specialties: specialties.split(",").map((item: string) => item.trim()).filter(Boolean),
+          yearsExperience: Number(yearsExperience || 0),
+          hourlyRate: Number(hourlyRate || 0),
+          fixedFeeFrom: Number(fixedFeeFrom || 0),
+          city,
+          isPublic
+        })
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) throw new Error(data?.error || "Unable to save profile.");
+
+      setMessage({ type: "success", text: "Profile saved." });
+      router.refresh();
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Unable to save profile."
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <Card>
+    <Card className="animate-in fade-in-0 slide-in-from-bottom-2">
       <CardContent className="grid gap-4 p-6 md:grid-cols-2">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
         <Input value={firmName} onChange={(e) => setFirmName(e.target.value)} placeholder="Firm or practice name" />
@@ -59,8 +74,19 @@ export function LawyerProfileEditor({ profile }: { profile: any }) {
           <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="What do you handle, how do you work, and what kind of clients do you help?" />
         </div>
         <div className="md:col-span-2 flex justify-end">
-          <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save profile"}</Button>
+          <Button onClick={save} disabled={saving}>{saving ? "Saving..." : "Save profile"}</Button>
         </div>
+        {message ? (
+          <div
+            className={`md:col-span-2 rounded-2xl border p-3 text-sm ${
+              message.type === "success"
+                ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                : "border-destructive/30 bg-destructive/10 text-destructive"
+            }`}
+          >
+            {message.text}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

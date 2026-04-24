@@ -9,7 +9,18 @@ function tone(sourceLabel?: string) {
 }
 
 export function TimelineView({ items }: { items: any[] }) {
-  const sorted = [...items].sort((a, b) => +new Date(a.eventDate) - +new Date(b.eventDate));
+  const sorted = [...(items || [])].sort((a, b) => +new Date(a.eventDate) - +new Date(b.eventDate));
+
+  if (!sorted.length) {
+    return (
+      <div className="rounded-3xl border border-dashed border-border bg-card/70 p-6 text-center">
+        <p className="text-sm font-medium">No timeline events yet</p>
+        <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-muted-foreground">
+          Timeline events will appear after documents are uploaded or case activity is recorded.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -22,7 +33,7 @@ export function TimelineView({ items }: { items: any[] }) {
             <div className="absolute top-2 h-full w-px bg-border" />
             <div className="relative z-10 mt-1 h-3.5 w-3.5 rounded-full bg-primary ring-4 ring-background" />
           </div>
-          <Card className="border-border/70">
+          <Card className="border-border/70 soft-hover">
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>

@@ -26,7 +26,9 @@ export function CaseCard({
                 <h3 className="text-lg font-semibold tracking-tight">{legalCase.title}</h3>
               </div>
             </div>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">{legalCase.description}</p>
+            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+              {legalCase.description || "No case description added yet."}
+            </p>
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">{toTitleCase(legalCase.status)}</Badge>
               <Badge variant={legalCase.priority === "HIGH" || legalCase.priority === "CRITICAL" ? "destructive" : "secondary"}>
