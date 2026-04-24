@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { handleApiError, notFound } from "@/lib/api-response";
 import { getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -22,48 +23,56 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  const user = await requireUser();
-  const draft = await prisma.draft.findUnique({ where: { id: params.id } });
-  if (!draft) return NextResponse.json({ error: "Draft not found." }, { status: 404 });
-  const { legalCase } = await getAccessibleCase(draft.caseId);
-  if (!legalCase) return NextResponse.json({ error: "Case not found." }, { status: 404 });
+  try {
+    const user = await requireUser();
+    const draft = await prisma.draft.findUnique({ where: { id: params.id } });
+    if (!draft) return notFound();
+    const { legalCase } = await getAccessibleCase(draft.caseId);
+    if (!legalCase) return notFound();
 
-  const body = patchSchema.parse(await request.json());
-  const updated = await prisma.draft.update({
-    where: { id: params.id },
-    data: {
-      title: body.title,
-      type: body.type,
-      currentContent: body.content,
-      verificationStatus: body.verificationStatus,
-      verifiedById: body.verificationStatus === "VERIFIED" && user.role === "LAWYER" ? user.id : undefined
-    }
-  });
-
-  if (body.content) {
-    const count = await prisma.draftVersion.count({ where: { draftId: params.id } });
-    await prisma.draftVersion.create({
+    const body = patchSchema.parse(await request.json());
+    const updated = await prisma.draft.update({
+      where: { id: params.id },
       data: {
-        draftId: params.id,
-        createdById: user.id,
-        versionNumber: count + 1,
-        changeSummary: body.changeSummary || "Manual update",
-        content: body.content
+        title: body.title,
+        type: body.type,
+        currentContent: body.content,
+        verificationStatus: body.verificationStatus,
+        verifiedById: body.verificationStatus === "VERIFIED" && user.role === "LAWYER" ? user.id : undefined
       }
     });
-  }
 
-  await logActivity(draft.caseId, user.id, "DRAFT_UPDATED", `Updated draft ${updated.title}.`);
-  return NextResponse.json({ draft: updated });
+    if (body.content) {
+      const count = await prisma.draftVersion.count({ where: { draftId: params.id } });
+      await prisma.draftVersion.create({
+        data: {
+          draftId: params.id,
+          createdById: user.id,
+          versionNumber: count + 1,
+          changeSummary: body.changeSummary || "Manual update",
+          content: body.content
+        }
+      });
+    }
+
+    await logActivity(draft.caseId, user.id, "DRAFT_UPDATED", `Updated draft ${updated.title}.`);
+    return NextResponse.json({ draft: updated });
+  } catch (error) {
+    return handleApiError(error, "DRAFT_UPDATE_ROUTE", "Unable to update draft.");
+  }
 }
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
-  const user = await requireUser();
-  const draft = await prisma.draft.findUnique({ where: { id: params.id } });
-  if (!draft) return NextResponse.json({ error: "Draft not found." }, { status: 404 });
-  const { legalCase } = await getAccessibleCase(draft.caseId);
-  if (!legalCase) return NextResponse.json({ error: "Case not found." }, { status: 404 });
-  await prisma.draft.delete({ where: { id: params.id } });
-  await logActivity(draft.caseId, user.id, "DRAFT_DELETED", `Deleted draft ${draft.title}.`);
-  return NextResponse.json({ ok: true });
+  try {
+    const user = await requireUser();
+    const draft = await prisma.draft.findUnique({ where: { id: params.id } });
+    if (!draft) return notFound();
+    const { legalCase } = await getAccessibleCase(draft.caseId);
+    if (!legalCase) return notFound();
+    await prisma.draft.delete({ where: { id: params.id } });
+    await logActivity(draft.caseId, user.id, "DRAFT_DELETED", `Deleted draft ${draft.title}.`);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return handleApiError(error, "DRAFT_DELETE_ROUTE", "Unable to delete draft.");
+  }
 }
