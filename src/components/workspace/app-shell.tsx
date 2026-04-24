@@ -17,7 +17,7 @@ export function AppShell({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background transition-colors duration-300">
       <Sidebar nav={nav} heading={heading} currentPath={currentPath} />
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Topbar user={user} />

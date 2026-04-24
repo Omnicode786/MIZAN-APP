@@ -45,7 +45,7 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
   return (
     <label
       className={cn(
-        "language-toggle inline-flex h-10 w-[160px] shrink-0 items-center gap-2 rounded-2xl border border-border bg-background/75 px-3 text-sm text-foreground shadow-sm backdrop-blur transition hover:bg-muted/70",
+        "language-toggle inline-flex h-10 w-[160px] shrink-0 items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 text-sm text-foreground shadow-sm backdrop-blur transition-colors duration-300 hover:bg-muted/70 dark:bg-card/90",
         compact && "h-9 w-[144px] px-2"
       )}
       title="Language"

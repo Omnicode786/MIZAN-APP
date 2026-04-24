@@ -28,7 +28,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run lint --if-present
+      - run: npx eslint . --ext .js,.jsx,.ts,.tsx
 
       - run: npm test --if-present
 

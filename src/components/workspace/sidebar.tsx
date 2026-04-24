@@ -69,7 +69,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "app-sidebar sticky top-0 hidden h-screen shrink-0 border-r border-border/70 bg-card/80 backdrop-blur-xl transition-all duration-300 lg:flex lg:flex-col",
+        "app-sidebar sticky top-0 hidden h-screen shrink-0 border-r border-border/70 bg-card/80 backdrop-blur-xl transition-all duration-300 lg:flex lg:flex-col dark:bg-card/90",
         collapsed ? "w-[84px] px-3 py-5" : "w-72 p-5"
       )}
     >
@@ -99,7 +99,7 @@ export function Sidebar({
           <div className="mb-3 h-3" />
         )}
 
-        <nav className="space-y-2 rounded-[1.75rem] border border-border/60 bg-background/55 p-2 shadow-sm">
+        <nav className="space-y-2 rounded-[1.75rem] border border-border/60 bg-background/55 p-2 shadow-sm transition-colors duration-300 dark:bg-background/80">
           <Link
             href="/"
             title="Back to Home"

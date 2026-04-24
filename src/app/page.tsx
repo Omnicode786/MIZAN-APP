@@ -26,19 +26,18 @@ import {
   Landmark,
   LockKeyhole,
   MessageSquareText,
-  Moon,
   Network,
   Route,
   Scale,
   Search,
   ShieldCheck,
   Sparkles,
-  Sun,
   Upload,
   UsersRound
 } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useLanguage } from "@/hooks/use-language";
 import { t } from "@/lib/translations";
 import { Badge } from "@/components/ui/badge";
@@ -214,8 +213,6 @@ const heroTrustSignals = [
 ];
 
 export default function LandingPage() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
   const [headlineIndex, setHeadlineIndex] = useState(0);
   const language = useLanguage();
   const shouldReduceMotion = useReducedMotion();
@@ -229,16 +226,6 @@ export default function LandingPage() {
   const visualY = useTransform(scrollYProgress, [0, 1], [0, -32]);
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem("mizan-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const nextTheme = storedTheme === "dark" || (!storedTheme && prefersDark) ? "dark" : "light";
-
-    setTheme(nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     if (shouldReduceMotion) return;
 
     const timer = window.setInterval(() => {
@@ -248,18 +235,12 @@ export default function LandingPage() {
     return () => window.clearInterval(timer);
   }, [shouldReduceMotion]);
 
-  function toggleTheme() {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    localStorage.setItem("mizan-theme", nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-  }
-
-  const surfaceClass = "rounded-xl border border-border/70 bg-card shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
+  const surfaceClass =
+    "rounded-xl border border-border/70 bg-card/95 text-card-foreground shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-colors duration-300 dark:bg-card/90 dark:shadow-[0_16px_36px_rgba(2,6,23,0.32)]";
   const bodyCopyClass = "max-w-[65ch] text-[13px] leading-[18px] text-muted-foreground";
 
   return (
-    <div className="min-h-screen overflow-hidden bg-background">
+    <div className="min-h-screen overflow-hidden bg-background transition-colors duration-300">
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-x-0 top-0 flex justify-center overflow-hidden">
           <div className="relative h-[420px] w-[min(86vw,900px)] opacity-[0.05] sm:h-[480px] lg:h-[560px]">
@@ -346,20 +327,7 @@ export default function LandingPage() {
 
             <div className="col-span-6 flex items-center justify-end gap-3 lg:col-span-4">
               <LanguageToggle compact />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={toggleTheme}
-                aria-label="Toggle dark mode"
-                className="h-8 w-8 rounded-xl"
-              >
-                {mounted && theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </Button>
+              <ThemeToggle className="h-8 w-8 rounded-xl" />
               <Button asChild variant="ghost" className="hidden h-8 rounded-xl px-3 text-[14px] sm:inline-flex">
                 <Link href="/login">{t(language, "login")}</Link>
               </Button>
@@ -375,7 +343,7 @@ export default function LandingPage() {
 
         <main>
           <section ref={heroRef} className="relative pb-0 pt-8">
-            <div className="rounded-[20px] border border-[#E2E8F0] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] p-4 shadow-[0_10px_36px_rgba(15,23,42,0.05)] lg:p-5">
+            <div className="rounded-[20px] border border-border/70 bg-[linear-gradient(180deg,hsl(var(--card))_0%,hsl(var(--muted)/0.6)_100%)] p-4 shadow-[0_10px_36px_rgba(15,23,42,0.05)] transition-colors duration-300 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98)_0%,rgba(15,23,42,0.9)_100%)] dark:shadow-[0_22px_52px_rgba(2,6,23,0.38)] lg:p-5">
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch lg:gap-x-8">
                 <motion.div
                   className="lg:col-span-6"
@@ -384,7 +352,7 @@ export default function LandingPage() {
                   animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 >
-                  <div className="flex h-full flex-col rounded-2xl bg-[linear-gradient(180deg,#FFFFFF_0%,#F1F5F9_100%)] p-4 lg:p-5">
+                  <div className="flex h-full flex-col rounded-2xl bg-[linear-gradient(180deg,hsl(var(--card))_0%,hsl(var(--muted)/0.75)_100%)] p-4 transition-colors duration-300 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.82)_0%,rgba(30,41,59,0.72)_100%)] lg:p-5">
                     <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-between lg:mx-0">
                       <div>
                         <motion.div
@@ -393,11 +361,11 @@ export default function LandingPage() {
                           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                           transition={{ delay: 0.05, duration: 0.6 }}
                         >
-                          <div className="inline-flex h-7 items-center gap-1.5 rounded-md bg-[#F3F4F6] px-2.5 text-[11px] font-medium leading-4 text-[#4B5563]">
+                          <div className="inline-flex h-7 items-center gap-1.5 rounded-md bg-muted px-2.5 text-[11px] font-medium leading-4 text-muted-foreground transition-colors duration-300 dark:bg-muted/80 dark:text-foreground/80">
                             <Sparkles className="h-3.5 w-3.5" />
                             <span>Agent-powered</span>
                           </div>
-                          <div className="inline-flex h-7 items-center gap-1.5 rounded-md bg-[#F3F4F6] px-2.5 text-[11px] font-medium leading-4 text-[#4B5563]">
+                          <div className="inline-flex h-7 items-center gap-1.5 rounded-md bg-muted px-2.5 text-[11px] font-medium leading-4 text-muted-foreground transition-colors duration-300 dark:bg-muted/80 dark:text-foreground/80">
                             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
                             <span>Live workflow focus</span>
                             <AnimatePresence mode="wait">
@@ -416,7 +384,7 @@ export default function LandingPage() {
                         </motion.div>
 
                         <motion.h1
-                          className="mt-4 max-w-[520px] text-balance text-[42px] font-bold leading-[50px] tracking-[-0.02em] text-[#0F172A]"
+                          className="mt-4 max-w-[520px] text-balance text-[42px] font-bold leading-[50px] tracking-[-0.02em] text-foreground"
                           initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
                           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                           transition={{ delay: 0.12, duration: 0.72 }}
@@ -425,7 +393,7 @@ export default function LandingPage() {
                         </motion.h1>
 
                         <motion.p
-                          className="mt-6 max-w-[480px] text-[14px] leading-[22px] text-[#475569]"
+                          className="mt-6 max-w-[480px] text-[14px] leading-[22px] text-muted-foreground"
                           initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
                           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                           transition={{ delay: 0.22, duration: 0.68 }}
@@ -460,7 +428,7 @@ export default function LandingPage() {
                         {heroTrustSignals.map((item) => (
                           <div
                             key={item}
-                            className="inline-flex items-center gap-1.5 text-[12px] leading-4 text-[#94A3B8]"
+                            className="inline-flex items-center gap-1.5 text-[12px] leading-4 text-muted-foreground/80"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                             <span>{item}</span>
@@ -490,7 +458,7 @@ export default function LandingPage() {
                     />
                     <HeroOrbit />
 
-                    <Card className="relative w-full overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+                    <Card className="relative w-full overflow-hidden rounded-[14px] border border-border/70 bg-card/95 shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-colors duration-300 dark:bg-card/90 dark:shadow-[0_20px_48px_rgba(2,6,23,0.4)]">
                       <motion.div
                         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.05),transparent_28%)]"
                         animate={shouldReduceMotion ? undefined : { opacity: [0.7, 1, 0.7] }}
@@ -500,14 +468,14 @@ export default function LandingPage() {
                       <CardContent className="relative p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-[14px] font-bold leading-5 text-[#111827]">
+                            <p className="text-[14px] font-bold leading-5 text-foreground">
                               Live matter cockpit
                             </p>
-                            <p className="mt-0.5 truncate text-[12px] leading-4 text-[#94A3B8]">
+                            <p className="mt-0.5 truncate text-[12px] leading-4 text-muted-foreground/80">
                               Intake, evidence, deadlines, drafts, requests, and lawyer review in one place.
                             </p>
                           </div>
-                          <div className="inline-flex items-center rounded-[12px] bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-medium leading-4 text-[#059669]">
+                          <div className="inline-flex items-center rounded-[12px] bg-emerald-500/12 px-2.5 py-1 text-[11px] font-medium leading-4 text-emerald-700 transition-colors duration-300 dark:bg-emerald-500/18 dark:text-emerald-300">
                             Workflow active
                           </div>
                         </div>
@@ -516,13 +484,13 @@ export default function LandingPage() {
                           {cockpitMetrics.map(([label, value], index) => (
                             <motion.div
                               key={label}
-                              className="relative flex h-full min-h-[118px] flex-col rounded-[10px] bg-[#F9FAFB] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+                              className="relative flex h-full min-h-[118px] flex-col rounded-[10px] bg-muted/60 p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors duration-300 dark:bg-muted/80"
                               initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                               animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                               transition={{ delay: 0.36 + index * 0.05, duration: 0.52 }}
                             >
                               <motion.span
-                                className="absolute right-3.5 top-3.5 inline-flex h-[5px] w-[5px] rounded-full bg-[#3B82F6]"
+                                className="absolute right-3.5 top-3.5 inline-flex h-[5px] w-[5px] rounded-full bg-primary"
                                 animate={shouldReduceMotion ? undefined : { opacity: [0.3, 1, 0.3] }}
                                 transition={{
                                   duration: 1.6,
@@ -531,10 +499,10 @@ export default function LandingPage() {
                                   ease: "easeInOut"
                                 }}
                               />
-                              <p className="text-[10px] font-semibold uppercase leading-4 tracking-[0.05em] text-[#64748B]">
+                              <p className="text-[10px] font-semibold uppercase leading-4 tracking-[0.05em] text-muted-foreground">
                                 {label}
                               </p>
-                              <p className="mt-1.5 text-[16px] font-semibold leading-6 text-[#0F172A]">
+                              <p className="mt-1.5 text-[16px] font-semibold leading-6 text-foreground">
                                 {value}
                               </p>
                               <div className="mt-auto pt-3">
@@ -545,17 +513,17 @@ export default function LandingPage() {
                         </div>
 
                         <div className="mt-2.5 grid gap-2.5 xl:grid-cols-[2fr_3fr] xl:items-start">
-                          <div className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                          <div className="rounded-[10px] border border-border/70 bg-card p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors duration-300 dark:bg-card/90">
                             <div className="flex items-start justify-between gap-3">
                               <div>
-                                <p className="text-[13px] font-semibold leading-5 text-[#111827]">
+                                <p className="text-[13px] font-semibold leading-5 text-foreground">
                                   AI Case Agent
                                 </p>
-                                <p className="mt-1 text-[11px] leading-4 text-[#6B7280]">
+                                <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
                                   Converts the live case record into next legal workflow actions.
                                 </p>
                               </div>
-                              <Bot className="h-[18px] w-[18px] shrink-0 text-[#3B82F6]" />
+                              <Bot className="h-[18px] w-[18px] shrink-0 text-primary" />
                             </div>
 
                             <div className="mt-3 grid gap-3">
@@ -572,7 +540,7 @@ export default function LandingPage() {
                                   transition={{ delay: 0.42 + index * 0.06, duration: 0.48 }}
                                 >
                                   <motion.span
-                                    className="mt-0.5 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#3B82F6] text-white"
+                                    className="mt-0.5 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
                                     animate={shouldReduceMotion ? undefined : { scale: [1, 1.15, 1] }}
                                     transition={{
                                       duration: 1.9,
@@ -583,30 +551,30 @@ export default function LandingPage() {
                                   >
                                     <CheckCircle2 className="h-[10px] w-[10px]" />
                                   </motion.span>
-                                  <p className="text-[12px] leading-[18px] text-[#374151]">{item}</p>
+                                  <p className="text-[12px] leading-[18px] text-foreground/82 dark:text-foreground/80">{item}</p>
                                 </motion.div>
                               ))}
                             </div>
                           </div>
 
-                          <div className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                          <div className="rounded-[10px] border border-border/70 bg-card p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors duration-300 dark:bg-card/90">
                             <div className="flex items-center justify-between gap-3">
                               <div>
-                                <p className="text-[13px] font-semibold leading-5 text-[#111827]">
+                                <p className="text-[13px] font-semibold leading-5 text-foreground">
                                   Matter roadmap
                                 </p>
-                                <p className="mt-1 text-[11px] leading-4 text-[#6B7280]">
+                                <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
                                   A structured progression from evidence intake to lawyer handoff.
                                 </p>
                               </div>
-                              <div className="inline-flex items-center rounded-[12px] bg-[#D1FAE5] px-2 py-1 text-[11px] font-medium leading-4 text-[#059669]">
+                              <div className="inline-flex items-center rounded-[12px] bg-emerald-500/12 px-2 py-1 text-[11px] font-medium leading-4 text-emerald-700 transition-colors duration-300 dark:bg-emerald-500/18 dark:text-emerald-300">
                                 Structured
                               </div>
                             </div>
 
                             <div className="relative mt-3">
-                              <div className="absolute bottom-2.5 left-[10px] top-2.5 w-0.5 bg-[#CBD5E1]" />
-                              <div className="absolute left-[10px] top-2.5 h-5 w-0.5 bg-[#3B82F6]" />
+                              <div className="absolute bottom-2.5 left-[10px] top-2.5 w-0.5 bg-border" />
+                              <div className="absolute left-[10px] top-2.5 h-5 w-0.5 bg-primary" />
                               <div className="grid gap-2.5">
                                 {workflowSteps.map((step, index) => (
                                   <motion.div
@@ -617,10 +585,10 @@ export default function LandingPage() {
                                     transition={{ delay: 0.48 + index * 0.05, duration: 0.48 }}
                                   >
                                     <motion.div
-                                      className={`relative z-10 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 bg-white text-[10px] font-semibold ${
+                                      className={`relative z-10 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 bg-card text-[10px] font-semibold ${
                                         index === 0
-                                          ? "border-[#3B82F6] text-[#3B82F6]"
-                                          : "border-[#CBD5E1] text-[#64748B]"
+                                          ? "border-primary text-primary"
+                                          : "border-border text-muted-foreground"
                                       }`}
                                       animate={shouldReduceMotion ? undefined : { y: [0, -2, 0] }}
                                       transition={{
@@ -634,7 +602,7 @@ export default function LandingPage() {
                                     </motion.div>
                                     <div className="min-w-0">
                                       <div className="flex flex-wrap items-baseline gap-2">
-                                        <p className="text-[12px] font-semibold leading-4 text-[#111827]">
+                                        <p className="text-[12px] font-semibold leading-4 text-foreground">
                                           {step.title}
                                         </p>
                                         <Badge
@@ -650,7 +618,7 @@ export default function LandingPage() {
                                           {step.state}
                                         </Badge>
                                       </div>
-                                      <p className="mt-0.5 text-[11px] leading-[14px] text-[#6B7280]">
+                                      <p className="mt-0.5 text-[11px] leading-[14px] text-muted-foreground">
                                         {step.detail}
                                       </p>
                                     </div>
@@ -942,7 +910,7 @@ export default function LandingPage() {
           </section>
 
           <section className="pb-12 pt-8">
-            <div className={`${surfaceClass} overflow-hidden bg-[linear-gradient(135deg,rgba(37,99,235,0.08),rgba(255,255,255,0.98)_38%,rgba(37,99,235,0.06))]`}>
+            <div className={`${surfaceClass} overflow-hidden bg-[linear-gradient(135deg,rgba(37,99,235,0.08),rgba(255,255,255,0.98)_38%,rgba(37,99,235,0.06))] dark:bg-[linear-gradient(135deg,rgba(37,99,235,0.16),rgba(15,23,42,0.96)_38%,rgba(37,99,235,0.1))]`}>
               <div className="grid grid-cols-1 gap-y-8 p-5 lg:grid-cols-12 lg:items-center lg:gap-x-6">
                 <div className="lg:col-span-7">
                   <Badge variant="secondary" className="h-7 rounded-full px-2.5 text-[11px]">
@@ -1037,7 +1005,7 @@ function HeroAction({
         className="relative h-10 rounded-xl px-5 text-[14px] font-semibold"
       >
         <Link href={href} className="group relative overflow-hidden">
-          <span className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_58%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <span className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_58%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-[radial-gradient(circle_at_center,rgba(96,165,250,0.22),transparent_58%)]" />
           <span className="relative inline-flex items-center">{children}</span>
         </Link>
       </Button>
