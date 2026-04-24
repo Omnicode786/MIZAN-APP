@@ -1,0 +1,507 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 23% 98%;
+  --foreground: 222 47% 11%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 215 25% 91%;
+  --secondary-foreground: 222 47% 11%;
+
+  --muted: 214 32% 95%;
+  --muted-foreground: 215 16% 47%;
+
+  --accent: 216 34% 94%;
+  --accent-foreground: 222 47% 11%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 142 71% 45%;
+  --success-foreground: 210 40% 98%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 222 47% 11%;
+
+  --border: 214 20% 86%;
+  --input: 214 20% 88%;
+  --ring: 221 83% 53%;
+
+  --radius: 1rem;
+}
+
+.dark {
+  --background: 228 30% 8%;
+  --foreground: 210 40% 98%;
+
+  --card: 228 28% 11%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 228 28% 11%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 223 100% 68%;
+  --primary-foreground: 228 30% 8%;
+
+  --secondary: 228 20% 18%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 228 20% 15%;
+  --muted-foreground: 220 18% 72%;
+
+  --accent: 232 22% 17%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 72% 56%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 145 63% 48%;
+  --success-foreground: 210 40% 98%;
+
+  --warning: 39 95% 58%;
+  --warning-foreground: 228 30% 8%;
+
+  --border: 228 16% 22%;
+  --input: 228 16% 18%;
+  --ring: 223 100% 68%;
+}
+
+* {
+  @apply border-border;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  background-image:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.10), transparent 30%),
+    radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.08), transparent 24%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 100%);
+  background-attachment: fixed;
+  text-rendering: optimizeLegibility;
+}
+
+html[lang="ur"],
+html[data-language="ur"] {
+  --urdu-ui-font: "Noto Naskh Arabic", "Noto Nastaliq Urdu", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-family: var(--urdu-ui-font);
+  font-size: 17px;
+}
+
+html[dir="rtl"] body {
+  direction: rtl;
+}
+
+html[data-language="ur"] body {
+  font-family: var(--urdu-ui-font);
+  line-height: 2;
+  word-spacing: 0.04em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html[data-language="ur"] h1,
+html[data-language="ur"] h2,
+html[data-language="ur"] h3,
+html[data-language="ur"] h4,
+html[data-language="ur"] h5,
+html[data-language="ur"] h6 {
+  font-family: var(--urdu-ui-font);
+  font-weight: 700;
+  letter-spacing: 0 !important;
+  line-height: 1.8;
+  text-wrap: balance;
+}
+
+html[data-language="ur"] h1,
+html[data-language="ur"] .text-5xl,
+html[data-language="ur"] .text-6xl {
+  line-height: 1.75;
+}
+
+html[data-language="ur"] p,
+html[data-language="ur"] li,
+html[data-language="ur"] blockquote,
+html[data-language="ur"] label,
+html[data-language="ur"] span,
+html[data-language="ur"] a,
+html[data-language="ur"] button,
+html[data-language="ur"] input,
+html[data-language="ur"] textarea,
+html[data-language="ur"] select {
+  letter-spacing: 0 !important;
+}
+
+html[data-language="ur"] .uppercase {
+  text-transform: none;
+}
+
+html[data-language="ur"] .tracking-tight,
+html[data-language="ur"] [class*="tracking-"] {
+  letter-spacing: 0 !important;
+}
+
+html[data-language="ur"] .text-xs {
+  font-size: 0.86rem;
+  line-height: 2;
+}
+
+html[data-language="ur"] [class*="text-[10px]"],
+html[data-language="ur"] [class*="text-[11px]"],
+html[data-language="ur"] [class*="text-[12px]"] {
+  font-size: 0.84rem;
+  line-height: 2;
+}
+
+html[data-language="ur"] .text-sm {
+  font-size: 0.98rem;
+  line-height: 2;
+}
+
+html[data-language="ur"] .text-base {
+  font-size: 1.06rem;
+  line-height: 2.05;
+}
+
+html[data-language="ur"] .text-lg {
+  font-size: 1.18rem;
+  line-height: 1.95;
+}
+
+html[data-language="ur"] .text-xl {
+  font-size: 1.34rem;
+  line-height: 1.9;
+}
+
+html[data-language="ur"] .text-2xl {
+  font-size: 1.62rem;
+  line-height: 1.85;
+}
+
+html[data-language="ur"] .text-3xl {
+  font-size: 2rem;
+  line-height: 1.75;
+}
+
+html[data-language="ur"] .text-4xl {
+  font-size: 2.35rem;
+  line-height: 1.72;
+}
+
+html[data-language="ur"] .text-5xl {
+  font-size: 2.8rem;
+}
+
+html[data-language="ur"] .text-6xl {
+  font-size: 3.35rem;
+}
+
+html[data-language="ur"] .leading-5,
+html[data-language="ur"] .leading-6,
+html[data-language="ur"] .leading-7,
+html[data-language="ur"] .leading-8,
+html[data-language="ur"] .leading-none,
+html[data-language="ur"] .leading-tight,
+html[data-language="ur"] .leading-snug {
+  line-height: 2 !important;
+}
+
+html[data-language="ur"] .text-muted-foreground {
+  color: hsl(var(--foreground) / 0.72);
+}
+
+.dark html[data-language="ur"] .text-muted-foreground,
+html[data-language="ur"].dark .text-muted-foreground {
+  color: hsl(var(--foreground) / 0.78);
+}
+
+html[data-language="ur"] input,
+html[data-language="ur"] textarea,
+html[data-language="ur"] select {
+  font-family: var(--urdu-ui-font);
+  font-size: 1rem;
+  line-height: 2;
+  text-align: right;
+}
+
+html[data-language="ur"] input,
+html[data-language="ur"] select,
+html[data-language="ur"] button,
+html[data-language="ur"] .h-9,
+html[data-language="ur"] .h-10,
+html[data-language="ur"] .h-11 {
+  min-height: 3.25rem;
+}
+
+html[data-language="ur"] textarea {
+  min-height: 8rem;
+  padding-top: 0.95rem;
+  padding-bottom: 0.95rem;
+}
+
+html[data-language="ur"] button,
+html[data-language="ur"] [role="button"],
+html[data-language="ur"] a[class*="rounded"],
+html[data-language="ur"] .inline-flex {
+  line-height: 1.9;
+}
+
+html[data-language="ur"] .rounded-full,
+html[data-language="ur"] .rounded-2xl,
+html[data-language="ur"] .rounded-3xl {
+  overflow: visible;
+}
+
+html[data-language="ur"] .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+html[data-language="ur"] .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem;
+}
+
+html[data-language="ur"] .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.25rem;
+}
+
+html[data-language="ur"] input[type="email"],
+html[data-language="ur"] input[type="password"],
+html[data-language="ur"] input[type="url"],
+html[data-language="ur"] input[type="number"],
+html[data-language="ur"] input[type="date"] {
+  direction: ltr;
+  text-align: left;
+}
+
+html[data-language="ur"] .prose-mizan p,
+html[data-language="ur"] .prose-mizan li,
+html[data-language="ur"] .prose-mizan blockquote {
+  font-size: 1rem;
+  line-height: 2.15;
+}
+
+html[data-language="ur"] .prose-mizan h1,
+html[data-language="ur"] .prose-mizan h2,
+html[data-language="ur"] .prose-mizan h3,
+html[data-language="ur"] .prose-mizan h4 {
+  font-weight: 700;
+  line-height: 1.85;
+  letter-spacing: 0 !important;
+  text-transform: none;
+}
+
+html[data-language="ur"] .prose-mizan ul,
+html[data-language="ur"] .prose-mizan ol {
+  font-size: 1rem;
+  line-height: 2.15;
+  padding-inline-start: 1.6rem;
+  padding-inline-end: 0;
+}
+
+html[data-language="ur"] .prose-mizan blockquote {
+  border-left: 0;
+  border-right: 2px solid hsl(var(--primary) / 0.3);
+  padding-left: 0;
+  padding-right: 1rem;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 28%),
+    radial-gradient(circle at 85% 12%, rgba(139, 92, 246, 0.18), transparent 22%),
+    radial-gradient(circle at 20% 100%, rgba(6, 182, 212, 0.10), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+  background-color: hsl(var(--background));
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.22);
+  color: inherit;
+}
+
+.dark ::selection {
+  background: rgba(96, 165, 250, 0.28);
+  color: white;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+  }
+}
+
+@layer components {
+  .grid-surface {
+    background-image:
+      radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 34%),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+      linear-gradient(to right, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+    background-size: 100% 100%, 24px 24px, 24px 24px;
+  }
+
+  .dark .grid-surface {
+    background-image:
+      radial-gradient(circle at top, rgba(96, 165, 250, 0.18), transparent 34%),
+      radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.14), transparent 26%),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+      linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px;
+  }
+
+  .prose-mizan p {
+    @apply text-sm leading-7 text-muted-foreground;
+  }
+
+  .prose-mizan h1 {
+    @apply text-xl font-semibold tracking-tight text-foreground;
+  }
+
+  .prose-mizan h2 {
+    @apply text-lg font-semibold tracking-tight text-foreground;
+  }
+
+  .prose-mizan h3 {
+    @apply text-sm font-semibold uppercase tracking-[0.14em] text-foreground/90;
+  }
+
+  .prose-mizan h4 {
+    @apply text-sm font-semibold text-foreground;
+  }
+
+  .prose-mizan ul {
+    @apply list-disc space-y-2 pl-5 text-sm leading-7 text-muted-foreground;
+  }
+
+  .prose-mizan ol {
+    @apply list-decimal space-y-2 pl-5 text-sm leading-7 text-muted-foreground;
+  }
+
+  .prose-mizan blockquote {
+    @apply border-l-2 border-primary/30 pl-4 text-sm leading-7 text-muted-foreground;
+  }
+
+  .surface-card {
+    @apply rounded-2xl border border-border/70 bg-card;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 8px 24px rgba(15, 23, 42, 0.04);
+  }
+
+  .dark .surface-card {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.24),
+      0 18px 48px rgba(0, 0, 0, 0.32),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .surface-panel {
+    @apply rounded-2xl border border-border/70 bg-muted/35 backdrop-blur-sm;
+  }
+
+  .dark .surface-panel {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      0 10px 30px rgba(0,0,0,0.24);
+  }
+
+  .surface-highlight {
+    background:
+      linear-gradient(135deg, rgba(59,130,246,0.10), rgba(99,102,241,0.06));
+    @apply border border-primary/10 rounded-2xl;
+  }
+
+  .dark .surface-highlight {
+    background:
+      linear-gradient(135deg, rgba(59,130,246,0.18), rgba(139,92,246,0.14));
+    @apply border border-primary/15;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .ring-soft {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  }
+
+  .dark .ring-soft {
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
+  }
+}
+
+/* Better native form feel */
+input,
+textarea,
+select {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: hsl(var(--muted-foreground) / 0.88);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18);
+}
+
+/* Subtle scrollbar polish */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(228 12% 30%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.45);
+  background-clip: padding-box;
+}

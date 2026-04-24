@@ -1,0 +1,82 @@
+{
+  "version": "2026-04-23",
+  "jurisdiction": "Pakistan",
+  "disclaimer": "Starter knowledge only. Not legal advice. Always verify against the latest Gazette notifications and qualified counsel.",
+  "acts": [
+    {
+      "key": "contract_act_1872",
+      "title": "Contract Act, 1872",
+      "useCases": ["contract review", "payment disputes", "business/vendor disputes", "legal notices"],
+      "summary": "Core contract framework for offer, acceptance, lawful consideration, competent parties, consent, breach-linked obligations, and related commercial promises.",
+      "productHints": ["clause review", "draft notice generation", "contract validity checks"],
+      "sourceType": "official"
+    },
+    {
+      "key": "specific_relief_act_1877",
+      "title": "Specific Relief Act, 1877",
+      "useCases": ["specific performance", "injunction-related strategy", "contract enforcement"],
+      "summary": "Useful when the remedy sought is not just damages, but injunctions or specific performance in civil disputes.",
+      "productHints": ["strategy simulator", "escalation pathway suggestions"],
+      "sourceType": "official"
+    },
+    {
+      "key": "payment_of_wages_act_1936",
+      "title": "Payment of Wages Act, 1936",
+      "useCases": ["employment issues", "salary deductions", "delayed wages"],
+      "summary": "Supports wage-timing and deduction related issue spotting in employment matters.",
+      "productHints": ["employment triage", "deadline reminders", "complaint templates"],
+      "sourceType": "official"
+    },
+    {
+      "key": "qanun_e_shahadat_1984",
+      "title": "Qanun-e-Shahadat Order, 1984",
+      "useCases": ["evidence organization", "document authenticity", "electronic evidence"],
+      "summary": "Important for evidence relevance, expert opinions, and admissibility themes when organizing digital records.",
+      "productHints": ["evidence vault", "entity extraction", "export bundle generation"],
+      "sourceType": "official"
+    },
+    {
+      "key": "punjab_rented_premises_act_2009",
+      "title": "Punjab Rented Premises Act, 2009",
+      "useCases": ["rental/tenancy disputes", "landlord-tenant notices", "eviction-related timelines"],
+      "summary": "A key tenancy framework for Punjab dealing with tenancy agreements, obligations, and rent dispute procedures.",
+      "productHints": ["tenancy case intake", "notice workflow", "deadline extraction"],
+      "sourceType": "official"
+    },
+    {
+      "key": "harassment_workplace_act_2010_2022",
+      "title": "Protection Against Harassment of Women at the Workplace Act, 2010 (as amended in 2022)",
+      "useCases": ["harassment complaints", "workplace grievance flows", "inquiry structure"],
+      "summary": "Relevant for workplace harassment complaint handling, internal process awareness, and escalation structure.",
+      "productHints": ["grievance draft generator", "timeline builder", "internal committee workflow"],
+      "sourceType": "official"
+    },
+    {
+      "key": "peca_2016",
+      "title": "Prevention of Electronic Crimes Act, 2016",
+      "useCases": ["cyber complaints", "online harassment", "data misuse", "digital threats"],
+      "summary": "Primary cybercrime statute for unauthorized digital acts, related offences, and investigation-linked pathways.",
+      "productHints": ["cyber complaint intake", "evidence grouping", "agency guidance"],
+      "sourceType": "official"
+    }
+  ],
+  "agencies": [
+    {
+      "name": "FIA Complaint Portal",
+      "category": "public complaint intake",
+      "notes": "Useful when routing users toward structured complaint registration flows."
+    },
+    {
+      "name": "NCCIA",
+      "category": "cyber complaint",
+      "notes": "Relevant for cyber complaint direction and awareness."
+    }
+  ],
+  "tags": {
+    "contract review": ["consideration", "consent", "termination", "penalty", "payment", "ownership"],
+    "rental/tenancy disputes": ["rent agreement", "notice", "arrears", "eviction", "registrar"],
+    "employment issues": ["wages", "deductions", "delay", "grievance"],
+    "cyber complaints": ["harassment", "impersonation", "data theft", "blackmail", "threat"],
+    "harassment complaints": ["inquiry", "workplace", "conduct", "complaint", "retaliation"]
+  }
+}
