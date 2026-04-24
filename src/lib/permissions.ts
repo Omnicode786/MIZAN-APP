@@ -9,6 +9,7 @@ export async function requireUser() {
 
 export async function getAccessibleCase(caseId: string) {
   const user = await requireUser();
+  const includeInternalNotes = user.role === "LAWYER";
 
   const legalCase = await prisma.case.findFirst({
     where:
@@ -34,7 +35,9 @@ export async function getAccessibleCase(caseId: string) {
       deadlines: { orderBy: { dueDate: "asc" } },
       drafts: { include: { versions: { orderBy: { versionNumber: "desc" } } }, orderBy: { updatedAt: "desc" } },
       comments: { include: { author: true }, orderBy: { createdAt: "desc" } },
-      internalNotes: { include: { author: true }, orderBy: { createdAt: "desc" } },
+      internalNotes: includeInternalNotes
+        ? { include: { author: true }, orderBy: { createdAt: "desc" } }
+        : false,
       riskScores: true,
       activityLogs: { include: { actor: true }, orderBy: { createdAt: "desc" } },
       assistantThreads: {
@@ -48,7 +51,13 @@ export async function getAccessibleCase(caseId: string) {
     }
   });
 
-  return { user, legalCase };
+  return {
+    user,
+    legalCase:
+      legalCase && !includeInternalNotes
+        ? ({ ...legalCase, internalNotes: [] } as typeof legalCase & { internalNotes: [] })
+        : legalCase
+  };
 }
 
 export async function logActivity(caseId: string | null, actorId: string | null, action: string, detail?: string, metadata?: any) {

@@ -169,6 +169,8 @@ export function ClientAiAssistant({
       ]);
       setActiveThreadId(updatedThread.id);
       setQuestion("");
+    } catch {
+      setError("The AI assistant could not answer right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -181,8 +183,8 @@ export function ClientAiAssistant({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-sm">
+    <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-2">
+      <section className="surface-card overflow-hidden rounded-[2rem]">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="p-6 lg:p-8">
             <div className="flex flex-wrap gap-2">

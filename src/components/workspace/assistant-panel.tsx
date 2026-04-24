@@ -79,13 +79,15 @@ export function AssistantPanel({
       } else {
         setError(data?.error || "The AI assistant could not answer right now.");
       }
+    } catch {
+      setError("The AI assistant could not answer right now. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Card>
+    <Card className="animate-in fade-in-0 slide-in-from-bottom-2">
       <CardContent className="p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -121,7 +123,7 @@ export function AssistantPanel({
           {(activeThread?.messages || []).map((message) => (
             <div
               key={message.id}
-              className={`rounded-2xl border p-4 ${
+              className={`rounded-2xl border p-4 transition-colors duration-200 ${
                 message.role === "AI"
                   ? "border-primary/20 bg-primary/5"
                   : "border-border/70 bg-background"

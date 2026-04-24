@@ -9,8 +9,11 @@ import { prisma } from "@/lib/prisma";
 
 export default async function LawyerInternalNotesPage() {
   const user = await getCurrentUserWithProfile();
+  const lawyerProfileId = user?.lawyerProfile?.id;
   const notes = await prisma.internalNote.findMany({
-    where: { case: { assignments: { some: { lawyerProfileId: user?.lawyerProfile?.id } } } },
+    where: lawyerProfileId
+      ? { case: { assignments: { some: { lawyerProfileId } } } }
+      : { id: "__NO_ACCESS__" },
     include: { case: true },
     orderBy: { createdAt: 'desc' }
   });

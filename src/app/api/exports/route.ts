@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { handleApiError, notFound, unauthorized } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+import { getAccessibleCase } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { createCaseBundlePdf } from "@/lib/pdf/export";
 import { formatDate } from "@/lib/utils";
@@ -11,46 +13,40 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const user = await getCurrentUserWithProfile();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const user = await getCurrentUserWithProfile();
+    if (!user) return unauthorized();
 
-  const body = schema.parse(await request.json());
+    const body = schema.parse(await request.json());
 
-  const legalCase = await prisma.case.findUnique({
-    where: { id: body.caseId },
-    include: {
-      timelineEvents: true,
-      deadlines: true,
-      internalNotes: true
-    }
-  });
+    const { legalCase } = await getAccessibleCase(body.caseId);
+    if (!legalCase) return notFound();
 
-  if (!legalCase) {
-    return NextResponse.json({ error: "Case not found." }, { status: 404 });
+    const pdf = await createCaseBundlePdf({
+      caseTitle: legalCase.title,
+      summary: legalCase.description || "Generated export bundle summary.",
+      timeline: legalCase.timelineEvents.map((item) => ({
+        title: item.title,
+        date: formatDate(item.eventDate)
+      })),
+      deadlines: legalCase.deadlines.map((item) => ({
+        title: item.title,
+        date: formatDate(item.dueDate)
+      }))
+    });
+
+    const bundle = await prisma.exportBundle.create({
+      data: {
+        caseId: body.caseId,
+        createdById: user.id,
+        bundleType: "case_bundle_pdf",
+        filePath: pdf.publicPath,
+        includePrivateNotes: user.role === "LAWYER" ? body.includePrivateNotes : false
+      }
+    });
+
+    return NextResponse.json({ bundle, file: pdf.publicPath });
+  } catch (error) {
+    return handleApiError(error, "EXPORT_ROUTE", "Unable to export this case.");
   }
-
-  const pdf = await createCaseBundlePdf({
-    caseTitle: legalCase.title,
-    summary: legalCase.description || "Generated export bundle summary.",
-    timeline: legalCase.timelineEvents.map((item) => ({
-      title: item.title,
-      date: formatDate(item.eventDate)
-    })),
-    deadlines: legalCase.deadlines.map((item) => ({
-      title: item.title,
-      date: formatDate(item.dueDate)
-    }))
-  });
-
-  const bundle = await prisma.exportBundle.create({
-    data: {
-      caseId: body.caseId,
-      createdById: user.id,
-      bundleType: "case_bundle_pdf",
-      filePath: pdf.publicPath,
-      includePrivateNotes: body.includePrivateNotes
-    }
-  });
-
-  return NextResponse.json({ bundle, file: pdf.publicPath });
 }

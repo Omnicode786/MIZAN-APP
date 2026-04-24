@@ -13,11 +13,13 @@ export async function getCasesForRole(role: "CLIENT" | "LAWYER") {
   if (!user) return [];
 
   if (role === "LAWYER") {
+    if (!user.lawyerProfile) return [];
+
     return prisma.case.findMany({
       where: {
         assignments: {
           some: {
-            lawyerProfileId: user.lawyerProfile?.id
+            lawyerProfileId: user.lawyerProfile.id
           }
         }
       },
@@ -30,8 +32,10 @@ export async function getCasesForRole(role: "CLIENT" | "LAWYER") {
     });
   }
 
+  if (!user.clientProfile) return [];
+
   return prisma.case.findMany({
-    where: { clientProfileId: user.clientProfile?.id },
+    where: { clientProfileId: user.clientProfile.id },
     include: {
       assignments: { include: { lawyer: { include: { user: true } } } },
       deadlines: true,
@@ -45,6 +49,10 @@ export async function getCaseDetail(caseId?: string) {
   if (!caseId) return null;
   const user = await getCurrentUserWithProfile();
   if (!user) return null;
+  if (user.role === "LAWYER" && !user.lawyerProfile) return null;
+  if (user.role === "CLIENT" && !user.clientProfile) return null;
+
+  const includeInternalNotes = user.role === "LAWYER";
 
   const detail = await prisma.case.findFirst({
     where:
@@ -65,7 +73,9 @@ export async function getCaseDetail(caseId?: string) {
       deadlines: { orderBy: { dueDate: "asc" } },
       drafts: { include: { versions: { orderBy: { versionNumber: "desc" } } }, orderBy: { updatedAt: "desc" } },
       comments: { include: { author: true }, orderBy: { createdAt: "desc" } },
-      internalNotes: { include: { author: true }, orderBy: { createdAt: "desc" } },
+      internalNotes: includeInternalNotes
+        ? { include: { author: true }, orderBy: { createdAt: "desc" } }
+        : false,
       assignments: { include: { lawyer: { include: { user: true } } } },
       riskScores: true,
       activityLogs: { include: { actor: true }, orderBy: { createdAt: "desc" } },
@@ -84,6 +94,7 @@ export async function getCaseDetail(caseId?: string) {
 
   return {
     ...detail,
+    internalNotes: includeInternalNotes ? ((detail as any).internalNotes || []) : [],
     assistantThreads: sanitizeAssistantThreads(detail.assistantThreads)
   };
 }

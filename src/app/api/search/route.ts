@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { handleApiError, unauthorized } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -143,7 +144,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUserWithProfile();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return unauthorized();
     }
 
     const body = schema.parse(await request.json());
@@ -340,15 +341,6 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error("[SEARCH_ERROR]", error);
-
-    return NextResponse.json(
-      {
-        error: "Search failed."
-      },
-      {
-        status: 500
-      }
-    );
+    return handleApiError(error, "SEARCH_ROUTE", "Search failed.");
   }
 }
