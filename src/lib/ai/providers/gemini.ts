@@ -10,7 +10,8 @@ type AiTaskOptions = {
 };
 
 function envValue(value: string | undefined, fallback: string) {
-  return (value || fallback).trim().replace(/^["']|["']$/g, "");
+  const normalized = (value || "").trim().replace(/^["']|["']$/g, "");
+  return normalized || fallback;
 }
 
 function envApiKey(value: string | undefined) {
@@ -32,6 +33,19 @@ async function callGemini(parts: any[], options: AiTaskOptions = {}): Promise<Ge
   }
 
   const model = envValue(process.env.GEMINI_MODEL, "gemini-2.5-flash");
+  if (!model) {
+    throw new Error("Gemini model is not configured.");
+  }
+
+  if (!Array.isArray(parts) || !parts.length) {
+    throw new Error("Gemini prompt is empty.");
+  }
+
+  const hasText = parts.some((part) => typeof part?.text === "string" && part.text.trim().length > 0);
+  if (!hasText) {
+    throw new Error("Gemini prompt is empty.");
+  }
+
   let response: Response | null = null;
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -61,19 +75,13 @@ async function callGemini(parts: any[], options: AiTaskOptions = {}): Promise<Ge
 
   if (!response.ok) {
     const bodyText = await response.text();
-    const parsed = safeJsonParse(bodyText);
-    const remoteMessage = parsed?.error?.message || "";
-    const remoteReason = parsed?.error?.details?.find((item: any) => item?.reason)?.reason || "";
+    console.error("[GEMINI_PROVIDER_ERROR]", {
+      status: response.status,
+      model,
+      body: bodyText
+    });
 
-    if (remoteReason === "API_KEY_INVALID" || /api key not valid/i.test(remoteMessage)) {
-      throw new Error("Gemini rejected GEMINI_API_KEY as invalid. Replace it with a valid Gemini API key and restart the dev server.");
-    }
-
-    throw new Error(
-      remoteMessage
-        ? `Gemini request failed with ${response.status}: ${remoteMessage}`
-        : `Gemini request failed with ${response.status}`
-    );
+    throw new Error(`Gemini request failed with ${response.status}.`);
   }
 
   const data = await response.json();
@@ -101,6 +109,10 @@ export async function generateGeminiInsight(
   context?: string,
   options: AiTaskOptions = {}
 ) {
+  if (!prompt.trim()) {
+    throw new Error("Gemini prompt is empty.");
+  }
+
   return callGemini([
     {
       text: `${prompt}\n\nWorking context:\n${context || "No extra context supplied."}`
@@ -114,11 +126,27 @@ export async function generateGeminiVisionInsight(
   context?: string,
   options: AiTaskOptions = {}
 ) {
+  if (!prompt.trim()) {
+    throw new Error("Gemini prompt is empty.");
+  }
+
+  const validImages = images.filter(
+    (image) =>
+      typeof image?.mimeType === "string" &&
+      image.mimeType.trim().length > 0 &&
+      typeof image?.data === "string" &&
+      image.data.trim().length > 0
+  );
+
+  if (validImages.length !== images.length) {
+    throw new Error("Gemini image input is invalid.");
+  }
+
   const parts = [
     {
       text: `${prompt}\n\nWorking context:\n${context || "No extra context supplied."}`
     },
-    ...images.map((image) => ({
+    ...validImages.map((image) => ({
       inline_data: {
         mime_type: image.mimeType,
         data: image.data
