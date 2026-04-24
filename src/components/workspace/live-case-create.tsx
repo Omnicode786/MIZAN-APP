@@ -18,25 +18,30 @@ export function LiveCaseCreate() {
   const [message, setMessage] = useState<string | null>(null);
 
   async function submit() {
-    setLoading(true);
-    setMessage(null);
-    const res = await fetch("/api/cases", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, category, priority, description })
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setMessage(data.error || "Unable to create case.");
-      return;
+    try {
+      setLoading(true);
+      setMessage(null);
+      const res = await fetch("/api/cases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, category, priority, description })
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setMessage(data?.error || "Unable to create case.");
+        return;
+      }
+      router.push(`/client/cases/${data.case.id}`);
+      router.refresh();
+    } catch {
+      setMessage("Unable to create case. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    router.push(`/client/cases/${data.case.id}`);
-    router.refresh();
   }
 
   return (
-    <Card>
+    <Card className="animate-in fade-in-0 slide-in-from-bottom-2">
       <CardContent className="p-5">
         <div className="grid gap-3 md:grid-cols-2">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Case title" />
