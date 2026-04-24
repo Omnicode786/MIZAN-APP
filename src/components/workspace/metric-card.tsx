@@ -12,7 +12,7 @@ export function MetricCard({
   change?: string;
 }) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden soft-hover">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>

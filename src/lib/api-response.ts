@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { AiProviderError } from "@/lib/ai";
 
 export function apiError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -33,7 +32,7 @@ export function handleApiError(
     return validationError("Invalid request.");
   }
 
-  if (error instanceof AiProviderError) {
+  if (error instanceof Error && error.name === "AiProviderError") {
     return apiError("AI service is temporarily unavailable. Please try again.", 502);
   }
 

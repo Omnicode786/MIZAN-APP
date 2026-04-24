@@ -123,7 +123,7 @@ export function Sidebar({
                 href={item.href}
                 title={collapsed ? label : undefined}
                 className={cn(
-                  "flex rounded-2xl text-sm transition",
+                  "flex rounded-2xl text-sm transition-all duration-200",
                   collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3.5",
                   active
                     ? "bg-primary text-primary-foreground shadow-soft"

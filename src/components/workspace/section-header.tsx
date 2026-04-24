@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 
 export function SectionHeader({
   eyebrow,
@@ -23,11 +22,7 @@ export function SectionHeader({
         <h1 className="text-3xl font-semibold tracking-tight text-balance">{title}</h1>
         {description ? <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">{description}</p> : null}
       </div>
-      {action ?? (
-        <Button variant="outline" className="min-w-[140px] self-start md:self-auto">
-          Export Snapshot
-        </Button>
-      )}
+      {action ? <div className="self-start md:self-auto">{action}</div> : null}
     </div>
   );
 }
