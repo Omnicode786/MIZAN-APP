@@ -42,6 +42,7 @@ export default async function LawyerDashboardPage() {
         <GlassSurface
           className="fade-in-up overflow-hidden"
           borderRadius={34}
+          borderGlow
           backgroundOpacity={0.16}
           blur={15}
           saturation={1.44}

@@ -191,6 +191,7 @@ export function ClientAiAssistant({
       <GlassSurface
         className="overflow-hidden"
         borderRadius={34}
+        borderGlow
         backgroundOpacity={0.16}
         blur={15}
         saturation={1.42}
@@ -242,6 +243,7 @@ export function ClientAiAssistant({
       <GlassSurface
         className="overflow-hidden"
         borderRadius={34}
+        borderGlow
         backgroundOpacity={0.12}
         blur={14}
         saturation={1.36}

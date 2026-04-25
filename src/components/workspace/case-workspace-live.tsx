@@ -419,6 +419,7 @@ export function CaseWorkspaceLive({
       <GlassSurface
         className="min-w-0 overflow-hidden"
         borderRadius={34}
+        borderGlow
         backgroundOpacity={0.14}
         blur={15}
         saturation={1.42}

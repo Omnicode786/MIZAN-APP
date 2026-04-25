@@ -78,6 +78,7 @@ export function Sidebar({
         className="nav-surface h-full w-full"
         height="100%"
         borderRadius={34}
+        borderGlow
         backgroundOpacity={0.1}
         blur={12}
         saturation={1.16}

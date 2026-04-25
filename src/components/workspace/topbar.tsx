@@ -25,6 +25,7 @@ export function Topbar({
       <GlassSurface
         className="nav-surface mx-auto w-full max-w-[1600px]"
         borderRadius={28}
+        borderGlow
         backgroundOpacity={0.1}
         blur={12}
         saturation={1.16}

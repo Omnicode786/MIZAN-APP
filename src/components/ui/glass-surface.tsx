@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
   type HTMLAttributes,
+  type PointerEvent,
   type ReactNode
 } from "react";
 import { useTheme } from "@/components/theme-provider";
@@ -35,6 +36,7 @@ type GlassSurfaceProps = HTMLAttributes<HTMLDivElement> & {
   yChannel?: ChannelSelector;
   mixBlendMode?: NonNullable<CSSProperties["mixBlendMode"]>;
   refractive?: boolean;
+  borderGlow?: boolean;
   innerClassName?: string;
 };
 
@@ -94,9 +96,13 @@ export function GlassSurface({
   yChannel = "G",
   mixBlendMode = "difference",
   refractive = false,
+  borderGlow = false,
   className,
   innerClassName,
   style,
+  onPointerEnter,
+  onPointerLeave,
+  onPointerMove,
   ...props
 }: GlassSurfaceProps) {
   const { mounted, resolvedTheme, uiMode } = useTheme();
@@ -120,6 +126,56 @@ export function GlassSurface({
   const greenChannelRef = useRef<SVGFEDisplacementMapElement | null>(null);
   const blueChannelRef = useRef<SVGFEDisplacementMapElement | null>(null);
   const gaussianBlurRef = useRef<SVGFEGaussianBlurElement | null>(null);
+
+  const resetBorderGlow = useCallback(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    element.style.setProperty("--liquid-angle", "45deg");
+    element.style.setProperty("--liquid-border-opacity", isDarkMode ? "0.26" : "0.42");
+    element.style.setProperty("--liquid-fill-opacity", isDarkMode ? "0.06" : "0.09");
+    element.style.setProperty("--liquid-glow-opacity", isDarkMode ? "0.08" : "0.12");
+  }, [isDarkMode]);
+
+  const updateBorderGlow = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (!borderGlow || !isGlassMode) return;
+
+      const element = containerRef.current;
+      if (!element) return;
+
+      const rect = element.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const dx = x - cx;
+      const dy = y - cy;
+      const radians = Math.atan2(dy, dx);
+      let degrees = radians * (180 / Math.PI) + 90;
+      if (degrees < 0) degrees += 360;
+
+      const kx = dx === 0 ? Infinity : cx / Math.abs(dx);
+      const ky = dy === 0 ? Infinity : cy / Math.abs(dy);
+      const edgeProximity = Math.min(Math.max(1 / Math.min(kx, ky), 0), 1);
+      const edgeStrength = Math.max(0, (edgeProximity * 100 - 30) / 70);
+      const borderOpacity = isDarkMode ? 0.26 + edgeStrength * 0.54 : 0.42 + edgeStrength * 0.5;
+      const fillOpacity = isDarkMode ? 0.06 + edgeStrength * 0.1 : 0.09 + edgeStrength * 0.15;
+      const glowOpacity = isDarkMode ? 0.08 + edgeStrength * 0.12 : 0.12 + edgeStrength * 0.2;
+
+      element.style.setProperty("--liquid-angle", `${degrees.toFixed(3)}deg`);
+      element.style.setProperty("--liquid-border-opacity", borderOpacity.toFixed(3));
+      element.style.setProperty("--liquid-fill-opacity", fillOpacity.toFixed(3));
+      element.style.setProperty("--liquid-glow-opacity", glowOpacity.toFixed(3));
+    },
+    [borderGlow, isDarkMode, isGlassMode]
+  );
+
+  useEffect(() => {
+    if (borderGlow) {
+      resetBorderGlow();
+    }
+  }, [borderGlow, resetBorderGlow]);
 
   const effectiveBrightness = isGlassMode
     ? isDarkMode
@@ -388,9 +444,22 @@ export function GlassSurface({
       ref={containerRef}
       className={cn(
         "relative isolate min-w-0 overflow-hidden transition-[transform,box-shadow,border-color,background-color,opacity] duration-300 ease-out",
+        borderGlow && "liquid-border-glow",
         className
       )}
       style={containerStyles}
+      onPointerMove={(event) => {
+        updateBorderGlow(event);
+        onPointerMove?.(event);
+      }}
+      onPointerEnter={(event) => {
+        updateBorderGlow(event);
+        onPointerEnter?.(event);
+      }}
+      onPointerLeave={(event) => {
+        resetBorderGlow();
+        onPointerLeave?.(event);
+      }}
       {...props}
     >
       {useSvgFilter ? (
