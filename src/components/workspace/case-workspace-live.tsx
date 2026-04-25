@@ -401,7 +401,7 @@ export function CaseWorkspaceLive({
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 fade-in-up">
       {notice ? (
         <div
           className={cn(
@@ -415,11 +415,12 @@ export function CaseWorkspaceLive({
         </div>
       ) : null}
 
-      <Card className="min-w-0 overflow-hidden border-border/70 bg-card/95 shadow-sm">
+      <Card className="min-w-0 overflow-hidden">
         <CardContent className="p-0">
           <div className="relative overflow-hidden border-b border-border/60 bg-muted/20 px-5 py-5 sm:px-7 sm:py-6">
             <div className="pointer-events-none absolute right-[-120px] top-[-140px] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
             <div className="pointer-events-none absolute bottom-[-160px] left-[20%] h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute left-[-100px] top-[35%] h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
 
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0 space-y-4">
@@ -634,7 +635,7 @@ export function CaseWorkspaceLive({
                     onClick={generateDraft}
                     disabled={busy === "draft-generate"}
                   >
-                    {busy === "draft-generate" ? "Generating..." : t(language, "generate")}
+                    {busy === "draft-generate" ? "Thinking..." : t(language, "generate")}
                   </Button>
                 </div>
               }
