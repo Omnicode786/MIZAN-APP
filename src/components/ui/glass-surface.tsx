@@ -13,6 +13,10 @@ import {
 } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
+import {
+  resetLiquidBorderGlow as resetLiquidBorderGlowStyle,
+  updateLiquidBorderGlow as updateLiquidBorderGlowStyle
+} from "@/lib/liquid-border-glow";
 
 type ChannelSelector = "R" | "G" | "B" | "A";
 
@@ -81,7 +85,7 @@ export function GlassSurface({
   width = "100%",
   height = "auto",
   borderRadius = 28,
-  borderWidth = 0.07,
+  borderWidth = 0.1,
   brightness = 46,
   opacity = 0.82,
   blur = 10,
@@ -131,10 +135,7 @@ export function GlassSurface({
     const element = containerRef.current;
     if (!element) return;
 
-    element.style.setProperty("--liquid-angle", "45deg");
-    element.style.setProperty("--liquid-border-opacity", isDarkMode ? "0.26" : "0.42");
-    element.style.setProperty("--liquid-fill-opacity", isDarkMode ? "0.06" : "0.09");
-    element.style.setProperty("--liquid-glow-opacity", isDarkMode ? "0.08" : "0.12");
+    resetLiquidBorderGlowStyle(element, isDarkMode);
   }, [isDarkMode]);
 
   const updateBorderGlow = useCallback(
@@ -144,29 +145,7 @@ export function GlassSurface({
       const element = containerRef.current;
       if (!element) return;
 
-      const rect = element.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      const dx = x - cx;
-      const dy = y - cy;
-      const radians = Math.atan2(dy, dx);
-      let degrees = radians * (180 / Math.PI) + 90;
-      if (degrees < 0) degrees += 360;
-
-      const kx = dx === 0 ? Infinity : cx / Math.abs(dx);
-      const ky = dy === 0 ? Infinity : cy / Math.abs(dy);
-      const edgeProximity = Math.min(Math.max(1 / Math.min(kx, ky), 0), 1);
-      const edgeStrength = Math.max(0, (edgeProximity * 100 - 30) / 70);
-      const borderOpacity = isDarkMode ? 0.26 + edgeStrength * 0.54 : 0.42 + edgeStrength * 0.5;
-      const fillOpacity = isDarkMode ? 0.06 + edgeStrength * 0.1 : 0.09 + edgeStrength * 0.15;
-      const glowOpacity = isDarkMode ? 0.08 + edgeStrength * 0.12 : 0.12 + edgeStrength * 0.2;
-
-      element.style.setProperty("--liquid-angle", `${degrees.toFixed(3)}deg`);
-      element.style.setProperty("--liquid-border-opacity", borderOpacity.toFixed(3));
-      element.style.setProperty("--liquid-fill-opacity", fillOpacity.toFixed(3));
-      element.style.setProperty("--liquid-glow-opacity", glowOpacity.toFixed(3));
+      updateLiquidBorderGlowStyle(element, event.clientX, event.clientY, isDarkMode);
     },
     [borderGlow, isDarkMode, isGlassMode]
   );
@@ -194,8 +173,8 @@ export function GlassSurface({
     : Math.max(blur - 1, 6);
   const effectiveDisplace = isGlassMode
     ? isDarkMode
-      ? Math.max(displace, 0.2)
-      : Math.max(displace, 0.29)
+      ? Math.max(displace, 0.24)
+      : Math.max(displace, 0.34)
     : Math.max(displace, 0.15);
   const effectiveSaturation = isGlassMode
     ? isDarkMode
@@ -204,12 +183,12 @@ export function GlassSurface({
     : Math.max(saturation, 1.08);
   const effectiveDistortionScale = isGlassMode
     ? isDarkMode
-      ? distortionScale * 0.46
-      : distortionScale * 0.52
+      ? distortionScale * 0.5
+      : distortionScale * 0.58
     : Math.round(distortionScale * 0.62);
-  const effectiveRedOffset = isGlassMode ? (isDarkMode ? redOffset - 1 : redOffset - 2) : redOffset;
-  const effectiveGreenOffset = isGlassMode ? (isDarkMode ? greenOffset + 1 : greenOffset + 3) : greenOffset;
-  const effectiveBlueOffset = isGlassMode ? (isDarkMode ? blueOffset + 2 : blueOffset + 5) : blueOffset;
+  const effectiveRedOffset = isGlassMode ? (isDarkMode ? redOffset - 2 : redOffset - 3) : redOffset;
+  const effectiveGreenOffset = isGlassMode ? (isDarkMode ? greenOffset + 2 : greenOffset + 4) : greenOffset;
+  const effectiveBlueOffset = isGlassMode ? (isDarkMode ? blueOffset + 3 : blueOffset + 6) : blueOffset;
 
   const generateDisplacementMap = useCallback(() => {
     const rect = containerRef.current?.getBoundingClientRect();

@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { useLiquidBorderGlow } from "@/hooks/use-liquid-border-glow";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
@@ -23,14 +26,40 @@ const badgeVariants = cva(
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 
-export function Badge({ className, variant, ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant,
+  onPointerEnter,
+  onPointerLeave,
+  onPointerMove,
+  ...props
+}: BadgeProps) {
+  const {
+    ref,
+    resetLiquidBorderGlow,
+    updateLiquidBorderGlow
+  } = useLiquidBorderGlow<HTMLDivElement>();
+
   return (
     <div
+      ref={ref}
       className={cn(
         badgeVariants({ variant }),
-        "text-wrap-safe whitespace-normal",
+        "liquid-border-glow text-wrap-safe whitespace-normal",
         className
       )}
+      onPointerMove={(event) => {
+        updateLiquidBorderGlow(event);
+        onPointerMove?.(event);
+      }}
+      onPointerEnter={(event) => {
+        updateLiquidBorderGlow(event);
+        onPointerEnter?.(event);
+      }}
+      onPointerLeave={(event) => {
+        resetLiquidBorderGlow();
+        onPointerLeave?.(event);
+      }}
       {...props}
     />
   );

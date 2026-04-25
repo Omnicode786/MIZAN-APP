@@ -820,13 +820,17 @@ html.dark[data-ui-mode="glass"] body {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    --liquid-border-primary: rgba(255, 255, 255, 0.78);
-    --liquid-border-secondary: rgba(56, 189, 248, 0.42);
-    --liquid-border-tertiary: rgba(192, 132, 252, 0.30);
-    --liquid-border-warm: rgba(244, 114, 182, 0.24);
-    --liquid-border-opacity: 0.42;
-    --liquid-fill-opacity: 0.09;
-    --liquid-glow-opacity: 0.12;
+    --liquid-border-primary: rgba(255, 255, 255, 0.88);
+    --liquid-border-secondary: rgba(14, 165, 233, 0.58);
+    --liquid-border-tertiary: rgba(168, 85, 247, 0.46);
+    --liquid-border-warm: rgba(236, 72, 153, 0.38);
+    --liquid-border-width: 2px;
+    --liquid-glow-radius-a: 18px;
+    --liquid-glow-radius-b: 36px;
+    --liquid-glow-radius-c: 62px;
+    --liquid-border-opacity: 0.40;
+    --liquid-fill-opacity: 0.034;
+    --liquid-glow-opacity: 0;
     --liquid-glow-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.20) inset,
       0 1px 0 rgba(255, 255, 255, 0.60) inset,
@@ -834,17 +838,31 @@ html.dark[data-ui-mode="glass"] body {
   }
 
   html.dark[data-ui-mode="glass"] .liquid-border-glow {
-    --liquid-border-primary: rgba(255, 255, 255, 0.34);
-    --liquid-border-secondary: rgba(56, 189, 248, 0.20);
-    --liquid-border-tertiary: rgba(192, 132, 252, 0.15);
-    --liquid-border-warm: rgba(244, 114, 182, 0.10);
-    --liquid-border-opacity: 0.26;
-    --liquid-fill-opacity: 0.06;
-    --liquid-glow-opacity: 0.08;
+    --liquid-border-primary: rgba(255, 255, 255, 0.55);
+    --liquid-border-secondary: rgba(34, 211, 238, 0.42);
+    --liquid-border-tertiary: rgba(167, 139, 250, 0.34);
+    --liquid-border-warm: rgba(244, 114, 182, 0.28);
+    --liquid-glow-radius-a: 20px;
+    --liquid-glow-radius-b: 38px;
+    --liquid-glow-radius-c: 66px;
+    --liquid-border-opacity: 0.32;
+    --liquid-fill-opacity: 0.018;
+    --liquid-glow-opacity: 0;
     --liquid-glow-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.075) inset,
       0 1px 0 rgba(255, 255, 255, 0.10) inset,
       0 -1px 0 rgba(255, 255, 255, 0.03) inset;
+  }
+
+  html[data-ui-mode="glass"] .surface-card.liquid-border-glow {
+    --liquid-border-width: 1.75px;
+  }
+
+  html[data-ui-mode="glass"] .glass-chip.liquid-border-glow {
+    --liquid-border-width: 1.45px;
+    --liquid-glow-radius-a: 13px;
+    --liquid-glow-radius-b: 24px;
+    --liquid-glow-radius-c: 38px;
   }
 
   html[data-ui-mode="glass"] .liquid-border-glow > * {
@@ -886,8 +904,18 @@ html.dark[data-ui-mode="glass"] body {
     z-index: 2;
     pointer-events: none;
     border-radius: inherit;
-    padding: 1px;
+    padding: var(--liquid-border-width);
     background:
+      conic-gradient(
+        from var(--liquid-angle, 45deg) at center,
+        transparent 0deg,
+        var(--liquid-border-primary) 12deg,
+        var(--liquid-border-secondary) 32deg,
+        var(--liquid-border-tertiary) 58deg,
+        var(--liquid-border-warm) 76deg,
+        transparent 102deg,
+        transparent 360deg
+      ),
       radial-gradient(at 80% 55%, var(--liquid-border-primary) 0, transparent 42%),
       radial-gradient(at 69% 34%, var(--liquid-border-secondary) 0, transparent 44%),
       radial-gradient(at 8% 6%, var(--liquid-border-tertiary) 0, transparent 42%),
@@ -902,13 +930,15 @@ html.dark[data-ui-mode="glass"] body {
         var(--liquid-border-primary) 86%,
         transparent 100%
       );
-    background-size: 135% 135%, 145% 145%, 120% 120%, 155% 155%, 260% 260%;
-    background-position: 80% 55%, 69% 34%, 8% 6%, 41% 38%, 50% 50%;
+    background-size: 100% 100%, 135% 135%, 145% 145%, 120% 120%, 155% 155%, 260% 260%;
+    background-position: center, 80% 55%, 69% 34%, 8% 6%, 41% 38%, 50% 50%;
     opacity: var(--liquid-border-opacity);
     filter:
-      saturate(1.35)
-      drop-shadow(0 0 9px rgba(125, 211, 252, var(--liquid-glow-opacity)))
-      drop-shadow(0 0 14px rgba(192, 132, 252, calc(var(--liquid-glow-opacity) * 0.7)));
+      saturate(1.65)
+      brightness(1.1)
+      drop-shadow(0 0 var(--liquid-glow-radius-a) rgba(34, 211, 238, var(--liquid-glow-opacity)))
+      drop-shadow(0 0 var(--liquid-glow-radius-b) rgba(168, 85, 247, calc(var(--liquid-glow-opacity) * 0.78)))
+      drop-shadow(0 0 var(--liquid-glow-radius-c) rgba(236, 72, 153, calc(var(--liquid-glow-opacity) * 0.42)));
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);

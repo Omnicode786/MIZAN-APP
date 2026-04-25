@@ -1,13 +1,41 @@
+"use client";
+
 import * as React from "react";
+import { useLiquidBorderGlow } from "@/hooks/use-liquid-border-glow";
 import { cn } from "@/lib/utils";
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Card({
+  className,
+  onPointerEnter,
+  onPointerLeave,
+  onPointerMove,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  const {
+    ref,
+    resetLiquidBorderGlow,
+    updateLiquidBorderGlow
+  } = useLiquidBorderGlow<HTMLDivElement>();
+
   return (
     <div
+      ref={ref}
       className={cn(
-        "surface-card min-w-0 text-card-foreground",
+        "surface-card liquid-border-glow min-w-0 text-card-foreground",
         className
       )}
+      onPointerMove={(event) => {
+        updateLiquidBorderGlow(event);
+        onPointerMove?.(event);
+      }}
+      onPointerEnter={(event) => {
+        updateLiquidBorderGlow(event);
+        onPointerEnter?.(event);
+      }}
+      onPointerLeave={(event) => {
+        resetLiquidBorderGlow();
+        onPointerLeave?.(event);
+      }}
       {...props}
     />
   );
