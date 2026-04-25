@@ -75,7 +75,7 @@ export function AiTranslationActions({ text }: { text: string }) {
             onClick={() => translate(target)}
             disabled={loading !== null}
           >
-            {loading === target ? "..." : languageLabels[target]}
+            {loading === target ? "Thinking..." : languageLabels[target]}
           </Button>
         ))}
       </div>

@@ -87,12 +87,12 @@ export function AssistantPanel({
   }
 
   return (
-    <Card className="animate-in fade-in-0 slide-in-from-bottom-2">
+    <Card className="fade-in-up overflow-hidden">
       <CardContent className="p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium">{t(language, "aiLegalAssistance")}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground text-wrap-safe">
               Grounded in Pakistani-law starter data and the current case file.
               {role === "CLIENT" && simpleLanguageMode ? " Plain-language mode is on." : ""}
             </p>
@@ -102,7 +102,7 @@ export function AssistantPanel({
             <select
               value={activeThread?.id}
               onChange={(e) => setActiveThreadId(e.target.value)}
-              className="h-9 rounded-2xl border border-border bg-background px-3 text-xs"
+              className="h-10 max-w-full rounded-2xl border border-border/70 bg-background/80 px-3 text-xs shadow-sm"
             >
               {threads.map((thread) => (
                 <option key={thread.id} value={thread.id}>
@@ -119,14 +119,14 @@ export function AssistantPanel({
           </div>
         ) : null}
 
-        <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+        <div className="premium-scroll max-h-[420px] space-y-3 overflow-y-auto pr-1">
           {(activeThread?.messages || []).map((message) => (
             <div
               key={message.id}
               className={`rounded-2xl border p-4 transition-colors duration-200 ${
                 message.role === "AI"
-                  ? "border-primary/20 bg-primary/5"
-                  : "border-border/70 bg-background"
+                  ? "border-primary/20 bg-primary/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                  : "border-border/70 bg-background/82"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
@@ -174,13 +174,13 @@ export function AssistantPanel({
           ) : null}
         </div>
 
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <Input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder={t(language, "askQuestion")}
           />
-          <Button onClick={ask} disabled={loading || !question.trim()}>
+          <Button className="w-full sm:w-auto" onClick={ask} disabled={loading || !question.trim()}>
             {loading ? "Thinking..." : t(language, "askQuestion")}
           </Button>
         </div>

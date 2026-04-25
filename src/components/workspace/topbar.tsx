@@ -19,12 +19,12 @@ export function Topbar({
   const displayUser = user || { name: "MIZAN user", role: "USER" };
 
   return (
-    <div className="app-topbar sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl transition-colors duration-300">
+    <div className="app-topbar sticky top-0 z-30 border-b border-border/70 bg-background/78 backdrop-blur-2xl transition-colors duration-300">
       <div className="mx-auto flex w-full max-w-[1600px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="topbar-search relative hidden max-w-xl flex-1 md:block">
           <Search className="topbar-search-icon pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            className="topbar-search-input h-11 border-border/70 bg-card/70 pl-10"
+            className="topbar-search-input h-11 border-border/70 bg-card/72 pl-10"
             placeholder={t(language, "searchPlaceholder")}
           />
         </div>
@@ -37,7 +37,7 @@ export function Topbar({
               <Bell className="h-4 w-4" />
             </Link>
           </Button>
-          <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/70 px-3 py-2 shadow-sm transition-colors duration-300 dark:bg-card/85">
+          <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/72 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition-colors duration-300 dark:bg-card/82 dark:shadow-[0_18px_36px_rgba(0,0,0,0.24)]">
             <Avatar name={displayUser.name} className="h-9 w-9 text-xs" />
             <div className="hidden min-w-0 sm:block">
               <p className="truncate text-sm font-medium">{displayUser.name}</p>

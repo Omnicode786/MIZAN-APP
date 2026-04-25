@@ -20,6 +20,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
   const [duration, setDuration] = useState(6);
   const [argument, setArgument] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<"start" | "turn" | "finalize" | null>(null);
   const [error, setError] = useState("");
 
   const active = useMemo(
@@ -30,6 +31,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
   async function startSession() {
     try {
       setLoading(true);
+      setLoadingAction("start");
       setError("");
       const res = await fetch("/api/debate/session", {
         method: "POST",
@@ -42,6 +44,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
       setError(err instanceof Error ? err.message : "Unable to start debate.");
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -50,6 +53,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
 
     try {
       setLoading(true);
+      setLoadingAction("turn");
       setError("");
       const res = await fetch(`/api/debate/session/${active.id}`, {
         method: "POST",
@@ -63,6 +67,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
       setError(err instanceof Error ? err.message : "Unable to submit argument.");
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -71,6 +76,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
 
     try {
       setLoading(true);
+      setLoadingAction("finalize");
       setError("");
       const res = await fetch(`/api/debate/session/${active.id}`, {
         method: "PATCH",
@@ -83,16 +89,17 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
       setError(err instanceof Error ? err.message : "Unable to finalize debate.");
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
   return (
-    <Card className="animate-in fade-in-0 slide-in-from-bottom-2">
+    <Card className="fade-in-up overflow-hidden">
       <CardContent className="p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium">{t(language, "debateMode")}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground text-wrap-safe">
               AI acts as opposing counsel, argues from the current record, then scores who is ahead when time ends.
             </p>
           </div>
@@ -124,7 +131,7 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
               onChange={(e) => setDuration(Number(e.target.value || 6))}
             />
             <Button onClick={startSession} disabled={loading}>
-              {loading ? "Starting..." : t(language, "startDebate")}
+              {loadingAction === "start" ? "Thinking..." : t(language, "startDebate")}
             </Button>
           </div>
         ) : (
@@ -133,14 +140,14 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
               Ends at {formatDate(active.endsAt, "dd MMM yyyy, p")}
             </div>
 
-            <div className="max-h-[320px] space-y-3 overflow-y-auto pr-1">
+            <div className="premium-scroll max-h-[320px] space-y-3 overflow-y-auto pr-1">
               {active.turns.map((turn: any) => (
                 <div
                   key={turn.id}
                   className={`rounded-2xl border p-4 ${
                     turn.speaker === "AI"
                       ? "border-amber-400/20 bg-amber-500/5"
-                      : "border-border/70 bg-background"
+                      : "border-border/70 bg-background/82"
                   }`}
                 >
                   <div className="mb-3 flex items-center justify-between gap-3">
@@ -166,12 +173,12 @@ export function DebatePanel({ caseId, sessions }: { caseId: string; sessions: an
               placeholder="State your argument as counsel for your side."
             />
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button onClick={sendTurn} disabled={loading || !argument.trim()}>
-                {loading ? "Submitting..." : "Submit argument"}
+                {loadingAction === "turn" ? "Thinking..." : "Submit argument"}
               </Button>
               <Button variant="outline" onClick={finalize} disabled={loading}>
-                {t(language, "endAndScore")}
+                {loadingAction === "finalize" ? "Thinking..." : t(language, "endAndScore")}
               </Button>
             </div>
           </div>

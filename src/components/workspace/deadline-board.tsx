@@ -34,7 +34,7 @@ export function DeadlineBoard({ deadlines }: { deadlines: any[] }) {
           <Card
             key={deadline.id}
             className={cn(
-              "w-full overflow-hidden border-border/70 bg-background/75 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg",
+              "w-full overflow-hidden soft-hover border-border/70 bg-background/75",
               tone.border
             )}
           >
@@ -52,10 +52,10 @@ export function DeadlineBoard({ deadlines }: { deadlines: any[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
-                      <h4 className="break-words text-sm font-semibold leading-5">
+                      <h4 className="break-words text-sm font-semibold leading-6">
                         {deadline.title}
                       </h4>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground text-wrap-safe">
                         Due {formatDate(deadline.dueDate)}
                       </p>
                     </div>
@@ -69,7 +69,7 @@ export function DeadlineBoard({ deadlines }: { deadlines: any[] }) {
                   </div>
 
                   {deadline.notes ? (
-                    <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                    <p className="mt-3 text-xs leading-6 text-muted-foreground text-wrap-safe">
                       {deadline.notes}
                     </p>
                   ) : null}

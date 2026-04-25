@@ -14,7 +14,7 @@ export function RiskReadinessDashboard({
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 animate-in fade-in-0 slide-in-from-bottom-2">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 fade-in-up">
       {metrics.map((metric) => (
         <MetricCard
           key={metric.label}

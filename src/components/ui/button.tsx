@@ -3,24 +3,26 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-2xl text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex min-w-0 items-center justify-center gap-2 rounded-2xl border border-transparent text-sm font-medium whitespace-nowrap shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 disabled:pointer-events-none disabled:opacity-55 disabled:shadow-none",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-soft hover:-translate-y-0.5 hover:bg-primary/90 dark:hover:bg-primary/85",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "text-foreground hover:bg-muted/80 dark:hover:bg-muted/90",
+          "bg-primary text-primary-foreground shadow-[0_12px_28px_hsl(var(--primary)/0.24)] hover:-translate-y-0.5 hover:bg-primary/92 hover:shadow-[0_16px_34px_hsl(var(--primary)/0.28)] dark:shadow-[0_18px_40px_rgba(37,99,235,0.28)]",
+        secondary:
+          "border-border/60 bg-secondary/82 text-secondary-foreground hover:-translate-y-0.5 hover:bg-secondary hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.22)]",
+        ghost:
+          "text-foreground shadow-none hover:bg-muted/70 hover:text-foreground dark:hover:bg-muted/85",
         outline:
-          "border border-border bg-background/80 shadow-sm hover:bg-muted/80 dark:bg-card/80 dark:hover:bg-muted/90",
+          "border-border/70 bg-card/82 text-foreground hover:-translate-y-0.5 hover:border-primary/25 hover:bg-muted/65 hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)] dark:bg-card/72 dark:hover:bg-muted/72 dark:hover:shadow-[0_18px_38px_rgba(0,0,0,0.26)]",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-soft hover:-translate-y-0.5 hover:bg-destructive/90"
+          "bg-destructive text-destructive-foreground shadow-[0_12px_28px_hsl(var(--destructive)/0.22)] hover:-translate-y-0.5 hover:bg-destructive/90 hover:shadow-[0_16px_34px_hsl(var(--destructive)/0.26)]"
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 px-3.5 text-xs",
         lg: "h-11 px-6 text-base",
-        icon: "h-10 w-10"
+        icon: "h-10 w-10 rounded-xl"
       }
     },
     defaultVariants: {

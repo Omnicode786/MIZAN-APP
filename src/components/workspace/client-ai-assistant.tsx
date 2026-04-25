@@ -183,7 +183,7 @@ export function ClientAiAssistant({
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-2">
+    <div className="space-y-6 fade-in-up">
       <section className="surface-card overflow-hidden rounded-[2rem]">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="p-6 lg:p-8">
@@ -315,10 +315,10 @@ export function ClientAiAssistant({
                     type="button"
                     disabled={loading || (mode === "case" && !contextCaseId)}
                     onClick={() => ask(prompt)}
-                    className="w-full rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-left text-sm leading-6 transition hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {prompt}
-                  </button>
+                  className="w-full rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-left text-sm leading-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {prompt}
+                </button>
                 ))}
               </div>
             </div>
@@ -365,7 +365,7 @@ export function ClientAiAssistant({
             </div>
           ) : null}
 
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="premium-scroll flex-1 overflow-y-auto p-5">
             {messages.length ? (
               <div className="space-y-4">
                 {messages.map((message) => (
@@ -407,7 +407,7 @@ export function ClientAiAssistant({
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Thinking
+                    Thinking...
                   </>
                 ) : (
                   <>
@@ -618,7 +618,7 @@ function ThinkingBubble() {
     <div className="flex justify-start">
       <div className="flex items-center gap-3 rounded-[1.5rem] border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        Thinking through the record
+        Thinking...
       </div>
     </div>
   );

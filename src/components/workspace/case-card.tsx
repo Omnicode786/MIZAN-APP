@@ -13,20 +13,20 @@ export function CaseCard({
   hrefPrefix: string;
 }) {
   return (
-    <Card className="group h-full border-border/70 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <Card className="group h-full soft-hover">
       <CardContent className="flex h-full flex-col gap-6 p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-primary/10 text-primary">
                 <FolderKanban className="h-5 w-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{toTitleCase(legalCase.category)}</p>
-                <h3 className="text-lg font-semibold tracking-tight">{legalCase.title}</h3>
+                <h3 className="break-words text-lg font-semibold tracking-tight">{legalCase.title}</h3>
               </div>
             </div>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+            <p className="max-w-2xl text-sm leading-7 text-muted-foreground text-wrap-safe">
               {legalCase.description || "No case description added yet."}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -39,7 +39,7 @@ export function CaseCard({
           </div>
           <Link
             href={`${hrefPrefix}/${legalCase.id}`}
-            className="inline-flex items-center gap-2 self-start rounded-full border border-border px-4 py-2.5 text-sm text-muted-foreground transition group-hover:bg-primary group-hover:text-primary-foreground"
+            className="inline-flex items-center gap-2 self-start rounded-full border border-border/70 bg-background/72 px-4 py-2.5 text-sm text-muted-foreground transition group-hover:border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground"
           >
             Open
             <ArrowRight className="h-4 w-4" />
