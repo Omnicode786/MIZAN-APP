@@ -834,11 +834,11 @@ html.dark[data-ui-mode="glass"] body {
     --liquid-border-tertiary: rgba(168, 85, 247, 0.46);
     --liquid-border-warm: rgba(236, 72, 153, 0.38);
     --liquid-border-width: 2px;
-    --liquid-glow-radius-a: 18px;
-    --liquid-glow-radius-b: 36px;
-    --liquid-glow-radius-c: 62px;
-    --liquid-border-opacity: 0.40;
-    --liquid-fill-opacity: 0.034;
+    --liquid-glow-radius-a: 10px;
+    --liquid-glow-radius-b: 20px;
+    --liquid-glow-radius-c: 32px;
+    --liquid-border-opacity: 0;
+    --liquid-fill-opacity: 0;
     --liquid-glow-opacity: 0;
     --liquid-glow-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.20) inset,
@@ -851,11 +851,11 @@ html.dark[data-ui-mode="glass"] body {
     --liquid-border-secondary: rgba(34, 211, 238, 0.42);
     --liquid-border-tertiary: rgba(167, 139, 250, 0.34);
     --liquid-border-warm: rgba(244, 114, 182, 0.28);
-    --liquid-glow-radius-a: 20px;
-    --liquid-glow-radius-b: 38px;
-    --liquid-glow-radius-c: 66px;
-    --liquid-border-opacity: 0.32;
-    --liquid-fill-opacity: 0.018;
+    --liquid-glow-radius-a: 11px;
+    --liquid-glow-radius-b: 22px;
+    --liquid-glow-radius-c: 34px;
+    --liquid-border-opacity: 0;
+    --liquid-fill-opacity: 0;
     --liquid-glow-opacity: 0;
     --liquid-glow-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.075) inset,
@@ -869,9 +869,9 @@ html.dark[data-ui-mode="glass"] body {
 
   html[data-ui-mode="glass"] .glass-chip.liquid-border-glow {
     --liquid-border-width: 1.45px;
-    --liquid-glow-radius-a: 13px;
-    --liquid-glow-radius-b: 24px;
-    --liquid-glow-radius-c: 38px;
+    --liquid-glow-radius-a: 7px;
+    --liquid-glow-radius-b: 13px;
+    --liquid-glow-radius-c: 20px;
   }
 
   html[data-ui-mode="glass"] .liquid-border-glow::before {
@@ -882,22 +882,22 @@ html.dark[data-ui-mode="glass"] body {
     pointer-events: none;
     border-radius: inherit;
     background:
-      radial-gradient(at 80% 55%, var(--liquid-border-tertiary) 0, transparent 44%),
-      radial-gradient(at 69% 34%, var(--liquid-border-secondary) 0, transparent 42%),
-      radial-gradient(at 8% 6%, var(--liquid-border-primary) 0, transparent 44%),
-      radial-gradient(at 41% 38%, var(--liquid-border-warm) 0, transparent 46%);
+      conic-gradient(
+        from calc(var(--liquid-angle, 45deg) - 28deg) at center,
+        transparent 0deg,
+        var(--liquid-border-primary) 8deg,
+        var(--liquid-border-secondary) 19deg,
+        var(--liquid-border-tertiary) 34deg,
+        var(--liquid-border-warm) 46deg,
+        transparent 58deg,
+        transparent 360deg
+      );
     mix-blend-mode: screen;
     opacity: var(--liquid-fill-opacity);
-    background-size: 135% 135%, 145% 145%, 120% 120%, 155% 155%;
-    background-position: 80% 55%, 69% 34%, 8% 6%, 41% 38%;
     mask-image:
-      linear-gradient(#000, #000),
-      radial-gradient(ellipse at 50% 50%, transparent 38%, #000 68%),
-      conic-gradient(from var(--liquid-angle, 45deg) at center, transparent 7%, #000 16%, #000 84%, transparent 94%);
+      radial-gradient(ellipse at 50% 50%, transparent 52%, #000 76%, #000 100%);
     -webkit-mask-image:
-      linear-gradient(#000, #000),
-      radial-gradient(ellipse at 50% 50%, transparent 38%, #000 68%),
-      conic-gradient(from var(--liquid-angle, 45deg) at center, transparent 7%, #000 16%, #000 84%, transparent 94%);
+      radial-gradient(ellipse at 50% 50%, transparent 52%, #000 76%, #000 100%);
     transition: opacity 240ms ease;
   }
 
@@ -911,31 +911,17 @@ html.dark[data-ui-mode="glass"] body {
     padding: var(--liquid-border-width);
     background:
       conic-gradient(
-        from var(--liquid-angle, 45deg) at center,
+        from calc(var(--liquid-angle, 45deg) - 30deg) at center,
         transparent 0deg,
-        var(--liquid-border-primary) 12deg,
-        var(--liquid-border-secondary) 32deg,
-        var(--liquid-border-tertiary) 58deg,
-        var(--liquid-border-warm) 76deg,
-        transparent 102deg,
+        var(--liquid-border-primary) 8deg,
+        var(--liquid-border-secondary) 20deg,
+        var(--liquid-border-tertiary) 36deg,
+        var(--liquid-border-warm) 48deg,
+        transparent 62deg,
         transparent 360deg
-      ),
-      radial-gradient(at 80% 55%, var(--liquid-border-primary) 0, transparent 42%),
-      radial-gradient(at 69% 34%, var(--liquid-border-secondary) 0, transparent 44%),
-      radial-gradient(at 8% 6%, var(--liquid-border-tertiary) 0, transparent 42%),
-      radial-gradient(at 41% 38%, var(--liquid-border-warm) 0, transparent 44%),
-      linear-gradient(
-        118deg,
-        transparent 0%,
-        var(--liquid-border-primary) 16%,
-        var(--liquid-border-secondary) 31%,
-        transparent 48%,
-        var(--liquid-border-tertiary) 68%,
-        var(--liquid-border-primary) 86%,
-        transparent 100%
       );
-    background-size: 100% 100%, 135% 135%, 145% 145%, 120% 120%, 155% 155%, 260% 260%;
-    background-position: center, 80% 55%, 69% 34%, 8% 6%, 41% 38%, 50% 50%;
+    background-size: 100% 100%;
+    background-position: center;
     opacity: var(--liquid-border-opacity);
     filter:
       saturate(1.65)
