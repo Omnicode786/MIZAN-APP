@@ -37,8 +37,8 @@ export default async function LawyerDashboardPage() {
       currentPath="/lawyer/dashboard"
       user={user!}
     >
-      <div className="space-y-6">
-        <section className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-sm">
+      <div className="space-y-6 fade-in-up">
+        <section className="surface-card relative overflow-hidden rounded-[2rem]">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute right-[-120px] top-[-120px] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
             <div className="absolute bottom-[-160px] left-[20%] h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
@@ -123,7 +123,7 @@ export default async function LawyerDashboardPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,420px)]">
           <div className="space-y-6">
-            <div className="flex items-end justify-between gap-4">
+            <div className="surface-panel flex items-end justify-between gap-4 rounded-[2rem] p-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
                   Case Queue
@@ -171,7 +171,7 @@ export default async function LawyerDashboardPage() {
           </div>
 
           <aside className="space-y-6">
-            <Card className="overflow-hidden border-border/70 bg-card/90 shadow-sm">
+            <Card className="overflow-hidden border-border/70 bg-card/90">
               <CardContent className="p-0">
                 <div className="border-b border-border/70 bg-muted/20 p-5">
                   <div className="flex items-center justify-between gap-3">
@@ -207,7 +207,7 @@ export default async function LawyerDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/90 shadow-sm">
+            <Card className="border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
@@ -223,7 +223,7 @@ export default async function LawyerDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/90 shadow-sm">
+            <Card className="border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
@@ -257,10 +257,10 @@ function DashboardStat({
   helper: string;
 }) {
   return (
-    <div className="rounded-3xl border border-border/70 bg-background/75 p-5 shadow-sm backdrop-blur">
+    <div className="surface-panel soft-hover rounded-3xl p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground text-wrap-safe">
             {label}
           </p>
           <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
