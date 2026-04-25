@@ -41,8 +41,8 @@ export default async function ClientDashboardPage() {
       currentPath="/client/dashboard"
       user={user!}
     >
-      <div className="space-y-7">
-        <section className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-sm">
+      <div className="space-y-7 fade-in-up">
+        <section className="surface-card relative overflow-hidden rounded-[2rem]">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute right-[-140px] top-[-140px] h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
             <div className="absolute bottom-[-180px] left-[20%] h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
@@ -129,7 +129,7 @@ export default async function ClientDashboardPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,420px)]">
           <main className="space-y-6">
-            <div className="flex flex-col gap-4 rounded-[2rem] border border-border/70 bg-card/80 p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
+            <div className="surface-panel flex flex-col gap-4 rounded-[2rem] p-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <Badge variant="outline" className="rounded-full px-3 py-1">
                   Case Files
@@ -181,7 +181,7 @@ export default async function ClientDashboardPage() {
           </main>
 
           <aside className="space-y-6">
-            <Card className="overflow-hidden border-border/70 bg-card/90 shadow-sm">
+            <Card className="overflow-hidden border-border/70 bg-card/90">
               <CardContent className="p-0">
                 <div className="border-b border-border/70 bg-muted/20 p-5">
                   <div className="flex items-center justify-between gap-3">
@@ -235,7 +235,7 @@ export default async function ClientDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/90 shadow-sm">
+            <Card className="border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <PanelHeading
                   icon={CalendarClock}
@@ -253,7 +253,7 @@ export default async function ClientDashboardPage() {
 
             <TimelinePanel items={snapshot.timeline || []} />
 
-            <Card className="border-border/70 bg-card/90 shadow-sm">
+            <Card className="border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -288,10 +288,10 @@ function DashboardStat({
   helper: string;
 }) {
   return (
-    <div className="rounded-3xl border border-border/70 bg-background/75 p-5 shadow-sm backdrop-blur">
+    <div className="surface-panel soft-hover rounded-3xl p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground text-wrap-safe">
             {label}
           </p>
           <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
@@ -345,7 +345,7 @@ function TimelinePanel({ items }: { items: any[] }) {
   const visibleItems = items.slice(0, 6);
 
   return (
-    <Card className="overflow-hidden border-border/70 bg-card/90 shadow-sm">
+    <Card className="overflow-hidden border-border/70 bg-card/90">
       <CardContent className="p-0">
         <div className="border-b border-border/70 bg-muted/20 p-5">
           <PanelHeading
@@ -396,7 +396,7 @@ function TimelinePanel({ items }: { items: any[] }) {
                       <tone.icon className={cn("h-4 w-4", tone.iconClass)} />
                     </div>
 
-                    <div className="min-w-0 flex-1 rounded-2xl border border-border/70 bg-background/70 p-4">
+                    <div className="min-w-0 flex-1 rounded-2xl border border-border/70 bg-background/70 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-medium">{toTitleCase(String(title))}</p>
                         <Badge variant={tone.badgeVariant} className="rounded-full px-2.5 py-0.5 text-[11px]">
