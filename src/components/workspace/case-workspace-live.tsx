@@ -770,7 +770,7 @@ export function CaseWorkspaceLive({
 
 function PanelCard({ children }: { children: ReactNode }) {
   return (
-    <Card className="min-w-0 overflow-hidden border-border/70 bg-card/95 shadow-sm transition hover:shadow-md">
+    <Card className="min-w-0 overflow-hidden soft-hover">
       <CardContent className="p-5 sm:p-6">{children}</CardContent>
     </Card>
   );
@@ -810,8 +810,8 @@ function MiniSectionHeader({
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 shadow-sm">
-      <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
+      <p className="text-wrap-safe text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </p>
       <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
@@ -838,9 +838,9 @@ function ScoreCard({
   }[tone];
 
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
       <div className="flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="min-w-0 text-wrap-safe text-xs uppercase tracking-[0.16em] text-muted-foreground">
           {label}
         </p>
         <p className="shrink-0 text-sm font-semibold">{clamped}%</p>
@@ -867,7 +867,7 @@ function DocumentCard({
   onDelete: () => void;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm transition hover:border-primary/20 hover:shadow-md">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-primary/20 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
       <div className="flex min-w-0 flex-col gap-4 md:flex-row md:flex-wrap md:items-start md:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -936,7 +936,7 @@ function DeadlineRow({
   onDelete: () => void;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <p className="break-words font-medium">{deadline.title}</p>
@@ -976,7 +976,7 @@ function EmptyState({ text, compact = false }: { text: string; compact?: boolean
   return (
     <div
       className={cn(
-        "rounded-2xl border border-dashed border-border bg-muted/10 text-sm leading-6 text-muted-foreground",
+        "rounded-2xl border border-dashed border-border bg-muted/10 text-sm leading-6 text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
         compact ? "p-4" : "p-5"
       )}
     >
@@ -1000,9 +1000,9 @@ function CollaborationPanel({
     <div className="min-w-0">
       <MiniSectionHeader icon={MessageSquare} title={title} description={description} />
 
-      <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
+      <div className="premium-scroll mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
         {comments.map((item: any) => (
-          <div key={item.id} className="min-w-0 rounded-2xl border border-border/70 bg-background/70 p-4">
+          <div key={item.id} className="min-w-0 rounded-2xl border border-border/70 bg-background/70 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="truncate font-medium">{item.author?.name || "User"}</p>
@@ -1056,9 +1056,9 @@ function InternalNotesPanel({
         description="Visible only to the lawyer side of the case."
       />
 
-      <div className="mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
+      <div className="premium-scroll mt-3 max-h-[300px] space-y-3 overflow-y-auto pr-1">
         {notes.map((note: any) => (
-          <div key={note.id} className="min-w-0 rounded-2xl border border-border/70 bg-muted/20 p-4">
+          <div key={note.id} className="min-w-0 rounded-2xl border border-border/70 bg-muted/20 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
             <p className="break-words text-sm leading-6 text-muted-foreground">{note.body}</p>
             <p className="mt-2 text-xs text-muted-foreground">
               {note.author?.name || "Lawyer"} · {relativeDate(note.createdAt)}
@@ -1103,7 +1103,7 @@ function ProposalCard({
   const contactsUnlocked = assignment.status === "ACCEPTED";
 
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <p className="break-words font-medium">{assignment.lawyer?.user?.name || "Lawyer"}</p>
@@ -1216,7 +1216,7 @@ function EditableDraftCard({ draft, role, busy, onSave, onDelete }: any) {
   const [content, setContent] = useState(draft.currentContent || "");
 
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
           <p className="break-words font-medium">{draft.title}</p>
