@@ -123,33 +123,33 @@ export function GlassSurface({
 
   const effectiveBrightness = isGlassMode
     ? isDarkMode
-      ? Math.min(brightness, 44)
-      : Math.min(brightness + 4, 62)
+      ? Math.min(brightness + 2, 46)
+      : Math.min(brightness + 6, 64)
     : brightness;
   const effectiveOpacity = isGlassMode
     ? isDarkMode
-      ? Math.min(opacity, 0.78)
-      : Math.min(opacity + 0.02, 0.88)
+      ? Math.min(opacity + 0.02, 0.8)
+      : Math.min(opacity + 0.03, 0.9)
     : opacity;
   const effectiveBlur = isGlassMode
     ? isDarkMode
-      ? blur + 6
-      : blur + 4
+      ? blur + 7
+      : blur + 5
     : Math.max(blur - 1, 6);
   const effectiveDisplace = isGlassMode
     ? isDarkMode
-      ? Math.max(displace, 0.18)
-      : Math.max(displace, 0.26)
+      ? Math.max(displace, 0.2)
+      : Math.max(displace, 0.29)
     : Math.max(displace, 0.15);
   const effectiveSaturation = isGlassMode
     ? isDarkMode
-      ? Math.max(saturation, 1.08)
-      : Math.max(saturation + 0.12, 1.18)
+      ? Math.max(saturation + 0.02, 1.1)
+      : Math.max(saturation + 0.18, 1.24)
     : Math.max(saturation, 1.08);
   const effectiveDistortionScale = isGlassMode
     ? isDarkMode
-      ? distortionScale * 0.42
-      : distortionScale * 0.48
+      ? distortionScale * 0.46
+      : distortionScale * 0.52
     : Math.round(distortionScale * 0.62);
   const effectiveRedOffset = isGlassMode ? (isDarkMode ? redOffset - 1 : redOffset - 2) : redOffset;
   const effectiveGreenOffset = isGlassMode ? (isDarkMode ? greenOffset + 1 : greenOffset + 3) : greenOffset;
@@ -174,13 +174,13 @@ export function GlassSurface({
             <stop offset="100%" stop-color="blue" />
           </linearGradient>
           <radialGradient id="${whiteGradId}" cx="18%" cy="10%" r="68%">
-            <stop offset="0%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.08" : "0.36") : "0.24"}" />
-            <stop offset="42%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.03" : "0.08") : "0.04"}" />
+            <stop offset="0%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.09" : "0.39") : "0.24"}" />
+            <stop offset="42%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.034" : "0.086") : "0.04"}" />
             <stop offset="100%" stop-color="white" stop-opacity="0" />
           </radialGradient>
           <radialGradient id="${glowGradId}" cx="84%" cy="12%" r="74%">
-            <stop offset="0%" stop-color="${isGlassMode ? "#bae6fd" : "#c4b5fd"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.035" : "0.16") : "0.1"}" />
-            <stop offset="36%" stop-color="${isGlassMode ? "#ddd6fe" : "#7dd3fc"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.014" : "0.07") : "0.035"}" />
+            <stop offset="0%" stop-color="${isGlassMode ? "#bae6fd" : "#c4b5fd"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.039" : "0.175") : "0.1"}" />
+            <stop offset="36%" stop-color="${isGlassMode ? "#ddd6fe" : "#7dd3fc"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.016" : "0.076") : "0.035"}" />
             <stop offset="100%" stop-color="#0000" />
           </radialGradient>
         </defs>
@@ -340,8 +340,8 @@ export function GlassSurface({
       ? `linear-gradient(180deg, rgba(255,255,255,${Math.min(resolvedBackgroundOpacity * 0.28, 0.045)}), rgba(255,255,255,${Math.min(resolvedBackgroundOpacity * 0.12, 0.018)})), linear-gradient(135deg, rgba(8, 12, 22, 0.54), rgba(0, 0, 0, 0.68))`
       : `linear-gradient(180deg, hsl(0 0% 100% / ${Math.min(resolvedBackgroundOpacity + 0.14, 0.34)}), hsl(214 60% 98% / ${Math.min(resolvedBackgroundOpacity + 0.04, 0.22)}))`;
     containerStyles.backdropFilter = isDarkMode
-      ? `url(#${filterId}) blur(7px) saturate(1.01) brightness(0.78) contrast(1.08)`
-      : `url(#${filterId}) blur(6px) saturate(${Math.min(effectiveSaturation, 1.28)}) brightness(1.02)`;
+      ? `url(#${filterId}) blur(8px) saturate(1.04) brightness(0.81) contrast(1.09)`
+      : `url(#${filterId}) blur(7px) saturate(${Math.min(effectiveSaturation, 1.34)}) brightness(1.05)`;
     containerStyles.WebkitBackdropFilter = containerStyles.backdropFilter;
     containerStyles.border = isDarkMode
       ? "1px solid rgba(255,255,255,0.08)"
@@ -359,7 +359,7 @@ export function GlassSurface({
     containerStyles.background = isDarkMode
       ? "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.016)), linear-gradient(135deg, rgba(8,12,22,0.54), rgba(0,0,0,0.68))"
       : "linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(241, 247, 255, 0.36))";
-    containerStyles.backdropFilter = `blur(${Math.max(effectiveBlur + 4, 14)}px) saturate(${isDarkMode ? 1.01 : Math.max(effectiveSaturation, 1.2)}) brightness(${isDarkMode ? 0.78 : 1.01}) contrast(${isDarkMode ? 1.08 : 1})`;
+    containerStyles.backdropFilter = `blur(${Math.max(effectiveBlur + 5, 15)}px) saturate(${isDarkMode ? 1.04 : Math.max(effectiveSaturation, 1.26)}) brightness(${isDarkMode ? 0.81 : 1.04}) contrast(${isDarkMode ? 1.09 : 1})`;
     containerStyles.WebkitBackdropFilter = containerStyles.backdropFilter;
     containerStyles.border = isDarkMode
       ? "1px solid rgba(255,255,255,0.08)"
@@ -463,9 +463,9 @@ export function GlassSurface({
         className={cn(
           "pointer-events-none absolute inset-0 rounded-[inherit]",
           isGlassMode && isDarkMode
-            ? "bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.025),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(186,230,253,0.018),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.024),rgba(255,255,255,0.006)_45%,rgba(0,0,0,0.12))]"
+            ? "bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.028),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(186,230,253,0.02),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.027),rgba(255,255,255,0.007)_45%,rgba(0,0,0,0.12))]"
             : isGlassMode
-              ? "bg-[radial-gradient(circle_at_14%_12%,rgba(255,255,255,0.38),transparent_32%),radial-gradient(circle_at_85%_8%,rgba(125,211,252,0.09),transparent_24%),radial-gradient(circle_at_28%_120%,rgba(196,181,253,0.07),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.22),rgba(255,255,255,0.04))]"
+              ? "bg-[radial-gradient(circle_at_14%_12%,rgba(255,255,255,0.41),transparent_32%),radial-gradient(circle_at_85%_8%,rgba(125,211,252,0.098),transparent_24%),radial-gradient(circle_at_28%_120%,rgba(196,181,253,0.076),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.24),rgba(255,255,255,0.044))]"
               : isDarkMode
                 ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))]"
                 : "bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(255,255,255,0.1))]"
