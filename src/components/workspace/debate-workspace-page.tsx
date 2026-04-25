@@ -38,6 +38,7 @@ export function DebateWorkspacePage({
   const [duration, setDuration] = useState(8);
   const [argument, setArgument] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<"start" | "turn" | "finalize" | null>(null);
   const [error, setError] = useState("");
 
   const selectedCase = useMemo(
@@ -58,6 +59,7 @@ export function DebateWorkspacePage({
 
     try {
       setLoading(true);
+      setLoadingAction("start");
       setError("");
 
       const res = await fetch("/api/debate/session", {
@@ -72,6 +74,7 @@ export function DebateWorkspacePage({
       setError(err instanceof Error ? err.message : "Unable to start debate.");
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -80,6 +83,7 @@ export function DebateWorkspacePage({
 
     try {
       setLoading(true);
+      setLoadingAction("turn");
       setError("");
 
       const res = await fetch(`/api/debate/session/${activeSession.id}`, {
@@ -95,6 +99,7 @@ export function DebateWorkspacePage({
       setError(err instanceof Error ? err.message : "Unable to submit argument.");
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -103,6 +108,7 @@ export function DebateWorkspacePage({
 
     try {
       setLoading(true);
+      setLoadingAction("finalize");
       setError("");
 
       const res = await fetch(`/api/debate/session/${activeSession.id}`, {
@@ -117,6 +123,7 @@ export function DebateWorkspacePage({
       setError(err instanceof Error ? err.message : "Unable to finalize debate.");
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -140,7 +147,7 @@ export function DebateWorkspacePage({
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-2">
+    <div className="space-y-6 fade-in-up">
       {error ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -261,7 +268,7 @@ export function DebateWorkspacePage({
                       disabled={loading || !selectedCase}
                       className="w-full"
                     >
-                      {loading ? "Starting..." : t(language, "startDebate")}
+                      {loadingAction === "start" ? "Thinking..." : t(language, "startDebate")}
                     </Button>
                   </div>
                 </CardContent>
@@ -389,7 +396,7 @@ export function DebateWorkspacePage({
                         />
                       </div>
 
-                      <div className="max-h-[520px] space-y-4 overflow-y-auto pr-1">
+                      <div className="premium-scroll max-h-[520px] space-y-4 overflow-y-auto pr-1">
                         {activeSession.turns.map((turn: any) => (
                           <div
                             key={turn.id}
@@ -435,14 +442,14 @@ export function DebateWorkspacePage({
                               onClick={sendTurn}
                               disabled={loading || !argument.trim()}
                             >
-                              {loading ? "Submitting..." : "Submit argument"}
+                              {loadingAction === "turn" ? "Thinking..." : "Submit argument"}
                             </Button>
                             <Button
                               variant="outline"
                               onClick={finalize}
                               disabled={loading}
                             >
-                              {t(language, "endAndScore")}
+                              {loadingAction === "finalize" ? "Thinking..." : t(language, "endAndScore")}
                             </Button>
                           </div>
                         </>
