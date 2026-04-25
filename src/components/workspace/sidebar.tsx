@@ -78,10 +78,20 @@ export function Sidebar({
         className="nav-surface h-full w-full"
         height="100%"
         borderRadius={34}
+        borderWidth={0.13}
         borderGlow
-        backgroundOpacity={0.1}
+        refractive
+        backgroundOpacity={0.04}
+        brightness={48}
+        opacity={0.5}
         blur={12}
-        saturation={1.16}
+        displace={0.42}
+        distortionScale={-184}
+        redOffset={0}
+        greenOffset={10}
+        blueOffset={21}
+        mixBlendMode="screen"
+        saturation={1.3}
         innerClassName={cn("flex h-full min-w-0 flex-col", collapsed ? "p-3" : "p-4")}
       >
         <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between gap-3")}>

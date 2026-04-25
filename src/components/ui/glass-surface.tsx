@@ -73,6 +73,14 @@ function detectSvgBackdropSupport(filterId: string) {
     return false;
   }
 
+  if (
+    typeof CSS !== "undefined" &&
+    (CSS.supports("backdrop-filter", `url(#${filterId})`) ||
+      CSS.supports("-webkit-backdrop-filter", `url(#${filterId})`))
+  ) {
+    return true;
+  }
+
   const probe = document.createElement("div");
   probe.style.backdropFilter = `url(#${filterId})`;
   probe.style.setProperty("-webkit-backdrop-filter", `url(#${filterId})`);
@@ -371,25 +379,34 @@ export function GlassSurface({
       ? "0 18px 42px rgba(2, 6, 23, 0.28), 0 1px 0 rgba(255,255,255,0.05) inset"
       : "0 16px 38px rgba(148, 163, 184, 0.16), 0 1px 0 rgba(255,255,255,0.78) inset";
   } else if (useSvgFilter) {
+    const refractiveBackgroundOpacity = isDarkMode
+      ? Math.min(Math.max(resolvedBackgroundOpacity * 0.82, 0.026), 0.072)
+      : Math.min(Math.max(resolvedBackgroundOpacity * 1.24, 0.044), 0.13);
+    const refractiveSaturation = isDarkMode
+      ? Math.min(Math.max(effectiveSaturation, 1.08), 1.24)
+      : Math.min(Math.max(effectiveSaturation, 1.28), 1.48);
+
     containerStyles.background = isDarkMode
-      ? `linear-gradient(180deg, rgba(255,255,255,${Math.min(resolvedBackgroundOpacity * 0.28, 0.045)}), rgba(255,255,255,${Math.min(resolvedBackgroundOpacity * 0.12, 0.018)})), linear-gradient(135deg, rgba(8, 12, 22, 0.54), rgba(0, 0, 0, 0.68))`
-      : `linear-gradient(180deg, hsl(0 0% 100% / ${Math.min(resolvedBackgroundOpacity + 0.14, 0.34)}), hsl(214 60% 98% / ${Math.min(resolvedBackgroundOpacity + 0.04, 0.22)}))`;
+      ? `linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.006)), hsl(0 0% 0% / ${refractiveBackgroundOpacity})`
+      : `linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.045)), hsl(0 0% 100% / ${refractiveBackgroundOpacity})`;
     containerStyles.backdropFilter = isDarkMode
-      ? `url(#${filterId}) blur(8px) saturate(1.04) brightness(0.81) contrast(1.09)`
-      : `url(#${filterId}) blur(7px) saturate(${Math.min(effectiveSaturation, 1.34)}) brightness(1.05)`;
+      ? `url(#${filterId}) saturate(${refractiveSaturation}) brightness(0.82) contrast(1.12)`
+      : `url(#${filterId}) saturate(${refractiveSaturation}) brightness(1.08) contrast(1.02)`;
     containerStyles.WebkitBackdropFilter = containerStyles.backdropFilter;
     containerStyles.border = isDarkMode
-      ? "1px solid rgba(255,255,255,0.08)"
-      : "1px solid rgba(255,255,255,0.42)";
+      ? "1px solid rgba(255,255,255,0.16)"
+      : "1px solid rgba(255,255,255,0.48)";
     containerStyles.boxShadow = isDarkMode
-      ? `0 0 0 1px rgba(255,255,255,0.05) inset,
-         0 1px 0 rgba(255,255,255,0.045) inset,
-         0 -1px 0 rgba(255,255,255,0.018) inset,
-         0 18px 44px rgba(2, 6, 23, 0.34)`
-      : `0 0 0 1px rgba(255,255,255,0.16) inset,
-         0 1px 0 rgba(255,255,255,0.62) inset,
-         0 -1px 0 rgba(255,255,255,0.18) inset,
-         0 18px 46px rgba(148, 163, 184, 0.14)`;
+      ? `0 0 2px 1px rgba(255,255,255,0.13) inset,
+         0 0 16px 5px rgba(255,255,255,0.045) inset,
+         0 1px 0 rgba(255,255,255,0.12) inset,
+         0 -1px 0 rgba(255,255,255,0.035) inset,
+         0 18px 48px rgba(0,0,0,0.44)`
+      : `0 0 2px 1px rgba(15,23,42,0.07) inset,
+         0 0 18px 5px rgba(255,255,255,0.34) inset,
+         0 1px 0 rgba(255,255,255,0.72) inset,
+         0 -1px 0 rgba(255,255,255,0.20) inset,
+         0 18px 46px rgba(148,163,184,0.18)`;
   } else if (backdropSupported) {
     containerStyles.background = isDarkMode
       ? "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.016)), linear-gradient(135deg, rgba(8,12,22,0.54), rgba(0,0,0,0.68))"

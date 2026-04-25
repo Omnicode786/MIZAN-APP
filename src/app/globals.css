@@ -416,6 +416,15 @@ html[data-language="ur"] .prose-mizan blockquote {
   background-attachment: fixed;
 }
 
+html.dark[data-ui-mode="classic"] body {
+  background-color: #010204;
+  background-image:
+    radial-gradient(circle at 16% -10%, rgba(30, 41, 59, 0.34), transparent 34%),
+    radial-gradient(circle at 92% 2%, rgba(15, 23, 42, 0.38), transparent 32%),
+    radial-gradient(circle at 48% 118%, rgba(8, 13, 23, 0.72), transparent 34%),
+    linear-gradient(135deg, #05070c 0%, #090d15 36%, #030407 68%, #000000 100%);
+}
+
 html.dark[data-ui-mode="glass"] body {
   background-image:
     radial-gradient(circle at 8% -6%, rgba(96, 165, 250, 0.06), transparent 28%),
@@ -760,28 +769,28 @@ html.dark[data-ui-mode="glass"] body {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(244, 248, 255, 0.48)),
       radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.38), transparent 28%),
-      radial-gradient(circle at 92% 8%, rgba(59, 130, 246, 0.06), transparent 24%) !important;
-    border-color: rgba(255, 255, 255, 0.42) !important;
-    backdrop-filter: blur(14px) saturate(1.08) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(1.08) !important;
+      radial-gradient(circle at 92% 8%, rgba(59, 130, 246, 0.06), transparent 24%);
+    border-color: rgba(255, 255, 255, 0.42);
+    backdrop-filter: blur(14px) saturate(1.08);
+    -webkit-backdrop-filter: blur(14px) saturate(1.08);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.48) inset,
       0 -1px 0 rgba(255, 255, 255, 0.12) inset,
-      0 14px 34px rgba(148, 163, 184, 0.13) !important;
+      0 14px 34px rgba(148, 163, 184, 0.13);
   }
 
   .dark .nav-surface {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.014)),
       linear-gradient(135deg, rgba(9, 10, 14, 0.9), rgba(0, 0, 0, 0.84)),
-      radial-gradient(circle at 12% 0%, rgba(96, 165, 250, 0.035), transparent 28%) !important;
-    border-color: rgba(255, 255, 255, 0.075) !important;
-    backdrop-filter: blur(12px) saturate(1.02) brightness(0.86) contrast(1.04) !important;
-    -webkit-backdrop-filter: blur(12px) saturate(1.02) brightness(0.86) contrast(1.04) !important;
+      radial-gradient(circle at 12% 0%, rgba(96, 165, 250, 0.035), transparent 28%);
+    border-color: rgba(255, 255, 255, 0.075);
+    backdrop-filter: blur(12px) saturate(1.02) brightness(0.86) contrast(1.04);
+    -webkit-backdrop-filter: blur(12px) saturate(1.02) brightness(0.86) contrast(1.04);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.045) inset,
       0 -1px 0 rgba(255, 255, 255, 0.014) inset,
-      0 16px 38px rgba(0, 0, 0, 0.34) !important;
+      0 16px 38px rgba(0, 0, 0, 0.34);
   }
 
   html[data-ui-mode="glass"] .nav-surface {
@@ -789,15 +798,15 @@ html.dark[data-ui-mode="glass"] body {
       linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(244, 248, 255, 0.34)),
       radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.42), transparent 30%),
       radial-gradient(circle at 88% 10%, rgba(125, 211, 252, 0.12), transparent 24%),
-      radial-gradient(circle at 45% 130%, rgba(196, 181, 253, 0.08), transparent 32%) !important;
-    border-color: rgba(255, 255, 255, 0.56) !important;
-    backdrop-filter: blur(21px) saturate(1.31) brightness(1.04) !important;
-    -webkit-backdrop-filter: blur(21px) saturate(1.31) brightness(1.04) !important;
+      radial-gradient(circle at 45% 130%, rgba(196, 181, 253, 0.08), transparent 32%);
+    border-color: rgba(255, 255, 255, 0.56);
+    backdrop-filter: blur(21px) saturate(1.31) brightness(1.04);
+    -webkit-backdrop-filter: blur(21px) saturate(1.31) brightness(1.04);
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.24) inset,
       0 1px 0 rgba(255, 255, 255, 0.66) inset,
       0 -1px 0 rgba(255, 255, 255, 0.20) inset,
-      0 18px 44px rgba(148, 163, 184, 0.15) !important;
+      0 18px 44px rgba(148, 163, 184, 0.15);
   }
 
   html.dark[data-ui-mode="glass"] .nav-surface {
@@ -805,15 +814,15 @@ html.dark[data-ui-mode="glass"] body {
       linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.018)),
       linear-gradient(135deg, rgba(8, 12, 22, 0.62), rgba(0, 0, 0, 0.72)),
       radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.026), transparent 30%),
-      radial-gradient(circle at 90% 8%, rgba(125, 211, 252, 0.024), transparent 24%) !important;
-    border-color: rgba(255, 255, 255, 0.14) !important;
-    backdrop-filter: blur(18px) saturate(1.09) brightness(0.85) contrast(1.08) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(1.09) brightness(0.85) contrast(1.08) !important;
+      radial-gradient(circle at 90% 8%, rgba(125, 211, 252, 0.024), transparent 24%);
+    border-color: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(18px) saturate(1.09) brightness(0.85) contrast(1.08);
+    -webkit-backdrop-filter: blur(18px) saturate(1.09) brightness(0.85) contrast(1.08);
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.075) inset,
       0 1px 0 rgba(255, 255, 255, 0.095) inset,
       0 -1px 0 rgba(255, 255, 255, 0.028) inset,
-      0 18px 42px rgba(0, 0, 0, 0.40) !important;
+      0 18px 42px rgba(0, 0, 0, 0.40);
   }
 
   html[data-ui-mode="glass"] .liquid-border-glow {
@@ -863,11 +872,6 @@ html.dark[data-ui-mode="glass"] body {
     --liquid-glow-radius-a: 13px;
     --liquid-glow-radius-b: 24px;
     --liquid-glow-radius-c: 38px;
-  }
-
-  html[data-ui-mode="glass"] .liquid-border-glow > * {
-    position: relative;
-    z-index: 1;
   }
 
   html[data-ui-mode="glass"] .liquid-border-glow::before {

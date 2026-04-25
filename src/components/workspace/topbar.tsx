@@ -21,20 +21,31 @@ export function Topbar({
   const displayUser = user || { name: "MIZAN user", role: "USER" };
 
   return (
-    <div className="app-topbar sticky top-0 z-30 px-4 py-3 sm:px-6 lg:px-8">
+    <div className="app-topbar sticky top-0 z-30 px-3 py-2 sm:px-5 lg:px-8">
       <GlassSurface
         className="nav-surface mx-auto w-full max-w-[1600px]"
+        height={64}
         borderRadius={28}
+        borderWidth={0.14}
         borderGlow
-        backgroundOpacity={0.1}
-        blur={12}
-        saturation={1.16}
-        innerClassName="flex min-w-0 items-center gap-3 px-4 py-3 sm:px-5"
+        refractive
+        backgroundOpacity={0.045}
+        brightness={50}
+        opacity={0.52}
+        blur={11}
+        displace={0.46}
+        distortionScale={-190}
+        redOffset={0}
+        greenOffset={10}
+        blueOffset={22}
+        mixBlendMode="screen"
+        saturation={1.34}
+        innerClassName="flex h-full min-w-0 items-center gap-2.5 px-3 py-2 sm:gap-3 sm:px-4"
       >
         <div className="topbar-search relative hidden max-w-xl flex-1 md:block">
-          <Search className="topbar-search-icon pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Search className="topbar-search-icon pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="topbar-search-input h-11 border-white/30 bg-white/25 pl-10 dark:bg-white/5"
+            className="topbar-search-input h-10 border-white/30 bg-white/25 pl-10 dark:bg-white/5"
             placeholder={t(language, "searchPlaceholder")}
           />
         </div>
@@ -48,8 +59,8 @@ export function Topbar({
               <Bell className="h-4 w-4" />
             </Link>
           </Button>
-          <div className="glass-subtle flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2 transition-colors duration-300">
-            <Avatar name={displayUser.name} className="h-9 w-9 text-xs" />
+          <div className="glass-subtle flex min-w-0 items-center gap-2.5 rounded-2xl px-2.5 py-1.5 transition-colors duration-300">
+            <Avatar name={displayUser.name} className="h-8 w-8 text-xs" />
             <div className="hidden min-w-0 sm:block">
               <p className="truncate text-sm font-medium">{displayUser.name}</p>
               <p className="text-xs text-muted-foreground">{displayUser.role.toLowerCase()}</p>
