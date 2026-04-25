@@ -7,7 +7,12 @@ import { APP_NAME } from "@/lib/constants";
 export const metadata: Metadata = {
   title: `${APP_NAME} - AI legal case operating system`,
   description:
-    "MIZAN is a premium legal-tech MVP for case intake, contract analysis, drafting, timelines, deadlines, and lawyer collaboration."
+    "MIZAN is a premium legal-tech MVP for case intake, contract analysis, drafting, timelines, deadlines, and lawyer collaboration.",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png"
+  }
 };
 
 export default function RootLayout({
