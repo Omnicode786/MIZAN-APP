@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiError, handleApiError, notFound, unauthorized, validationError } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/lib/legal-ai";
+import { runAgentTurn } from "@/lib/ai/agent-runner";
 import { normalizeLanguage } from "@/lib/language";
 import { getAccessibleCase } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +14,8 @@ const schema = z.object({
   documentId: z.string().optional(),
   question: z.string().min(2),
   title: z.string().optional(),
-  language: z.enum(["en", "ur", "roman-ur"]).optional()
+  language: z.enum(["en", "ur", "roman-ur"]).optional(),
+  agentMode: z.boolean().optional()
 });
 
 export async function POST(request: Request) {
@@ -32,6 +34,8 @@ export async function POST(request: Request) {
     }
 
     let threadId = body.threadId;
+    let recentMessages: { role: string; content: string | null }[] = [];
+
     if (threadId) {
       const existingThread = await prisma.assistantThread.findFirst({
         where: { id: threadId, createdById: user.id }
@@ -45,16 +49,42 @@ export async function POST(request: Request) {
       ) {
         return validationError("This conversation belongs to a different assistant context.");
       }
+
+      const latestMessages = await prisma.assistantMessage.findMany({
+        where: { threadId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: {
+          role: true,
+          content: true
+        }
+      });
+
+      recentMessages = latestMessages.reverse().map((message) => ({
+        role: message.role,
+        content: message.content
+      }));
     }
 
-    const ai = await answerPakistaniLegalQuestion({
-      question: body.question,
-      caseId: body.caseId,
-      documentId: body.documentId,
-      role: user.role,
-      simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
-      language
-    });
+    const ai = body.agentMode
+      ? await runAgentTurn({
+          currentUser: user,
+          question: body.question,
+          caseId: body.caseId,
+          documentId: body.documentId,
+          simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
+          language,
+          recentMessages
+        })
+      : await answerPakistaniLegalQuestion({
+          question: body.question,
+          caseId: body.caseId,
+          documentId: body.documentId,
+          role: user.role,
+          simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
+          language,
+          recentMessages
+        });
 
     if (!threadId) {
       let threadTitle = body.title?.trim() || "New conversation";

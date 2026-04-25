@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
@@ -11,17 +11,17 @@ import {
   Filter,
   Landmark,
   MapPin,
-  Moon,
   Scale,
   Search,
   ShieldCheck,
   Sparkles,
   Star,
-  Sun,
   UsersRound
 } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,21 +65,9 @@ export function PublicLawyersDirectory({
 }) {
   const language = useLanguage();
   const shouldReduceMotion = useReducedMotion();
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
-
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("mizan-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const nextTheme = storedTheme === "dark" || (!storedTheme && prefersDark) ? "dark" : "light";
-
-    setTheme(nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    setMounted(true);
-  }, []);
 
   const cities = useMemo(
     () => Array.from(new Set(lawyers.map((lawyer) => lawyer.city).filter(Boolean))).sort() as string[],
@@ -116,13 +104,6 @@ export function PublicLawyersDirectory({
     });
   }, [lawyers, query, selectedCity, selectedSpecialty]);
 
-  function toggleTheme() {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    localStorage.setItem("mizan-theme", nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-  }
-
   const dashboardHref = user?.role === "LAWYER" ? "/lawyer/dashboard" : "/client/dashboard";
 
   return (
@@ -153,20 +134,8 @@ export function PublicLawyersDirectory({
 
             <div className="col-span-6 flex items-center justify-end gap-2 lg:col-span-4">
               <LanguageToggle compact />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={toggleTheme}
-                aria-label="Toggle dark mode"
-                className="h-8 w-8 rounded-xl"
-              >
-                {mounted && theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </Button>
+              <UiModeToggle compact className="h-8 rounded-xl px-2.5" />
+              <ThemeToggle className="h-8 w-8 rounded-xl" />
 
               {user ? (
                 <Button asChild className="h-8 rounded-xl px-4 text-[14px]">

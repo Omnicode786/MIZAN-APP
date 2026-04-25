@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AiTranslationActions } from "@/components/ai-translation-actions";
-import { Card, CardContent } from "@/components/ui/card";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/hooks/use-language";
+import { stripAssistantActionMeta } from "@/lib/assistant-message-meta";
 import { t } from "@/lib/translations";
 import { FormattedAiContent } from "@/utils/ai-content";
 
@@ -87,8 +88,14 @@ export function AssistantPanel({
   }
 
   return (
-    <Card className="fade-in-up overflow-hidden">
-      <CardContent className="p-5">
+    <GlassSurface
+      className="fade-in-up overflow-hidden"
+      borderRadius={28}
+      backgroundOpacity={0.14}
+      blur={14}
+      saturation={1.38}
+      innerClassName="p-5"
+    >
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-medium">{t(language, "aiLegalAssistance")}</p>
@@ -102,7 +109,7 @@ export function AssistantPanel({
             <select
               value={activeThread?.id}
               onChange={(e) => setActiveThreadId(e.target.value)}
-              className="h-10 max-w-full rounded-2xl border border-border/70 bg-background/80 px-3 text-xs shadow-sm"
+              className="glass-chip h-10 max-w-full rounded-2xl px-3 text-xs shadow-sm"
             >
               {threads.map((thread) => (
                 <option key={thread.id} value={thread.id}>
@@ -120,51 +127,56 @@ export function AssistantPanel({
         ) : null}
 
         <div className="premium-scroll max-h-[420px] space-y-3 overflow-y-auto pr-1">
-          {(activeThread?.messages || []).map((message) => (
-            <div
-              key={message.id}
-              className={`rounded-2xl border p-4 transition-colors duration-200 ${
-                message.role === "AI"
-                  ? "border-primary/20 bg-primary/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                  : "border-border/70 bg-background/82"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {message.role}
-                </p>
+          {(activeThread?.messages || []).map((message) => {
+            const displayContent =
+              message.role === "AI" ? stripAssistantActionMeta(message.content) : message.content;
 
-                {message.confidence ? (
-                  <Badge variant="secondary">
-                    {Math.round(message.confidence * 100)}%
-                  </Badge>
+            return (
+              <div
+                key={message.id}
+                className={`rounded-2xl border p-4 transition-colors duration-200 ${
+                  message.role === "AI"
+                    ? "glass-subtle border-primary/20 bg-primary/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                    : "glass-subtle border-border/70 bg-background/60"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    {message.role}
+                  </p>
+
+                  {message.confidence ? (
+                    <Badge variant="secondary">
+                      {Math.round(message.confidence * 100)}%
+                    </Badge>
+                  ) : null}
+                </div>
+
+                <div className="mt-3">
+                  {message.role === "AI" ? (
+                    <>
+                      <FormattedAiContent content={displayContent} />
+                      <AiTranslationActions text={displayContent} />
+                    </>
+                  ) : (
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                      {displayContent}
+                    </p>
+                  )}
+                </div>
+
+                {Array.isArray(message.sources) && message.sources.length ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {message.sources.map((source) => (
+                      <Badge key={source} variant="outline">
+                        {source}
+                      </Badge>
+                    ))}
+                  </div>
                 ) : null}
               </div>
-
-              <div className="mt-3">
-                {message.role === "AI" ? (
-                  <>
-                    <FormattedAiContent content={message.content} />
-                    <AiTranslationActions text={message.content} />
-                  </>
-                ) : (
-                  <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                    {message.content}
-                  </p>
-                )}
-              </div>
-
-              {Array.isArray(message.sources) && message.sources.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {message.sources.map((source) => (
-                    <Badge key={source} variant="outline">
-                      {source}
-                    </Badge>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
+            );
+          })}
 
           {!activeThread?.messages?.length ? (
             <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
@@ -179,12 +191,12 @@ export function AssistantPanel({
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder={t(language, "askQuestion")}
+            className="bg-white/25 dark:bg-white/5"
           />
           <Button className="w-full sm:w-auto" onClick={ask} disabled={loading || !question.trim()}>
             {loading ? "Thinking..." : t(language, "askQuestion")}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </GlassSurface>
   );
 }

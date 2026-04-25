@@ -18,6 +18,7 @@ import { TimelineView } from "@/components/workspace/timeline-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { LAWYER_NAV } from "@/lib/constants";
 import { getDashboardSnapshot } from "@/lib/data-access";
 import { getCurrentUserWithProfile } from "@/lib/auth";
@@ -38,75 +39,84 @@ export default async function LawyerDashboardPage() {
       user={user!}
     >
       <div className="space-y-6 fade-in-up">
-        <section className="surface-card relative overflow-hidden rounded-[2rem]">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute right-[-120px] top-[-120px] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-            <div className="absolute bottom-[-160px] left-[20%] h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
-            <div className="absolute left-[-120px] top-[30%] h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
-          </div>
-
-          <div className="relative grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
-            <div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">
-                  <BriefcaseBusiness className="mr-1 h-3.5 w-3.5" />
-                  Lawyer Command Center
-                </Badge>
-                <Badge variant="secondary">
-                  <Sparkles className="mr-1 h-3.5 w-3.5" />
-                  AI-assisted review
-                </Badge>
-              </div>
-
-              <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
-                Review live matters, sharpen strategy, and move client cases forward.
-              </h1>
-
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-                Your workspace brings assigned cases, evidence posture, deadlines,
-                drafts, proposals, private notes, and debate mode into one structured
-                review flow.
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild>
-                  <Link href="/lawyer/cases">
-                    Open case queue
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-
-                <Button asChild variant="outline">
-                  <Link href="/lawyer/debate">
-                    Start debate mode
-                    <Gavel className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
+        <GlassSurface
+          className="fade-in-up overflow-hidden"
+          borderRadius={34}
+          backgroundOpacity={0.16}
+          blur={15}
+          saturation={1.44}
+          innerClassName="relative overflow-hidden rounded-[inherit]"
+        >
+          <section className="relative overflow-hidden rounded-[inherit]">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute right-[-120px] top-[-120px] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+              <div className="absolute bottom-[-160px] left-[20%] h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
+              <div className="absolute left-[-120px] top-[30%] h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              <DashboardStat
-                icon={UsersRound}
-                label="Assigned matters"
-                value={activeCases}
-                helper="Client cases available for review"
-              />
-              <DashboardStat
-                icon={CalendarClock}
-                label="Deadlines"
-                value={pendingDeadlines}
-                helper="Upcoming or tracked actions"
-              />
-              <DashboardStat
-                icon={FileText}
-                label="Recent activity"
-                value={recentEvents}
-                helper="Timeline updates in your queue"
-              />
+            <div className="relative grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">
+                    <BriefcaseBusiness className="mr-1 h-3.5 w-3.5" />
+                    Lawyer Command Center
+                  </Badge>
+                  <Badge variant="secondary">
+                    <Sparkles className="mr-1 h-3.5 w-3.5" />
+                    AI-assisted review
+                  </Badge>
+                </div>
+
+                <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
+                  Review live matters, sharpen strategy, and move client cases forward.
+                </h1>
+
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
+                  Your workspace brings assigned cases, evidence posture, deadlines,
+                  drafts, proposals, private notes, and debate mode into one structured
+                  review flow.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Button asChild>
+                    <Link href="/lawyer/cases">
+                      Open case queue
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="outline">
+                    <Link href="/lawyer/debate">
+                      Start debate mode
+                      <Gavel className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <DashboardStat
+                  icon={UsersRound}
+                  label="Assigned matters"
+                  value={activeCases}
+                  helper="Client cases available for review"
+                />
+                <DashboardStat
+                  icon={CalendarClock}
+                  label="Deadlines"
+                  value={pendingDeadlines}
+                  helper="Upcoming or tracked actions"
+                />
+                <DashboardStat
+                  icon={FileText}
+                  label="Recent activity"
+                  value={recentEvents}
+                  helper="Timeline updates in your queue"
+                />
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </GlassSurface>
 
         <SectionHeader
           eyebrow="Matter Intelligence"
@@ -171,7 +181,7 @@ export default async function LawyerDashboardPage() {
           </div>
 
           <aside className="space-y-6">
-            <Card className="overflow-hidden border-border/70 bg-card/90">
+            <Card className="glass-subtle overflow-hidden border-border/70 bg-card/90">
               <CardContent className="p-0">
                 <div className="border-b border-border/70 bg-muted/20 p-5">
                   <div className="flex items-center justify-between gap-3">
@@ -196,7 +206,7 @@ export default async function LawyerDashboardPage() {
                   ].map((item) => (
                     <div
                       key={item}
-                      className="rounded-2xl border border-border/70 bg-background/70 p-4"
+                      className="glass-subtle rounded-2xl p-4"
                     >
                       <p className="text-sm leading-6 text-muted-foreground">
                         {item}
@@ -207,7 +217,7 @@ export default async function LawyerDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/90">
+            <Card className="glass-subtle border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
@@ -223,7 +233,7 @@ export default async function LawyerDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/90">
+            <Card className="glass-subtle border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
@@ -257,7 +267,7 @@ function DashboardStat({
   helper: string;
 }) {
   return (
-    <div className="surface-panel soft-hover rounded-3xl p-5">
+    <div className="surface-panel glass-subtle soft-hover rounded-3xl p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground text-wrap-safe">

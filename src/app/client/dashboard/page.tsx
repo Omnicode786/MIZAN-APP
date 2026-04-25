@@ -21,6 +21,7 @@ import { RiskReadinessDashboard } from "@/components/workspace/risk-readiness-da
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { CLIENT_NAV } from "@/lib/constants";
 import { getDashboardSnapshot } from "@/lib/data-access";
 import { getCurrentUserWithProfile } from "@/lib/auth";
@@ -42,77 +43,86 @@ export default async function ClientDashboardPage() {
       user={user!}
     >
       <div className="space-y-7 fade-in-up">
-        <section className="surface-card relative overflow-hidden rounded-[2rem]">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute right-[-140px] top-[-140px] h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
-            <div className="absolute bottom-[-180px] left-[20%] h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
-            <div className="absolute left-[-140px] top-[25%] h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
-          </div>
+        <GlassSurface
+          className="fade-in-up overflow-hidden"
+          borderRadius={34}
+          backgroundOpacity={0.16}
+          blur={15}
+          saturation={1.44}
+          innerClassName="relative overflow-hidden rounded-[inherit]"
+        >
+          <section className="relative overflow-hidden rounded-[inherit]">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute right-[-140px] top-[-140px] h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+              <div className="absolute bottom-[-180px] left-[20%] h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
+              <div className="absolute left-[-140px] top-[25%] h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
+            </div>
 
-          <div className="relative grid gap-7 p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,360px)] lg:p-8">
-            <div className="flex flex-col justify-between">
-              <div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="rounded-full px-3 py-1">
-                    <FolderKanban className="mr-1 h-3.5 w-3.5" />
-                    Client Matter Center
-                  </Badge>
-                  <Badge variant="secondary" className="rounded-full px-3 py-1">
-                    <Sparkles className="mr-1 h-3.5 w-3.5" />
-                    AI-assisted organization
-                  </Badge>
+            <div className="relative grid gap-7 p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,360px)] lg:p-8">
+              <div className="flex flex-col justify-between">
+                <div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="rounded-full px-3 py-1">
+                      <FolderKanban className="mr-1 h-3.5 w-3.5" />
+                      Client Matter Center
+                    </Badge>
+                    <Badge variant="secondary" className="rounded-full px-3 py-1">
+                      <Sparkles className="mr-1 h-3.5 w-3.5" />
+                      AI-assisted organization
+                    </Badge>
+                  </div>
+
+                  <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
+                    Organize your legal matter before it reaches a lawyer.
+                  </h1>
+
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
+                    Create matters, upload evidence, understand gaps, track deadlines,
+                    generate drafts, and request lawyer review from one structured
+                    workspace.
+                  </p>
                 </div>
 
-                <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
-                  Organize your legal matter before it reaches a lawyer.
-                </h1>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Button asChild>
+                    <Link href="/client/cases">
+                      Open case workspace
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
 
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-                  Create matters, upload evidence, understand gaps, track deadlines,
-                  generate drafts, and request lawyer review from one structured
-                  workspace.
-                </p>
+                  <Button asChild variant="outline">
+                    <Link href="/client/lawyers">
+                      Find a lawyer
+                      <BriefcaseBusiness className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Button asChild>
-                  <Link href="/client/cases">
-                    Open case workspace
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-
-                <Button asChild variant="outline">
-                  <Link href="/client/lawyers">
-                    Find a lawyer
-                    <BriefcaseBusiness className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <DashboardStat
+                  icon={FolderKanban}
+                  label="Active matters"
+                  value={activeCases}
+                  helper="Cases in your workspace"
+                />
+                <DashboardStat
+                  icon={CalendarClock}
+                  label="Deadlines"
+                  value={upcomingDeadlines}
+                  helper="Upcoming legal actions"
+                />
+                <DashboardStat
+                  icon={Route}
+                  label="Timeline signals"
+                  value={recentEvents}
+                  helper="Recent case movement"
+                />
               </div>
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              <DashboardStat
-                icon={FolderKanban}
-                label="Active matters"
-                value={activeCases}
-                helper="Cases in your workspace"
-              />
-              <DashboardStat
-                icon={CalendarClock}
-                label="Deadlines"
-                value={upcomingDeadlines}
-                helper="Upcoming legal actions"
-              />
-              <DashboardStat
-                icon={Route}
-                label="Timeline signals"
-                value={recentEvents}
-                helper="Recent case movement"
-              />
-            </div>
-          </div>
-        </section>
+          </section>
+        </GlassSurface>
 
         <SectionHeader
           eyebrow="Matter Readiness"
@@ -181,7 +191,7 @@ export default async function ClientDashboardPage() {
           </main>
 
           <aside className="space-y-6">
-            <Card className="overflow-hidden border-border/70 bg-card/90">
+            <Card className="glass-subtle overflow-hidden border-border/70 bg-card/90">
               <CardContent className="p-0">
                 <div className="border-b border-border/70 bg-muted/20 p-5">
                   <div className="flex items-center justify-between gap-3">
@@ -218,7 +228,7 @@ export default async function ClientDashboardPage() {
                   ].map((item, index) => (
                     <div
                       key={item.title}
-                      className="flex gap-3 rounded-2xl border border-border/70 bg-background/70 p-4"
+                      className="glass-subtle flex gap-3 rounded-2xl p-4"
                     >
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                         {index + 1}
@@ -235,7 +245,7 @@ export default async function ClientDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card/90">
+            <Card className="glass-subtle border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <PanelHeading
                   icon={CalendarClock}
@@ -253,7 +263,7 @@ export default async function ClientDashboardPage() {
 
             <TimelinePanel items={snapshot.timeline || []} />
 
-            <Card className="border-border/70 bg-card/90">
+            <Card className="glass-subtle border-border/70 bg-card/90">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -288,7 +298,7 @@ function DashboardStat({
   helper: string;
 }) {
   return (
-    <div className="surface-panel soft-hover rounded-3xl p-5">
+    <div className="surface-panel glass-subtle soft-hover rounded-3xl p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground text-wrap-safe">
@@ -396,7 +406,7 @@ function TimelinePanel({ items }: { items: any[] }) {
                       <tone.icon className={cn("h-4 w-4", tone.iconClass)} />
                     </div>
 
-                    <div className="min-w-0 flex-1 rounded-2xl border border-border/70 bg-background/70 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                    <div className="glass-subtle min-w-0 flex-1 rounded-2xl p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-medium">{toTitleCase(String(title))}</p>
                         <Badge variant={tone.badgeVariant} className="rounded-full px-2.5 py-0.5 text-[11px]">

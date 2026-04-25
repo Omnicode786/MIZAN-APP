@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { runAiTask, runVisionAiTask } from "@/lib/ai";
 import { buildPakistanLawContext } from "@/lib/pakistan-law/retrieval";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
+import { stripAssistantActionMeta } from "@/lib/assistant-message-meta";
 import {
   getLanguageInstruction,
   normalizeLanguage,
@@ -11,6 +12,25 @@ import {
 
 function compact(text: string | null | undefined, fallback = "") {
   return (text || fallback).replace(/\s+/g, " ").trim();
+}
+
+type RecentThreadMessage = {
+  role: string;
+  content: string | null;
+};
+
+function formatRecentThreadMessages(messages?: RecentThreadMessage[]) {
+  if (!messages?.length) return "";
+
+  return messages
+    .map((message) => {
+      const role = message.role === "AI" ? "Assistant" : message.role === "USER" ? "User" : message.role;
+      const content = compact(stripAssistantActionMeta(message.content || "")).slice(0, 1200);
+      return content ? `${role}: ${content}` : "";
+    })
+    .filter(Boolean)
+    .join("\n\n")
+    .slice(0, 5000);
 }
 
 function cleanThreadTitle(value: string, fallback: string) {
@@ -175,7 +195,8 @@ export async function answerPakistaniLegalQuestion({
   documentId,
   role,
   simpleLanguageMode,
-  language
+  language,
+  recentMessages
 }: {
   question: string;
   caseId?: string;
@@ -183,10 +204,12 @@ export async function answerPakistaniLegalQuestion({
   role: "CLIENT" | "LAWYER" | "ADMIN";
   simpleLanguageMode?: boolean;
   language?: AppLanguage;
+  recentMessages?: RecentThreadMessage[];
 }) {
   const outputLanguage = normalizeLanguage(language);
   let context = "";
   let sources: string[] = [];
+  const recentThreadContext = formatRecentThreadMessages(recentMessages);
   const useLegalAnalysisFormat = needsLegalAnalysisFormat(question, Boolean(caseId || documentId));
   const asksAboutLawyers = /\b(lawyer|advocate|attorney|counsel|hire|find|proposal|represent|representation)\b/i.test(question);
   const lawyerDirectoryContext = asksAboutLawyers ? await buildMizanLawyerDirectoryContext() : "";
@@ -213,9 +236,17 @@ export async function answerPakistaniLegalQuestion({
   }
 
   const law = useLegalAnalysisFormat
-    ? buildPakistanLawContext(`${question}\n${context}`)
+    ? buildPakistanLawContext(`${question}\n${recentThreadContext}\n${context}`)
     : { context: "", matches: [] };
   sources.push(...law.matches.map((item) => item.title));
+
+  const modelInput = [
+    recentThreadContext ? `Recent conversation from this same thread:\n${recentThreadContext}` : "",
+    context ? `Current grounded case/document context:\n${context}` : "",
+    `Current user question: ${question}`
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   const prompt = [
     "You are MIZAN's in-app Pakistani legal assistant for clients and lawyers.",
@@ -224,6 +255,9 @@ export async function answerPakistaniLegalQuestion({
     "For non-legal greetings, app-capability questions, thanks, or casual messages, answer like a helpful product assistant instead of forcing a legal memo. Don't entertain fishy/useless messages.",
     "For law-related or case-specific questions, be assistive, careful, and structured like a professional Pakistani lawyer reasoning through a file. This lawyer should work upon existing pakistan law data both from the given data and your existing data as well of the vast law of Pakistan. Act as a senior licensed lawyer make the client believe on you",
     getLanguageInstruction(outputLanguage),
+    recentThreadContext
+      ? "Use the recent conversation context only for this thread to resolve references and remember what the user just told you. Do not treat it as global memory."
+      : "No recent conversation context was supplied.",
 
     useLegalAnalysisFormat
       ? "Reason from the provided Pakistan-law context, MIZAN platform context, and uploaded case record. Do not invent facts outside the record."
@@ -239,11 +273,12 @@ export async function answerPakistaniLegalQuestion({
       ? LEGAL_MARKDOWN_RESPONSE_INSTRUCTIONS
       : CONVERSATIONAL_MARKDOWN_RESPONSE_INSTRUCTIONS,
     useLegalAnalysisFormat ? `Pakistan-law context:\n${law.context}` : "Pakistan-law context was not attached because this is not a legal-analysis question.",
+    recentThreadContext ? `Recent conversation context:\n${recentThreadContext}` : "No recent thread messages were supplied.",
     context ? `Grounded case/document context:\n${context}` : "No case file was supplied.",
     `User question: ${question}`
   ].join("\n\n");
 
-  const response = await runAiTask(prompt, context || question);
+  const response = await runAiTask(prompt, modelInput || question);
   return {
     ...response,
     sources: Array.from(new Set(sources)).slice(0, 8)

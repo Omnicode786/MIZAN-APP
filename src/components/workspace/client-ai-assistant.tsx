@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bot,
@@ -18,8 +19,10 @@ import {
 import { AiTranslationActions } from "@/components/ai-translation-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/hooks/use-language";
+import { extractAssistantActionMeta, stripAssistantActionMeta } from "@/lib/assistant-message-meta";
 import { toTitleCase, cn } from "@/lib/utils";
 import { FormattedAiContent } from "@/utils/ai-content";
 
@@ -55,17 +58,17 @@ type CaseOption = {
 type Mode = "general" | "case";
 
 const GENERAL_PROMPTS = [
-  "What rights do I generally have before signing a contract in Pakistan?",
-  "What should I do if someone sends me a legal notice?",
-  "What evidence should I collect before talking to a lawyer?",
-  "How can I respond if a seller refuses a refund?"
+  "Create a case from my story.",
+  "Find missing evidence for my dispute.",
+  "Make me a legal notice draft.",
+  "Build my next-step roadmap."
 ];
 
 const CASE_PROMPTS = [
-  "What is this case about?",
-  "What evidence is missing from this case?",
-  "What should I do next?",
-  "What are the biggest risks in this case?"
+  "Add a deadline to this case.",
+  "Prepare a lawyer handoff for this case.",
+  "Summarize this case for me.",
+  "Generate next steps for this case."
 ];
 
 export function ClientAiAssistant({
@@ -151,7 +154,8 @@ export function ClientAiAssistant({
           threadId: activeThread?.id,
           caseId: mode === "case" ? contextCaseId : undefined,
           question: text,
-          language
+          language,
+          agentMode: true
         })
       });
 
@@ -184,13 +188,24 @@ export function ClientAiAssistant({
 
   return (
     <div className="space-y-6 fade-in-up">
-      <section className="surface-card overflow-hidden rounded-[2rem]">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <GlassSurface
+        className="overflow-hidden"
+        borderRadius={34}
+        backgroundOpacity={0.16}
+        blur={15}
+        saturation={1.42}
+        innerClassName="overflow-hidden rounded-[inherit]"
+      >
+        <section className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="p-6 lg:p-8">
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="rounded-full px-3 py-1">
                 <Bot className="mr-1 h-3.5 w-3.5" />
                 Client AI desk
+              </Badge>
+              <Badge variant="success" className="rounded-full px-3 py-1">
+                <Sparkles className="mr-1 h-3.5 w-3.5" />
+                Agent mode enabled
               </Badge>
               <Badge variant="outline" className="rounded-full px-3 py-1">
                 <Scale className="mr-1 h-3.5 w-3.5" />
@@ -209,20 +224,30 @@ export function ClientAiAssistant({
             <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
               General mode answers without case data. Case mode attaches the selected matter, documents, evidence, deadlines, drafts, and timeline context.
             </p>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
+              The assistant can create cases, add deadlines, generate drafts, and build roadmap steps when you explicitly ask it to act.
+            </p>
           </div>
 
-          <div className="border-t border-border/70 bg-muted/20 p-6 lg:border-l lg:border-t-0">
+          <div className="border-t border-white/15 bg-white/10 p-6 lg:border-l lg:border-t-0 dark:bg-white/5">
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <AssistantStat icon={MessageSquare} label="Mode" value={mode === "general" ? "General" : "Case"} />
               <AssistantStat icon={FolderKanban} label="Cases" value={cases.length} />
               <AssistantStat icon={ShieldCheck} label="Threads" value={threads.length} />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </GlassSurface>
 
-      <section className="grid overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-sm xl:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className="border-b border-border/70 bg-muted/15 p-5 xl:border-b-0 xl:border-r">
+      <GlassSurface
+        className="overflow-hidden"
+        borderRadius={34}
+        backgroundOpacity={0.12}
+        blur={14}
+        saturation={1.36}
+        innerClassName="grid overflow-hidden rounded-[inherit] xl:grid-cols-[360px_minmax(0,1fr)]"
+      >
+        <aside className="border-b border-white/15 bg-white/10 p-5 dark:bg-white/5 xl:border-b-0 xl:border-r">
           <div className="space-y-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -258,7 +283,7 @@ export function ClientAiAssistant({
                 value={selectedCase?.id || ""}
                 disabled={mode !== "case" || !cases.length}
                 onChange={(event) => setSelectedCaseId(event.target.value)}
-                className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                className="glass-chip h-11 w-full rounded-2xl px-4 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {cases.length ? (
                   cases.map((item) => (
@@ -293,7 +318,7 @@ export function ClientAiAssistant({
               <select
                 value={activeThreadId || "new"}
                 onChange={(event) => setActiveThreadId(event.target.value === "new" ? null : event.target.value)}
-                className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
+                className="glass-chip h-11 w-full rounded-2xl px-4 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="new">New conversation</option>
                 {contextThreads.map((thread) => (
@@ -315,7 +340,7 @@ export function ClientAiAssistant({
                     type="button"
                     disabled={loading || (mode === "case" && !contextCaseId)}
                     onClick={() => ask(prompt)}
-                  className="w-full rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-left text-sm leading-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="glass-subtle w-full rounded-2xl px-4 py-3 text-left text-sm leading-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {prompt}
                 </button>
@@ -326,7 +351,7 @@ export function ClientAiAssistant({
         </aside>
 
         <main className="flex min-h-[680px] flex-col">
-          <div className="flex flex-col gap-4 border-b border-border/70 bg-background/60 p-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 border-b border-white/15 bg-white/10 p-5 dark:bg-white/5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 {mode === "general" ? <Bot className="h-5 w-5" /> : <FolderKanban className="h-5 w-5" />}
@@ -379,7 +404,7 @@ export function ClientAiAssistant({
             )}
           </div>
 
-          <div className="border-t border-border/70 bg-muted/15 p-5">
+          <div className="border-t border-white/15 bg-white/10 p-5 dark:bg-white/5">
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
               <Textarea
                 value={question}
@@ -407,7 +432,7 @@ export function ClientAiAssistant({
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Thinking...
+                    Agent is organizing your matter...
                   </>
                 ) : (
                   <>
@@ -419,7 +444,7 @@ export function ClientAiAssistant({
             </div>
           </div>
         </main>
-      </section>
+      </GlassSurface>
     </div>
   );
 }
@@ -443,7 +468,7 @@ function ModeButton({
         "flex h-12 items-center justify-center gap-2 rounded-2xl border text-sm font-medium transition",
         active
           ? "border-primary bg-primary text-primary-foreground shadow-soft"
-          : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+          : "glass-chip border-white/30 bg-white/40 text-muted-foreground hover:bg-white/50 hover:text-foreground dark:bg-white/5 dark:hover:bg-white/10"
       )}
     >
       <Icon className="h-4 w-4" />
@@ -462,7 +487,7 @@ function AssistantStat({
   value: string | number;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+    <div className="glass-subtle rounded-2xl p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -487,7 +512,7 @@ function CaseSnapshot({
 }) {
   if (mode === "general") {
     return (
-      <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
+      <div className="glass-subtle rounded-2xl p-4">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <ShieldCheck className="h-4 w-4" />
@@ -505,14 +530,14 @@ function CaseSnapshot({
 
   if (!selectedCase) {
     return (
-      <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+      <div className="glass-subtle rounded-2xl border-dashed p-4 text-sm text-muted-foreground">
         Create a case to unlock case mode.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border/70 bg-background/70 p-4">
+      <div className="glass-subtle space-y-3 rounded-2xl p-4">
       <div>
         <p className="text-sm font-semibold">{selectedCase.title}</p>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -553,7 +578,7 @@ function MiniMetric({
   value: number;
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-background px-2 py-3 text-center">
+    <div className="glass-subtle rounded-xl px-2 py-3 text-center">
       <Icon className="mx-auto h-4 w-4 text-primary" />
       <p className="mt-1 text-base font-semibold">{value}</p>
       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
@@ -566,6 +591,8 @@ function MiniMetric({
 function MessageBubble({ message }: { message: AssistantMessage }) {
   const isAi = message.role === "AI";
   const sources = Array.isArray(message.sources) ? message.sources : [];
+  const actionMeta = isAi ? extractAssistantActionMeta(message.content) : null;
+  const displayContent = isAi ? stripAssistantActionMeta(message.content) : message.content;
 
   return (
     <div className={cn("flex", isAi ? "justify-start" : "justify-end")}>
@@ -573,7 +600,7 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
         className={cn(
           "max-w-[92%] overflow-visible rounded-[1.5rem] border p-4 break-words md:max-w-[82%]",
           isAi
-            ? "border-primary/20 bg-primary/5"
+            ? "glass-subtle border-primary/20 bg-primary/10"
             : "border-primary bg-primary text-primary-foreground shadow-soft"
         )}
       >
@@ -590,9 +617,9 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
 
         {isAi ? (
           <div className="max-w-none overflow-visible">
-            <FormattedAiContent content={message.content} />
+            <FormattedAiContent content={displayContent} />
             <div className="mt-3">
-              <AiTranslationActions text={message.content} />
+              <AiTranslationActions text={displayContent} />
             </div>
           </div>
         ) : (
@@ -608,6 +635,8 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
             ))}
           </div>
         ) : null}
+
+        {isAi && actionMeta ? <AgentActionCard meta={actionMeta} /> : null}
       </div>
     </div>
   );
@@ -616,9 +645,36 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
 function ThinkingBubble() {
   return (
     <div className="flex justify-start">
-      <div className="flex items-center gap-3 rounded-[1.5rem] border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+      <div className="glass-subtle flex items-center gap-3 rounded-[1.5rem] border-primary/20 bg-primary/10 px-4 py-3 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        Thinking...
+        Agent is organizing your matter...
+      </div>
+    </div>
+  );
+}
+
+function AgentActionCard({
+  meta
+}: {
+  meta: ReturnType<typeof extractAssistantActionMeta>;
+}) {
+  if (!meta) {
+    return null;
+  }
+
+  return (
+    <div className="glass-subtle mt-4 rounded-2xl p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{meta.title}</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">{meta.message}</p>
+        </div>
+
+        {meta.action?.href ? (
+          <Button asChild size="sm" className="w-full sm:w-auto">
+            <Link href={meta.action.href}>{meta.action.label}</Link>
+          </Button>
+        ) : null}
       </div>
     </div>
   );

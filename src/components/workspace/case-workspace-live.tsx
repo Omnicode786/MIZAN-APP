@@ -17,6 +17,7 @@ import { AiTranslationActions } from "@/components/ai-translation-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ActivityFeed } from "@/components/workspace/activity-feed";
@@ -415,8 +416,15 @@ export function CaseWorkspaceLive({
         </div>
       ) : null}
 
-      <Card className="min-w-0 overflow-hidden">
-        <CardContent className="p-0">
+      <GlassSurface
+        className="min-w-0 overflow-hidden"
+        borderRadius={34}
+        backgroundOpacity={0.14}
+        blur={15}
+        saturation={1.42}
+        innerClassName="rounded-[inherit]"
+      >
+        <div className="p-0">
           <div className="relative overflow-hidden border-b border-border/60 bg-muted/20 px-5 py-5 sm:px-7 sm:py-6">
             <div className="pointer-events-none absolute right-[-120px] top-[-140px] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
             <div className="pointer-events-none absolute bottom-[-160px] left-[20%] h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
@@ -523,8 +531,8 @@ export function CaseWorkspaceLive({
               <ScoreCard label="Escalation readiness" value={initialCase.escalationReadiness} tone="violet" />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </GlassSurface>
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
         <div className="min-w-0 space-y-6">
@@ -770,9 +778,16 @@ export function CaseWorkspaceLive({
 
 function PanelCard({ children }: { children: ReactNode }) {
   return (
-    <Card className="min-w-0 overflow-hidden soft-hover">
-      <CardContent className="p-5 sm:p-6">{children}</CardContent>
-    </Card>
+    <GlassSurface
+      className="min-w-0 overflow-hidden soft-hover"
+      borderRadius={28}
+      backgroundOpacity={0.12}
+      blur={14}
+      saturation={1.36}
+      innerClassName="p-5 sm:p-6"
+    >
+      {children}
+    </GlassSurface>
   );
 }
 
@@ -810,7 +825,7 @@ function MiniSectionHeader({
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
+    <div className="glass-subtle min-w-0 rounded-2xl px-4 py-3">
       <p className="text-wrap-safe text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </p>
@@ -838,7 +853,7 @@ function ScoreCard({
   }[tone];
 
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
+    <div className="glass-subtle min-w-0 rounded-2xl p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="min-w-0 text-wrap-safe text-xs uppercase tracking-[0.16em] text-muted-foreground">
           {label}
@@ -867,7 +882,7 @@ function DocumentCard({
   onDelete: () => void;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-primary/20 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
+    <div className="glass-subtle min-w-0 rounded-2xl p-4 transition hover:border-primary/20 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]">
       <div className="flex min-w-0 flex-col gap-4 md:flex-row md:flex-wrap md:items-start md:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -936,7 +951,7 @@ function DeadlineRow({
   onDelete: () => void;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
+    <div className="glass-subtle min-w-0 rounded-2xl p-4">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <p className="break-words font-medium">{deadline.title}</p>
