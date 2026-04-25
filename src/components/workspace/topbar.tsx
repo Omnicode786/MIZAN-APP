@@ -23,11 +23,11 @@ export function Topbar({
   return (
     <div className="app-topbar sticky top-0 z-30 px-4 py-3 sm:px-6 lg:px-8">
       <GlassSurface
-        className="mx-auto w-full max-w-[1600px]"
+        className="nav-surface mx-auto w-full max-w-[1600px]"
         borderRadius={28}
-        backgroundOpacity={0.14}
-        blur={14}
-        saturation={1.4}
+        backgroundOpacity={0.1}
+        blur={12}
+        saturation={1.16}
         innerClassName="flex min-w-0 items-center gap-3 px-4 py-3 sm:px-5"
       >
         <div className="topbar-search relative hidden max-w-xl flex-1 md:block">

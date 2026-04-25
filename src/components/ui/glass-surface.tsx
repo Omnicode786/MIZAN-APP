@@ -34,6 +34,7 @@ type GlassSurfaceProps = HTMLAttributes<HTMLDivElement> & {
   xChannel?: ChannelSelector;
   yChannel?: ChannelSelector;
   mixBlendMode?: NonNullable<CSSProperties["mixBlendMode"]>;
+  refractive?: boolean;
   innerClassName?: string;
 };
 
@@ -79,12 +80,12 @@ export function GlassSurface({
   height = "auto",
   borderRadius = 28,
   borderWidth = 0.07,
-  brightness = 50,
-  opacity = 0.93,
-  blur = 11,
+  brightness = 46,
+  opacity = 0.82,
+  blur = 10,
   displace = 0,
-  backgroundOpacity = 0.12,
-  saturation = 1.28,
+  backgroundOpacity = 0.1,
+  saturation = 1.12,
   distortionScale = -180,
   redOffset = 0,
   greenOffset = 10,
@@ -92,6 +93,7 @@ export function GlassSurface({
   xChannel = "R",
   yChannel = "G",
   mixBlendMode = "difference",
+  refractive = false,
   className,
   innerClassName,
   style,
@@ -110,6 +112,7 @@ export function GlassSurface({
 
   const [svgSupported, setSvgSupported] = useState(false);
   const [backdropSupported, setBackdropSupported] = useState(false);
+  const useSvgFilter = isGlassMode && refractive && svgSupported;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const feImageRef = useRef<SVGFEImageElement | null>(null);
@@ -120,37 +123,37 @@ export function GlassSurface({
 
   const effectiveBrightness = isGlassMode
     ? isDarkMode
-      ? Math.min(brightness + 18, 72)
-      : Math.min(brightness + 12, 78)
+      ? Math.min(brightness, 44)
+      : Math.min(brightness + 4, 62)
     : brightness;
   const effectiveOpacity = isGlassMode
     ? isDarkMode
-      ? Math.min(opacity + 0.05, 0.99)
-      : Math.min(opacity + 0.03, 0.98)
+      ? Math.min(opacity, 0.78)
+      : Math.min(opacity + 0.02, 0.88)
     : opacity;
   const effectiveBlur = isGlassMode
     ? isDarkMode
-      ? blur + 12
-      : blur + 6
+      ? blur + 6
+      : blur + 4
     : Math.max(blur - 1, 6);
   const effectiveDisplace = isGlassMode
     ? isDarkMode
-      ? Math.max(displace, 0.42)
-      : Math.max(displace, 0.8)
+      ? Math.max(displace, 0.18)
+      : Math.max(displace, 0.26)
     : Math.max(displace, 0.15);
   const effectiveSaturation = isGlassMode
     ? isDarkMode
-      ? Math.max(saturation + 0.12, 1.28)
-      : saturation + 0.64
+      ? Math.max(saturation, 1.08)
+      : Math.max(saturation + 0.12, 1.18)
     : Math.max(saturation, 1.08);
   const effectiveDistortionScale = isGlassMode
     ? isDarkMode
-      ? distortionScale - 24
-      : distortionScale - 60
+      ? distortionScale * 0.42
+      : distortionScale * 0.48
     : Math.round(distortionScale * 0.62);
-  const effectiveRedOffset = isGlassMode ? (isDarkMode ? redOffset - 2 : redOffset - 6) : redOffset;
-  const effectiveGreenOffset = isGlassMode ? (isDarkMode ? greenOffset + 4 : greenOffset + 8) : greenOffset;
-  const effectiveBlueOffset = isGlassMode ? (isDarkMode ? blueOffset + 8 : blueOffset + 16) : blueOffset;
+  const effectiveRedOffset = isGlassMode ? (isDarkMode ? redOffset - 1 : redOffset - 2) : redOffset;
+  const effectiveGreenOffset = isGlassMode ? (isDarkMode ? greenOffset + 1 : greenOffset + 3) : greenOffset;
+  const effectiveBlueOffset = isGlassMode ? (isDarkMode ? blueOffset + 2 : blueOffset + 5) : blueOffset;
 
   const generateDisplacementMap = useCallback(() => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -171,13 +174,13 @@ export function GlassSurface({
             <stop offset="100%" stop-color="blue" />
           </linearGradient>
           <radialGradient id="${whiteGradId}" cx="18%" cy="10%" r="68%">
-            <stop offset="0%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.46" : "0.94") : "0.5"}" />
-            <stop offset="42%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.18" : "0.16") : "0.08"}" />
+            <stop offset="0%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.08" : "0.36") : "0.24"}" />
+            <stop offset="42%" stop-color="white" stop-opacity="${isGlassMode ? (isDarkMode ? "0.03" : "0.08") : "0.04"}" />
             <stop offset="100%" stop-color="white" stop-opacity="0" />
           </radialGradient>
           <radialGradient id="${glowGradId}" cx="84%" cy="12%" r="74%">
-            <stop offset="0%" stop-color="${isGlassMode ? "#bae6fd" : "#c4b5fd"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.22" : "0.55") : "0.26"}" />
-            <stop offset="36%" stop-color="${isGlassMode ? "#ddd6fe" : "#7dd3fc"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.08" : "0.18") : "0.09"}" />
+            <stop offset="0%" stop-color="${isGlassMode ? "#bae6fd" : "#c4b5fd"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.035" : "0.16") : "0.1"}" />
+            <stop offset="36%" stop-color="${isGlassMode ? "#ddd6fe" : "#7dd3fc"}" stop-opacity="${isGlassMode ? (isDarkMode ? "0.014" : "0.07") : "0.035"}" />
             <stop offset="100%" stop-color="#0000" />
           </radialGradient>
         </defs>
@@ -227,16 +230,24 @@ export function GlassSurface({
   ]);
 
   const updateDisplacementMap = useCallback(() => {
+    if (!useSvgFilter) {
+      return;
+    }
+
     const svgMap = generateDisplacementMap();
     feImageRef.current?.setAttribute("href", svgMap);
-  }, [generateDisplacementMap]);
+  }, [generateDisplacementMap, useSvgFilter]);
 
   useEffect(() => {
     setBackdropSupported(detectBackdropSupport());
-    setSvgSupported(detectSvgBackdropSupport(filterId));
-  }, [filterId]);
+    setSvgSupported(refractive ? detectSvgBackdropSupport(filterId) : false);
+  }, [filterId, refractive]);
 
   useEffect(() => {
+    if (!useSvgFilter) {
+      return;
+    }
+
     updateDisplacementMap();
 
     [
@@ -261,12 +272,13 @@ export function GlassSurface({
     effectiveGreenOffset,
     effectiveRedOffset,
     updateDisplacementMap,
+    useSvgFilter,
     xChannel,
     yChannel
   ]);
 
   useEffect(() => {
-    if (!containerRef.current || typeof ResizeObserver === "undefined") {
+    if (!useSvgFilter || !containerRef.current || typeof ResizeObserver === "undefined") {
       return;
     }
 
@@ -282,12 +294,16 @@ export function GlassSurface({
       cancelAnimationFrame(frame);
       resizeObserver.disconnect();
     };
-  }, [updateDisplacementMap]);
+  }, [updateDisplacementMap, useSvgFilter]);
 
   useEffect(() => {
+    if (!useSvgFilter) {
+      return;
+    }
+
     const frame = window.requestAnimationFrame(updateDisplacementMap);
     return () => cancelAnimationFrame(frame);
-  }, [height, updateDisplacementMap, width]);
+  }, [height, updateDisplacementMap, useSvgFilter, width]);
 
   const resolvedBackgroundOpacity =
     backgroundOpacity > 0
@@ -306,13 +322,12 @@ export function GlassSurface({
     height: typeof height === "number" ? `${height}px` : height,
     borderRadius: `${borderRadius}px`,
     "--glass-frost": resolvedBackgroundOpacity,
-    "--glass-saturation": effectiveSaturation,
-    transform: "translateZ(0)"
+    "--glass-saturation": effectiveSaturation
   };
 
   if (!isGlassMode) {
     containerStyles.background = isDarkMode
-      ? "linear-gradient(180deg, rgba(17, 24, 39, 0.82), rgba(10, 15, 29, 0.74))"
+      ? "linear-gradient(180deg, rgba(9, 10, 14, 0.9), rgba(0, 0, 0, 0.84))"
       : "linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 248, 255, 0.82))";
     containerStyles.border = isDarkMode
       ? "1px solid rgba(255,255,255,0.1)"
@@ -320,47 +335,45 @@ export function GlassSurface({
     containerStyles.boxShadow = isDarkMode
       ? "0 18px 42px rgba(2, 6, 23, 0.28), 0 1px 0 rgba(255,255,255,0.05) inset"
       : "0 16px 38px rgba(148, 163, 184, 0.16), 0 1px 0 rgba(255,255,255,0.78) inset";
-  } else if (svgSupported) {
+  } else if (useSvgFilter) {
     containerStyles.background = isDarkMode
-      ? `linear-gradient(180deg, rgba(255,255,255,${Math.min(resolvedBackgroundOpacity + 0.02, 0.32)}), rgba(255,255,255,${Math.min(resolvedBackgroundOpacity * 0.42, 0.14)})), linear-gradient(135deg, rgba(33, 43, 71, 0.46), rgba(7, 11, 24, 0.58))`
-      : `linear-gradient(180deg, hsl(0 0% 100% / ${Math.min(resolvedBackgroundOpacity + 0.22, 0.52)}), hsl(214 60% 98% / ${Math.min(resolvedBackgroundOpacity + 0.1, 0.36)}))`;
+      ? `linear-gradient(180deg, rgba(255,255,255,${Math.min(resolvedBackgroundOpacity * 0.28, 0.045)}), rgba(255,255,255,${Math.min(resolvedBackgroundOpacity * 0.12, 0.018)})), linear-gradient(135deg, rgba(8, 12, 22, 0.54), rgba(0, 0, 0, 0.68))`
+      : `linear-gradient(180deg, hsl(0 0% 100% / ${Math.min(resolvedBackgroundOpacity + 0.14, 0.34)}), hsl(214 60% 98% / ${Math.min(resolvedBackgroundOpacity + 0.04, 0.22)}))`;
     containerStyles.backdropFilter = isDarkMode
-      ? `url(#${filterId}) blur(12px) saturate(${Math.min(effectiveSaturation, 1.38)}) brightness(0.96) contrast(1.06)`
-      : `url(#${filterId}) saturate(${effectiveSaturation}) brightness(1.12)`;
+      ? `url(#${filterId}) blur(7px) saturate(1.01) brightness(0.78) contrast(1.08)`
+      : `url(#${filterId}) blur(6px) saturate(${Math.min(effectiveSaturation, 1.28)}) brightness(1.02)`;
     containerStyles.WebkitBackdropFilter = containerStyles.backdropFilter;
     containerStyles.border = isDarkMode
-      ? "1px solid rgba(255,255,255,0.22)"
-      : "1px solid rgba(255,255,255,0.62)";
+      ? "1px solid rgba(255,255,255,0.08)"
+      : "1px solid rgba(255,255,255,0.42)";
     containerStyles.boxShadow = isDarkMode
       ? `0 0 0 1px rgba(255,255,255,0.05) inset,
-         0 1px 0 rgba(255,255,255,0.22) inset,
-         0 -1px 0 rgba(255,255,255,0.08) inset,
-         0 26px 72px rgba(2, 6, 23, 0.5),
-         0 10px 28px rgba(15, 23, 42, 0.28)`
-      : `0 0 0 1px rgba(255,255,255,0.26) inset,
-         0 1px 0 rgba(255,255,255,0.94) inset,
-         0 -1px 0 rgba(255,255,255,0.3) inset,
-         0 30px 86px rgba(148, 163, 184, 0.24),
-         0 14px 32px rgba(15, 23, 42, 0.09)`;
+         0 1px 0 rgba(255,255,255,0.045) inset,
+         0 -1px 0 rgba(255,255,255,0.018) inset,
+         0 18px 44px rgba(2, 6, 23, 0.34)`
+      : `0 0 0 1px rgba(255,255,255,0.16) inset,
+         0 1px 0 rgba(255,255,255,0.62) inset,
+         0 -1px 0 rgba(255,255,255,0.18) inset,
+         0 18px 46px rgba(148, 163, 184, 0.14)`;
   } else if (backdropSupported) {
     containerStyles.background = isDarkMode
-      ? "linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08)), linear-gradient(135deg, rgba(30,41,67,0.58), rgba(7,11,24,0.62))"
-      : "linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(241, 247, 255, 0.48))";
-    containerStyles.backdropFilter = `blur(${Math.max(effectiveBlur + 12, 28)}px) saturate(${isDarkMode ? Math.min(effectiveSaturation, 1.34) : Math.max(effectiveSaturation, 1.68)}) brightness(${isDarkMode ? 0.96 : 1.1}) contrast(${isDarkMode ? 1.06 : 1})`;
+      ? "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.016)), linear-gradient(135deg, rgba(8,12,22,0.54), rgba(0,0,0,0.68))"
+      : "linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(241, 247, 255, 0.36))";
+    containerStyles.backdropFilter = `blur(${Math.max(effectiveBlur + 4, 14)}px) saturate(${isDarkMode ? 1.01 : Math.max(effectiveSaturation, 1.2)}) brightness(${isDarkMode ? 0.78 : 1.01}) contrast(${isDarkMode ? 1.08 : 1})`;
     containerStyles.WebkitBackdropFilter = containerStyles.backdropFilter;
     containerStyles.border = isDarkMode
-      ? "1px solid rgba(255,255,255,0.22)"
-      : "1px solid rgba(255,255,255,0.6)";
+      ? "1px solid rgba(255,255,255,0.08)"
+      : "1px solid rgba(255,255,255,0.38)";
     containerStyles.boxShadow = isDarkMode
-      ? `0 1px 0 rgba(255,255,255,0.2) inset,
-         0 -1px 0 rgba(255,255,255,0.06) inset,
-         0 24px 64px rgba(2, 6, 23, 0.46)`
-      : `0 1px 0 rgba(255,255,255,0.88) inset,
-         0 -1px 0 rgba(255,255,255,0.32) inset,
-         0 24px 60px rgba(148, 163, 184, 0.22)`;
+      ? `0 1px 0 rgba(255,255,255,0.045) inset,
+         0 -1px 0 rgba(255,255,255,0.018) inset,
+         0 18px 42px rgba(2, 6, 23, 0.32)`
+      : `0 1px 0 rgba(255,255,255,0.58) inset,
+         0 -1px 0 rgba(255,255,255,0.16) inset,
+         0 16px 40px rgba(148, 163, 184, 0.14)`;
   } else {
     containerStyles.background = isDarkMode
-      ? "rgba(17, 24, 39, 0.88)"
+      ? "rgba(0, 0, 0, 0.88)"
       : "rgba(255, 255, 255, 0.88)";
     containerStyles.border = isDarkMode
       ? "1px solid rgba(255,255,255,0.08)"
@@ -380,77 +393,79 @@ export function GlassSurface({
       style={containerStyles}
       {...props}
     >
-      <svg
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <filter
-            id={filterId}
-            colorInterpolationFilters="sRGB"
-            x="-12%"
-            y="-12%"
-            width="124%"
-            height="124%"
-          >
-            <feImage
-              ref={feImageRef}
-              x="0"
-              y="0"
-              width="100%"
-              height="100%"
-              preserveAspectRatio="none"
-              result="map"
-            />
+      {useSvgFilter ? (
+        <svg
+          className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <filter
+              id={filterId}
+              colorInterpolationFilters="sRGB"
+              x="-12%"
+              y="-12%"
+              width="124%"
+              height="124%"
+            >
+              <feImage
+                ref={feImageRef}
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                preserveAspectRatio="none"
+                result="map"
+              />
 
-            <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" result="dispRed" />
-            <feColorMatrix
-              in="dispRed"
-              type="matrix"
-              values="1 0 0 0 0
-                      0 0 0 0 0
-                      0 0 0 0 0
-                      0 0 0 1 0"
-              result="red"
-            />
+              <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" result="dispRed" />
+              <feColorMatrix
+                in="dispRed"
+                type="matrix"
+                values="1 0 0 0 0
+                        0 0 0 0 0
+                        0 0 0 0 0
+                        0 0 0 1 0"
+                result="red"
+              />
 
-            <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" result="dispGreen" />
-            <feColorMatrix
-              in="dispGreen"
-              type="matrix"
-              values="0 0 0 0 0
-                      0 1 0 0 0
-                      0 0 0 0 0
-                      0 0 0 1 0"
-              result="green"
-            />
+              <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" result="dispGreen" />
+              <feColorMatrix
+                in="dispGreen"
+                type="matrix"
+                values="0 0 0 0 0
+                        0 1 0 0 0
+                        0 0 0 0 0
+                        0 0 0 1 0"
+                result="green"
+              />
 
-            <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" result="dispBlue" />
-            <feColorMatrix
-              in="dispBlue"
-              type="matrix"
-              values="0 0 0 0 0
-                      0 0 0 0 0
-                      0 0 1 0 0
-                      0 0 0 1 0"
-              result="blue"
-            />
+              <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" result="dispBlue" />
+              <feColorMatrix
+                in="dispBlue"
+                type="matrix"
+                values="0 0 0 0 0
+                        0 0 0 0 0
+                        0 0 1 0 0
+                        0 0 0 1 0"
+                result="blue"
+              />
 
-            <feBlend in="red" in2="green" mode="screen" result="rg" />
-            <feBlend in="rg" in2="blue" mode="screen" result="output" />
-            <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation="0.7" />
-          </filter>
-        </defs>
-      </svg>
+              <feBlend in="red" in2="green" mode="screen" result="rg" />
+              <feBlend in="rg" in2="blue" mode="screen" result="output" />
+              <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation="0.7" />
+            </filter>
+          </defs>
+        </svg>
+      ) : null}
 
       <div
         aria-hidden="true"
         className={cn(
           "pointer-events-none absolute inset-0 rounded-[inherit]",
           isGlassMode && isDarkMode
-            ? "bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.16),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(186,230,253,0.09),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.13),rgba(255,255,255,0.035)_45%,rgba(0,0,0,0.08))]"
+            ? "bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.025),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(186,230,253,0.018),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.024),rgba(255,255,255,0.006)_45%,rgba(0,0,0,0.12))]"
             : isGlassMode
-              ? "bg-[radial-gradient(circle_at_14%_12%,rgba(255,255,255,0.98),transparent_32%),radial-gradient(circle_at_85%_8%,rgba(125,211,252,0.24),transparent_24%),radial-gradient(circle_at_28%_120%,rgba(196,181,253,0.18),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.56),rgba(255,255,255,0.08))]"
+              ? "bg-[radial-gradient(circle_at_14%_12%,rgba(255,255,255,0.38),transparent_32%),radial-gradient(circle_at_85%_8%,rgba(125,211,252,0.09),transparent_24%),radial-gradient(circle_at_28%_120%,rgba(196,181,253,0.07),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.22),rgba(255,255,255,0.04))]"
               : isDarkMode
                 ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))]"
                 : "bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(255,255,255,0.1))]"
@@ -462,9 +477,9 @@ export function GlassSurface({
         className={cn(
           "pointer-events-none absolute inset-px rounded-[inherit]",
           isGlassMode && isDarkMode
-            ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.2),rgba(255,255,255,0.075)_28%,rgba(255,255,255,0.02)_68%,rgba(0,0,0,0.1))]"
+            ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.032),rgba(255,255,255,0.012)_28%,rgba(255,255,255,0.004)_68%,rgba(0,0,0,0.14))]"
             : isGlassMode
-              ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,255,255,0.26)_30%,transparent_70%)]"
+              ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.36),rgba(255,255,255,0.12)_30%,transparent_70%)]"
               : isDarkMode
                 ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.015)_28%,transparent_68%)]"
                 : "bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(255,255,255,0.22)_34%,transparent_72%)]"
@@ -475,10 +490,10 @@ export function GlassSurface({
         <div
           aria-hidden="true"
           className={cn(
-            "pointer-events-none absolute inset-0 rounded-[inherit] mix-blend-screen opacity-80",
+            "pointer-events-none absolute inset-0 rounded-[inherit] mix-blend-screen opacity-55",
             isDarkMode
-              ? "bg-[radial-gradient(circle_at_14%_10%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_86%_12%,rgba(186,230,253,0.10),transparent_20%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.06),transparent_30%)]"
-              : "bg-[radial-gradient(circle_at_12%_8%,rgba(255,255,255,0.82),transparent_24%),radial-gradient(circle_at_86%_12%,rgba(125,211,252,0.2),transparent_22%),radial-gradient(circle_at_48%_104%,rgba(251,191,36,0.08),transparent_30%)]"
+              ? "bg-[radial-gradient(circle_at_14%_10%,rgba(255,255,255,0.025),transparent_22%),radial-gradient(circle_at_86%_12%,rgba(186,230,253,0.018),transparent_20%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.01),transparent_30%)]"
+              : "bg-[radial-gradient(circle_at_12%_8%,rgba(255,255,255,0.28),transparent_24%),radial-gradient(circle_at_86%_12%,rgba(125,211,252,0.08),transparent_22%),radial-gradient(circle_at_48%_104%,rgba(251,191,36,0.035),transparent_30%)]"
           )}
         />
       ) : null}

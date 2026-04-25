@@ -75,12 +75,12 @@ export function Sidebar({
       )}
     >
       <GlassSurface
-        className="h-full w-full"
+        className="nav-surface h-full w-full"
         height="100%"
         borderRadius={34}
-        backgroundOpacity={0.14}
-        blur={14}
-        saturation={1.42}
+        backgroundOpacity={0.1}
+        blur={12}
+        saturation={1.16}
         innerClassName={cn("flex h-full min-w-0 flex-col", collapsed ? "p-3" : "p-4")}
       >
         <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between gap-3")}>

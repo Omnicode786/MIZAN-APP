@@ -18,6 +18,9 @@ const schema = z.object({
   agentMode: z.boolean().optional()
 });
 
+const CASE_AGENT_INTENT_PATTERN =
+  /\b(create|open|start|make|file|save|add)\b[\s\S]{0,48}\b(case|matter|database|workspace|it|this)\b/i;
+
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUserWithProfile();
@@ -66,7 +69,15 @@ export async function POST(request: Request) {
       }));
     }
 
-    const ai = body.agentMode
+    const hasPendingCasePreview = recentMessages.some(
+      (message) => message.role === "AI" && (message.content || "").includes("MIZAN_CASE_PREVIEW")
+    );
+    const shouldRunAgent =
+      Boolean(body.agentMode) ||
+      hasPendingCasePreview ||
+      CASE_AGENT_INTENT_PATTERN.test(body.question);
+
+    const ai = shouldRunAgent
       ? await runAgentTurn({
           currentUser: user,
           question: body.question,

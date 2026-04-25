@@ -305,7 +305,7 @@ export default function LandingPage() {
       </div>
 
       <div className="mx-auto max-w-[1440px] px-6 py-4 xl:px-8">
-        <header className={`${surfaceClass} sticky top-4 z-40 bg-card/92 backdrop-blur`}>
+        <header className={`${surfaceClass} nav-surface sticky top-4 z-40 bg-card/92 backdrop-blur`}>
           <div className="grid h-14 grid-cols-12 items-center gap-x-6 px-6">
             <div className="col-span-6 flex items-center lg:col-span-3">
               <Logo />

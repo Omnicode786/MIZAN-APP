@@ -326,6 +326,114 @@ function hasMinimumCasePreviewData(args: Record<string, unknown>) {
   return hasCategory && hasNarrative;
 }
 
+function isExplicitCreateCaseRequest(question: string) {
+  const normalized = question.toLowerCase().replace(/\s+/g, " ").trim();
+
+  return [
+    /\b(create|open|start|make|file)\b[\s\S]{0,48}\b(case|matter)\b/i,
+    /\b(case|matter)\b[\s\S]{0,48}\b(create|open|start|make|file)\b/i,
+    /\b(add|save)\b[\s\S]{0,48}\b(case|matter)\b[\s\S]{0,48}\b(database|workspace)\b/i,
+    /\bcreate\s+(it|this)\b/i
+  ].some((pattern) => pattern.test(normalized));
+}
+
+async function extractCreateCaseArgsFromThread({
+  question,
+  recentThreadContext,
+  language
+}: {
+  question: string;
+  recentThreadContext: string;
+  language: AppLanguage;
+}) {
+  try {
+    const result = await runAiTask(
+      [
+        "Extract a MIZAN create_case tool argument object from the user's request and recent same-thread context.",
+        "Return JSON only. Do not answer in prose.",
+        "Do not invent facts. If facts are missing, return only the fields you can support.",
+        "Use valid internal enum-like strings in English for category and priority.",
+        "Valid category values: CONTRACT_REVIEW, RENTAL_TENANCY, EMPLOYMENT, CYBER_COMPLAINT, HARASSMENT, PAYMENT_DISPUTE, BUSINESS_VENDOR, LEGAL_NOTICE, EVIDENCE_ORGANIZATION, OTHER.",
+        "Valid priority values: LOW, MEDIUM, HIGH, CRITICAL.",
+        "Use ISO YYYY-MM-DD strings for timeline eventDate and deadline dueDate when dates are clear.",
+        "JSON shape:",
+        JSON.stringify({
+          title: "short case title",
+          category: "PAYMENT_DISPUTE",
+          priority: "HIGH",
+          summary: "short issue summary",
+          description: "case description",
+          facts: ["fact"],
+          parties: ["party"],
+          availableEvidence: ["evidence"],
+          documentsMentioned: ["document"],
+          evidenceGaps: ["missing evidence"],
+          recommendedNextSteps: ["next step"],
+          lawyerReviewRecommended: true,
+          timeline: [
+            {
+              title: "event title",
+              description: "event detail",
+              eventDate: "YYYY-MM-DD",
+              sourceLabel: "user-provided",
+              confidence: 0.82
+            }
+          ],
+          deadlines: [
+            {
+              title: "deadline title",
+              dueDate: "YYYY-MM-DD",
+              importance: "HIGH",
+              notes: "notes"
+            }
+          ]
+        }),
+        getLanguageInstruction(language)
+      ].join("\n\n"),
+      [
+        recentThreadContext ? `Recent same-thread context:\n${recentThreadContext}` : "No previous context.",
+        `Current user request:\n${question}`
+      ].join("\n\n"),
+      { maxOutputTokens: 1400, temperature: 0.1 }
+    );
+
+    const candidate = findJsonObject(result.text) || result.text;
+    const parsed = JSON.parse(candidate);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+
+    return parsed as Record<string, unknown>;
+  } catch (error) {
+    console.error("[AGENT_CASE_EXTRACTION_ERROR]", error);
+    return null;
+  }
+}
+
+async function buildCreateCasePreviewResponse({
+  args,
+  language
+}: {
+  args: Record<string, unknown>;
+  language: AppLanguage;
+}): Promise<AgentRunnerResult> {
+  const previewMarkdown = buildCasePreviewMarkdown(args);
+  const localizedPreview = await localizeSimpleText(previewMarkdown, language);
+
+  return {
+    text: appendAssistantCasePreviewMeta(localizedPreview, {
+      tool: "create_case",
+      status: "pending_confirmation",
+      arguments: args,
+      title: stringValue(args.title) || stringValue(args.summary),
+      createdAt: new Date().toISOString()
+    }),
+    confidence: 0.91,
+    sources: ["Case intake preview"],
+    toolName: "create_case"
+  };
+}
+
 async function localizeSimpleText(text: string, language: AppLanguage) {
   if (language === "en") {
     return text;
@@ -563,6 +671,50 @@ export async function runAgentTurn({
     }
   }
 
+  const shouldPrepareCasePreview =
+    isExplicitCreateCaseRequest(question) ||
+    (!pendingCasePreview && isCasePreviewConfirmation(question) && Boolean(recentThreadContext));
+
+  if (shouldPrepareCasePreview) {
+    const createCaseTool = getAgentTool("create_case");
+
+    if (!createCaseTool || !createCaseTool.allowedRoles.includes(currentUser.role)) {
+      return {
+        text: await localizeSimpleText(
+          "This action is available for clients. As a lawyer, I can prepare a case brief or internal strategy for an assigned matter.",
+          language
+        ),
+        confidence: 0.86,
+        sources: ["Tool: create_case"],
+        toolName: "create_case"
+      };
+    }
+
+    const extractedArgs = await extractCreateCaseArgsFromThread({
+      question,
+      recentThreadContext,
+      language
+    });
+    const parsedArgs = createCaseTool.schema.safeParse(extractedArgs || {});
+
+    if (!parsedArgs.success || !hasMinimumCasePreviewData(parsedArgs.data as Record<string, unknown>)) {
+      return {
+        text: await localizeSimpleText(
+          "I can create the case, but I need the core facts first. Please tell me what happened, who was involved, any key dates or amounts, and what evidence you have.",
+          language
+        ),
+        confidence: 0.84,
+        sources: ["Tool: create_case"],
+        toolName: "create_case"
+      };
+    }
+
+    return buildCreateCasePreviewResponse({
+      args: parsedArgs.data as Record<string, unknown>,
+      language
+    });
+  }
+
   const decisionPrompt = buildCaseIntakeAgentPrompt({
     role: currentUser.role,
     language,
@@ -699,21 +851,7 @@ export async function runAgentTurn({
       };
     }
 
-    const previewMarkdown = buildCasePreviewMarkdown(previewArgs);
-    const localizedPreview = await localizeSimpleText(previewMarkdown, language);
-
-    return {
-      text: appendAssistantCasePreviewMeta(localizedPreview, {
-        tool: "create_case",
-        status: "pending_confirmation",
-        arguments: previewArgs,
-        title: stringValue(previewArgs.title) || stringValue(previewArgs.summary),
-        createdAt: new Date().toISOString()
-      }),
-      confidence: 0.91,
-      sources: ["Case intake preview"],
-      toolName: tool.name
-    };
+    return buildCreateCasePreviewResponse({ args: previewArgs, language });
   }
 
   try {
