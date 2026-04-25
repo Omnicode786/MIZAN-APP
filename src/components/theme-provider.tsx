@@ -1,0 +1,158 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode
+} from "react";
+
+export type ThemeSetting = "light" | "dark" | "system";
+export type ResolvedTheme = "light" | "dark";
+
+const THEME_STORAGE_KEY = "mizan-theme";
+const THEME_MEDIA_QUERY = "(prefers-color-scheme: dark)";
+
+type ThemeContextValue = {
+  mounted: boolean;
+  theme: ThemeSetting;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (theme: ThemeSetting) => void;
+  toggleTheme: () => void;
+};
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+function resolveTheme(theme: ThemeSetting, prefersDark: boolean): ResolvedTheme {
+  if (theme === "system") {
+    return prefersDark ? "dark" : "light";
+  }
+
+  return theme;
+}
+
+function applyTheme(theme: ResolvedTheme) {
+  const root = document.documentElement;
+  root.classList.toggle("dark", theme === "dark");
+  root.dataset.theme = theme;
+  root.style.colorScheme = theme;
+}
+
+function getStoredTheme(): ThemeSetting {
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
+    return storedTheme;
+  }
+
+  return "system";
+}
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<ThemeSetting>("system");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(THEME_MEDIA_QUERY);
+    const storedTheme = getStoredTheme();
+    const nextResolvedTheme = resolveTheme(storedTheme, mediaQuery.matches);
+
+    setThemeState(storedTheme);
+    setResolvedTheme(nextResolvedTheme);
+    applyTheme(nextResolvedTheme);
+    setMounted(true);
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== THEME_STORAGE_KEY) {
+        return;
+      }
+
+      const nextTheme =
+        event.newValue === "light" || event.newValue === "dark" || event.newValue === "system"
+          ? event.newValue
+          : "system";
+      const nextThemeResolved = resolveTheme(nextTheme, mediaQuery.matches);
+
+      setThemeState(nextTheme);
+      setResolvedTheme(nextThemeResolved);
+      applyTheme(nextThemeResolved);
+    };
+
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(THEME_MEDIA_QUERY);
+    const onMediaChange = (event: MediaQueryListEvent) => {
+      if (theme !== "system") {
+        return;
+      }
+
+      const nextResolvedTheme = resolveTheme("system", event.matches);
+      setResolvedTheme(nextResolvedTheme);
+      applyTheme(nextResolvedTheme);
+    };
+
+    mediaQuery.addEventListener("change", onMediaChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", onMediaChange);
+    };
+  }, [mounted, theme]);
+
+  const setTheme = useCallback((nextTheme: ThemeSetting) => {
+    const mediaQuery = window.matchMedia(THEME_MEDIA_QUERY);
+    const nextResolvedTheme = resolveTheme(nextTheme, mediaQuery.matches);
+
+    setThemeState(nextTheme);
+    setResolvedTheme(nextResolvedTheme);
+
+    if (nextTheme === "system") {
+      window.localStorage.removeItem(THEME_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    }
+
+    applyTheme(nextResolvedTheme);
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  }, [resolvedTheme, setTheme]);
+
+  const value = useMemo(
+    () => ({
+      mounted,
+      theme,
+      resolvedTheme,
+      setTheme,
+      toggleTheme
+    }),
+    [mounted, theme, resolvedTheme, setTheme, toggleTheme]
+  );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+
+  return context;
+}
+
+export { THEME_STORAGE_KEY };

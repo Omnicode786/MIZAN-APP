@@ -1,0 +1,488 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  LAWYER
+  ADMIN
+}
+
+enum CaseCategory {
+  CONTRACT_REVIEW
+  RENTAL_TENANCY
+  EMPLOYMENT
+  CYBER_COMPLAINT
+  HARASSMENT
+  PAYMENT_DISPUTE
+  BUSINESS_VENDOR
+  LEGAL_NOTICE
+  EVIDENCE_ORGANIZATION
+  OTHER
+}
+
+enum CaseStatus {
+  DRAFT
+  INTAKE
+  ACTIVE
+  REVIEW
+  ESCALATED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AssignmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum DocumentType {
+  PDF
+  IMAGE
+  DOC
+  DOCX
+  EMAIL
+  SCREENSHOT
+  TEXT
+  OTHER
+}
+
+enum UploadSource {
+  USER_UPLOAD
+  LAWYER_UPLOAD
+  EMAIL_IMPORT
+  SCREEN_CAPTURE
+  SYSTEM_GENERATED
+}
+
+enum DraftType {
+  COMPLAINT_LETTER
+  LEGAL_NOTICE
+  WARNING_LETTER
+  RESPONSE_LETTER
+  REFUND_REQUEST
+  GRIEVANCE_SUBMISSION
+  CONTRACT_REVISION
+  OPINION_BRIEF
+  OTHER
+}
+
+enum VerificationStatus {
+  UNREVIEWED
+  VERIFIED
+  NEEDS_CORRECTION
+}
+
+enum CommentVisibility {
+  SHARED
+  PRIVATE
+}
+
+enum DeadlineStatus {
+  UPCOMING
+  OVERDUE
+  COMPLETED
+}
+
+enum RedactionStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AssistantScope {
+  GENERAL
+  CASE
+  DOCUMENT
+}
+
+enum MessageRole {
+  USER
+  AI
+  SYSTEM
+}
+
+enum DebateStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  name              String
+  role              Role
+  avatarUrl         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  clientProfile     ClientProfile?
+  lawyerProfile     LawyerProfile?
+  createdCases      Case[]             @relation("CaseCreator")
+  documents         Document[]
+  comments          Comment[]
+  internalNotes     InternalNote[]
+  notifications     Notification[]
+  activityLogs      ActivityLog[]
+  draftVersions     DraftVersion[]
+  createdDrafts     Draft[]            @relation("DraftCreator")
+  verifiedDrafts    Draft[]            @relation("DraftVerifier")
+  redactionJobs     RedactionJob[]
+  exportBundles     ExportBundle[]
+  assistantThreads  AssistantThread[]
+  debateSessions    DebateSession[]    @relation("DebateLawyer")
+}
+
+model ClientProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  phone              String?
+  region             String?
+  simpleLanguageMode Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cases              Case[]
+}
+
+model LawyerProfile {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  publicSlug      String           @unique
+  firmName        String?
+  bio             String?
+  specialties     String[]
+  yearsExperience Int              @default(0)
+  hourlyRate      Float?
+  fixedFeeFrom    Float?
+  isPublic        Boolean          @default(true)
+  verifiedBadge   Boolean          @default(false)
+  rating          Float?
+  city            String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments     CaseAssignment[]
+}
+
+model Case {
+  id                   String            @id @default(cuid())
+  title                String
+  category             CaseCategory
+  status               CaseStatus        @default(INTAKE)
+  priority             Priority          @default(MEDIUM)
+  stage                String            @default("Document Intake")
+  description          String?
+  caseHealthScore      Float             @default(0)
+  evidenceCompleteness Float             @default(0)
+  evidenceStrength     Float             @default(0)
+  deadlineRisk         Float             @default(0)
+  contractFairness     Float?
+  draftReadiness       Float             @default(0)
+  escalationReadiness  Float             @default(0)
+  creatorId            String
+  clientProfileId      String
+  lawyerRequestedAt    DateTime?
+  sharedWithLawyerAt   DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  creator              User              @relation("CaseCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  client               ClientProfile     @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  assignments          CaseAssignment[]
+  documents            Document[]
+  evidenceItems        EvidenceItem[]
+  timelineEvents       TimelineEvent[]
+  deadlines            Deadline[]
+  drafts               Draft[]
+  comments             Comment[]
+  internalNotes        InternalNote[]
+  exportBundles        ExportBundle[]
+  redactionJobs        RedactionJob[]
+  riskScores           RiskScore[]
+  activityLogs         ActivityLog[]
+  assistantThreads     AssistantThread[]
+  debateSessions       DebateSession[]
+}
+
+model CaseAssignment {
+  id              String           @id @default(cuid())
+  caseId          String
+  lawyerProfileId String
+  status          AssignmentStatus @default(PENDING)
+  feeProposal     Float?
+  probability     Float?
+  proposalNotes   String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  case            Case             @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  lawyer          LawyerProfile    @relation(fields: [lawyerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, lawyerProfileId])
+}
+
+model Document {
+  id                 String             @id @default(cuid())
+  caseId             String
+  uploadedById       String
+  fileName           String
+  filePath           String
+  mimeType           String
+  sizeBytes          Int
+  fileType           DocumentType
+  sourceType         UploadSource       @default(USER_UPLOAD)
+  probableCategory   String?
+  extractedText      String?
+  aiSummary          String?
+  tags               String[]
+  confidence         Float?
+  verificationStatus VerificationStatus @default(UNREVIEWED)
+  metadata           Json?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  case               Case               @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  uploadedBy         User               @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  evidenceItems      EvidenceItem[]
+  timelineEvents     TimelineEvent[]
+  deadlines          Deadline[]
+  comments           Comment[]
+  redactionJobs      RedactionJob[]
+  assistantThreads   AssistantThread[]
+}
+
+model EvidenceItem {
+  id                String    @id @default(cuid())
+  caseId            String
+  documentId        String?
+  label             String
+  summary           String?
+  sourceType        String
+  searchableText    String?
+  extractedEntities Json?
+  evidenceStrength  Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  case              Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  document          Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+}
+
+model TimelineEvent {
+  id               String    @id @default(cuid())
+  caseId           String
+  sourceDocumentId String?
+  title            String
+  description      String?
+  eventDate        DateTime
+  confidence       Float?
+  sourceLabel      String?
+  isAiGenerated    Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  case             Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  sourceDocument   Document? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+}
+
+model Deadline {
+  id               String         @id @default(cuid())
+  caseId           String
+  sourceDocumentId String?
+  title            String
+  dueDate          DateTime
+  notes            String?
+  status           DeadlineStatus @default(UPCOMING)
+  importance       Priority       @default(MEDIUM)
+  isAiDetected     Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  case             Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  sourceDocument   Document?      @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+}
+
+model Draft {
+  id                 String             @id @default(cuid())
+  caseId             String
+  createdById        String
+  verifiedById       String?
+  type               DraftType
+  title              String
+  currentContent     String
+  verificationStatus VerificationStatus @default(UNREVIEWED)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  case               Case               @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  createdBy          User               @relation("DraftCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  verifiedBy         User?              @relation("DraftVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  versions           DraftVersion[]
+}
+
+model DraftVersion {
+  id            String   @id @default(cuid())
+  draftId       String
+  createdById   String
+  versionNumber Int
+  changeSummary String?
+  content       String
+  createdAt     DateTime @default(now())
+  draft         Draft    @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  createdBy     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, versionNumber])
+}
+
+model Comment {
+  id         String            @id @default(cuid())
+  caseId     String
+  authorId   String
+  documentId String?
+  body       String
+  visibility CommentVisibility @default(SHARED)
+  pinned     Boolean           @default(false)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  case       Case              @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  author     User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  document   Document?         @relation(fields: [documentId], references: [id], onDelete: SetNull)
+}
+
+model InternalNote {
+  id        String   @id @default(cuid())
+  caseId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  kind      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExportBundle {
+  id                 String   @id @default(cuid())
+  caseId             String
+  createdById        String
+  bundleType         String
+  filePath           String
+  includePrivateNotes Boolean @default(false)
+  createdAt          DateTime @default(now())
+  case               Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  createdBy          User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+}
+
+model RedactionJob {
+  id          String           @id @default(cuid())
+  caseId      String
+  documentId  String
+  createdById String
+  status      RedactionStatus  @default(QUEUED)
+  rules       Json
+  outputPath  String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  case        Case             @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  document    Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdBy   User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+}
+
+model RiskScore {
+  id               String   @id @default(cuid())
+  caseId           String
+  dimension        String
+  score            Float
+  label            String
+  rationale        String?
+  confidence       Float?
+  lastCalculatedAt DateTime @default(now())
+  case             Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, dimension])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  caseId     String?
+  actorId    String?
+  action     String
+  detail     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  case       Case?    @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+}
+
+model AssistantThread {
+  id          String         @id @default(cuid())
+  createdById String
+  caseId      String?
+  documentId  String?
+  title       String?
+  scope       AssistantScope @default(GENERAL)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  case        Case?          @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  document    Document?      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  messages    AssistantMessage[]
+}
+
+model AssistantMessage {
+  id         String      @id @default(cuid())
+  threadId    String
+  role        MessageRole
+  content     String
+  sources     Json?
+  confidence  Float?
+  createdAt   DateTime   @default(now())
+  thread      AssistantThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+}
+
+model DebateSession {
+  id                String       @id @default(cuid())
+  caseId            String
+  lawyerId          String
+  title             String?
+  status            DebateStatus @default(ACTIVE)
+  startedAt         DateTime     @default(now())
+  endsAt            DateTime
+  outcomeProbability Float?
+  outcomeLabel      String?
+  evaluation        String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  case              Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  lawyer            User         @relation("DebateLawyer", fields: [lawyerId], references: [id], onDelete: Cascade)
+  turns             DebateTurn[]
+}
+
+model DebateTurn {
+  id         String      @id @default(cuid())
+  sessionId  String
+  speaker    MessageRole
+  content    String
+  roundNumber Int
+  createdAt  DateTime    @default(now())
+  session    DebateSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,3712 @@
+{
+  "version": "2026-04-24",
+  "jurisdiction": "Pakistan",
+  "datasetName": "pakistan-legal-workflow-knowledge-v3-expanded",
+  "datasetType": "expanded_starter_knowledge_base_for_legal_workflows",
+  "coverageNote": "Broad but not exhaustive. Designed for LawSphere/MIZAN issue spotting, retrieval grounding, workflow guidance, draft routing, evidence checklists, and case-agent outputs.",
+  "disclaimer": "Starter knowledge only. Not legal advice. This file is not a complete or authoritative statement of Pakistan law. Always verify against the latest Pakistan Code, provincial code portals, Gazette notifications, regulator circulars, rules, amendments, and qualified counsel before relying on any legal position.",
+  "supportedLanguages": [
+    "en",
+    "ur",
+    "roman-ur"
+  ],
+  "acts": [
+    {
+      "key": "constitution_1973",
+      "title": "Constitution of the Islamic Republic of Pakistan, 1973",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "fundamental rights",
+        "writs",
+        "public law"
+      ],
+      "summary": "Supreme legal framework defining state organs, fundamental rights, constitutional remedies, and state structure.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "rights issue spotting",
+        "public-law route guidance"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_1973_chronological"
+      ]
+    },
+    {
+      "key": "pakistan_penal_code_1860",
+      "title": "Pakistan Penal Code, 1860",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "criminal",
+      "useCases": [
+        "criminal offence spotting",
+        "threats",
+        "fraud",
+        "forgery"
+      ],
+      "summary": "Primary substantive criminal law defining offences and punishments.",
+      "issueSpotting": [
+        "What conduct occurred?",
+        "Is there dishonest intention/threat/force?",
+        "Is safety at risk?",
+        "Is FIR or private complaint route relevant?",
+        "Is civil/criminal overlap present?"
+      ],
+      "evidenceChecklist": [
+        "incident date/time/location",
+        "accused identity",
+        "witnesses",
+        "screenshots/recordings",
+        "complaint/FIR/application",
+        "medical/legal report if applicable"
+      ],
+      "productHints": [
+        "criminal triage",
+        "complaint drafting"
+      ],
+      "riskFlags": [
+        "serious allegation",
+        "urgent safety issue",
+        "counter-case risk",
+        "lack of evidence",
+        "civil dispute framed as criminal"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_penal_code_pdf"
+      ]
+    },
+    {
+      "key": "code_of_criminal_procedure_1898",
+      "title": "Code of Criminal Procedure, 1898",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "criminal",
+      "useCases": [
+        "FIR pathway",
+        "private complaint",
+        "bail",
+        "investigation"
+      ],
+      "summary": "Criminal procedure framework for complaints, investigation, arrest, bail, trial process, and magistrate/court procedure.",
+      "issueSpotting": [
+        "What conduct occurred?",
+        "Is there dishonest intention/threat/force?",
+        "Is safety at risk?",
+        "Is FIR or private complaint route relevant?",
+        "Is civil/criminal overlap present?"
+      ],
+      "evidenceChecklist": [
+        "incident date/time/location",
+        "accused identity",
+        "witnesses",
+        "screenshots/recordings",
+        "complaint/FIR/application",
+        "medical/legal report if applicable"
+      ],
+      "productHints": [
+        "FIR checklist",
+        "criminal forum routing"
+      ],
+      "riskFlags": [
+        "serious allegation",
+        "urgent safety issue",
+        "counter-case risk",
+        "lack of evidence",
+        "civil dispute framed as criminal"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_criminal_laws_category"
+      ]
+    },
+    {
+      "key": "code_of_civil_procedure_1908",
+      "title": "Code of Civil Procedure, 1908",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "civil suits",
+        "injunctions",
+        "execution",
+        "appeals"
+      ],
+      "summary": "Primary civil procedure framework for institution of suits, pleadings, summons, interim orders, decrees, execution, and appeals.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "civil suit brief",
+        "court filing checklist"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "cpc_pdf_search_result"
+      ]
+    },
+    {
+      "key": "contract_act_1872",
+      "title": "Contract Act, 1872",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_contracts",
+      "useCases": [
+        "contract review",
+        "payment disputes",
+        "vendor disputes"
+      ],
+      "summary": "Core contract framework for offer, acceptance, consideration, competent parties, free consent, lawful object, performance, breach, indemnity, guarantee, and agency.",
+      "issueSpotting": [
+        "Was there offer/acceptance?",
+        "Was consideration lawful?",
+        "Were parties competent?",
+        "Was there breach or non-performance?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "contract/agreement",
+        "messages showing terms",
+        "payment proof",
+        "invoice/receipt",
+        "notice/demand",
+        "reply from opposite party",
+        "party identity/address"
+      ],
+      "productHints": [
+        "clause review",
+        "notice generation"
+      ],
+      "riskFlags": [
+        "unclear parties",
+        "oral terms only",
+        "missing payment proof",
+        "limitation risk",
+        "one-sided clause"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "specific_relief_act_1877",
+      "title": "Specific Relief Act, 1877",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "specific performance",
+        "injunctions",
+        "declarations"
+      ],
+      "summary": "Relevant where the requested remedy is a specific court order such as performance, injunction, declaration, cancellation, or correction.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "remedy selector",
+        "injunction readiness"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "limitation_act_1908",
+      "title": "Limitation Act, 1908",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "deadline risk",
+        "filing windows",
+        "old claims"
+      ],
+      "summary": "Important for assessing whether a legal action, appeal, or claim may be time-barred.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "deadline tracker",
+        "limitation warning"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_limitation_act"
+      ]
+    },
+    {
+      "key": "qanun_e_shahadat_1984",
+      "title": "Qanun-e-Shahadat Order, 1984",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "evidence",
+      "useCases": [
+        "evidence organization",
+        "document authenticity",
+        "electronic evidence"
+      ],
+      "summary": "Core evidence framework relevant for admissibility, relevance, proof of documents, witness testimony, expert evidence, and evidentiary value of records.",
+      "issueSpotting": [
+        "Is the document original/copy?",
+        "Can source be authenticated?",
+        "Is metadata preserved?",
+        "Are witnesses available?",
+        "Is expert evidence needed?"
+      ],
+      "evidenceChecklist": [
+        "original/certified documents",
+        "screenshots with date/time",
+        "source links",
+        "metadata",
+        "witness names",
+        "chain of custody notes"
+      ],
+      "productHints": [
+        "evidence vault",
+        "case readiness score"
+      ],
+      "riskFlags": [
+        "cropped screenshots",
+        "missing originals",
+        "no timestamp",
+        "unclear source",
+        "alteration risk"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "commercial_documents_evidence_act_1939",
+      "title": "Commercial Documents Evidence Act, 1939",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "evidence",
+      "useCases": [
+        "commercial documents",
+        "business records",
+        "invoice evidence"
+      ],
+      "summary": "Evidence-related law useful for commercial-document and business-record proof contexts.",
+      "issueSpotting": [
+        "Is the document original/copy?",
+        "Can source be authenticated?",
+        "Is metadata preserved?",
+        "Are witnesses available?",
+        "Is expert evidence needed?"
+      ],
+      "evidenceChecklist": [
+        "original/certified documents",
+        "screenshots with date/time",
+        "source links",
+        "metadata",
+        "witness names",
+        "chain of custody notes"
+      ],
+      "productHints": [
+        "commercial evidence checklist"
+      ],
+      "riskFlags": [
+        "cropped screenshots",
+        "missing originals",
+        "no timestamp",
+        "unclear source",
+        "alteration risk"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_1939_chronological"
+      ]
+    },
+    {
+      "key": "electronic_transactions_ordinance_2002",
+      "title": "Electronic Transactions Ordinance, 2002",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "digital",
+      "useCases": [
+        "electronic documents",
+        "digital signatures",
+        "online contracts"
+      ],
+      "summary": "Relevant for electronic records, digital communications, and electronic transaction recognition.",
+      "issueSpotting": [
+        "Is record electronic?",
+        "Can origin and integrity be shown?",
+        "Is account identity known?",
+        "Were URLs/timestamps preserved?",
+        "Is there ongoing threat?"
+      ],
+      "evidenceChecklist": [
+        "screenshots",
+        "profile URLs/usernames",
+        "timestamps",
+        "device/platform details",
+        "source links",
+        "metadata",
+        "messages"
+      ],
+      "productHints": [
+        "digital evidence intake",
+        "online contract review"
+      ],
+      "riskFlags": [
+        "deleted messages",
+        "no URL",
+        "cropped screenshots",
+        "fake profile",
+        "privacy/safety risk"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_electronic_transactions_2002"
+      ]
+    },
+    {
+      "key": "prevention_electronic_crimes_act_2016",
+      "title": "Prevention of Electronic Crimes Act, 2016",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "digital",
+      "useCases": [
+        "cyber complaints",
+        "online harassment",
+        "data misuse",
+        "impersonation"
+      ],
+      "summary": "Primary cybercrime statute for unauthorized digital acts, cyber offences, and complaint-routing context.",
+      "issueSpotting": [
+        "Is record electronic?",
+        "Can origin and integrity be shown?",
+        "Is account identity known?",
+        "Were URLs/timestamps preserved?",
+        "Is there ongoing threat?"
+      ],
+      "evidenceChecklist": [
+        "screenshots",
+        "profile URLs/usernames",
+        "timestamps",
+        "device/platform details",
+        "source links",
+        "metadata",
+        "messages"
+      ],
+      "productHints": [
+        "cyber complaint intake",
+        "screenshot checklist"
+      ],
+      "riskFlags": [
+        "deleted messages",
+        "no URL",
+        "cropped screenshots",
+        "fake profile",
+        "privacy/safety risk"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_peca_2016"
+      ]
+    },
+    {
+      "key": "defamation_ordinance_2002",
+      "title": "Defamation Ordinance, 2002",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "digital",
+      "useCases": [
+        "defamation",
+        "online reputation harm",
+        "false allegations"
+      ],
+      "summary": "Relevant where false published statements are alleged to have harmed reputation, including digital publication contexts.",
+      "issueSpotting": [
+        "Is record electronic?",
+        "Can origin and integrity be shown?",
+        "Is account identity known?",
+        "Were URLs/timestamps preserved?",
+        "Is there ongoing threat?"
+      ],
+      "evidenceChecklist": [
+        "screenshots",
+        "profile URLs/usernames",
+        "timestamps",
+        "device/platform details",
+        "source links",
+        "metadata",
+        "messages"
+      ],
+      "productHints": [
+        "defamation notice draft",
+        "publication evidence capture"
+      ],
+      "riskFlags": [
+        "deleted messages",
+        "no URL",
+        "cropped screenshots",
+        "fake profile",
+        "privacy/safety risk"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_defamation_2002"
+      ]
+    },
+    {
+      "key": "right_of_access_to_information_act_2017",
+      "title": "Right of Access to Information Act, 2017",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "public records",
+        "government information requests"
+      ],
+      "summary": "Framework for requesting access to information from public bodies.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "public record request template"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_rti_2017"
+      ]
+    },
+    {
+      "key": "arbitration_act_1940",
+      "title": "Arbitration Act, 1940",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_contracts",
+      "useCases": [
+        "arbitration clause",
+        "business dispute resolution"
+      ],
+      "summary": "Relevant where a contract contains an arbitration clause or parties have agreed to arbitrate.",
+      "issueSpotting": [
+        "Was there offer/acceptance?",
+        "Was consideration lawful?",
+        "Were parties competent?",
+        "Was there breach or non-performance?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "contract/agreement",
+        "messages showing terms",
+        "payment proof",
+        "invoice/receipt",
+        "notice/demand",
+        "reply from opposite party",
+        "party identity/address"
+      ],
+      "productHints": [
+        "arbitration pathway",
+        "clause extraction"
+      ],
+      "riskFlags": [
+        "unclear parties",
+        "oral terms only",
+        "missing payment proof",
+        "limitation risk",
+        "one-sided clause"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "punjab_laws_arbitration_1940_pdf"
+      ]
+    },
+    {
+      "key": "recognition_enforcement_arbitration_2011",
+      "title": "Recognition and Enforcement (Arbitration Agreement and Foreign Arbitral) Act, 2011",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_contracts",
+      "useCases": [
+        "foreign arbitral award",
+        "international arbitration"
+      ],
+      "summary": "Relevant for recognition and enforcement of foreign arbitral agreements and awards.",
+      "issueSpotting": [
+        "Was there offer/acceptance?",
+        "Was consideration lawful?",
+        "Were parties competent?",
+        "Was there breach or non-performance?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "contract/agreement",
+        "messages showing terms",
+        "payment proof",
+        "invoice/receipt",
+        "notice/demand",
+        "reply from opposite party",
+        "party identity/address"
+      ],
+      "productHints": [
+        "foreign award checklist"
+      ],
+      "riskFlags": [
+        "unclear parties",
+        "oral terms only",
+        "missing payment proof",
+        "limitation risk",
+        "one-sided clause"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_law_justice_division_arbitration_2011"
+      ]
+    },
+    {
+      "key": "sale_of_goods_act_1930",
+      "title": "Sale of Goods Act, 1930",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "consumer",
+      "useCases": [
+        "sale of goods",
+        "defective goods",
+        "delivery disputes"
+      ],
+      "summary": "Relevant for sale of goods contracts, delivery, payment, acceptance, rejection, and goods-related disputes.",
+      "issueSpotting": [
+        "Is claimant a consumer?",
+        "Which province applies?",
+        "What product/service failed?",
+        "Is invoice/warranty available?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "invoice",
+        "payment proof",
+        "warranty card",
+        "seller identity/address",
+        "photos/videos of defect",
+        "communications",
+        "refund/repair request"
+      ],
+      "productHints": [
+        "refund demand draft",
+        "vendor notice"
+      ],
+      "riskFlags": [
+        "no invoice",
+        "wrong province",
+        "business-to-business dispute",
+        "seller identity missing",
+        "warranty expired"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_sale_of_goods_1930"
+      ]
+    },
+    {
+      "key": "partnership_act_1932",
+      "title": "Partnership Act, 1932",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "corporate",
+      "useCases": [
+        "partnership disputes",
+        "profit sharing",
+        "dissolution"
+      ],
+      "summary": "Relevant to business partnerships, partner rights/obligations, firm liabilities, authority, accounting, and dissolution.",
+      "issueSpotting": [
+        "Is entity registered?",
+        "Who are shareholders/directors?",
+        "What corporate record governs?",
+        "Is SECP/regulator involved?",
+        "Is it governance/funds/shares dispute?"
+      ],
+      "evidenceChecklist": [
+        "SECP/company documents",
+        "memorandum/articles",
+        "board resolutions",
+        "shareholding proof",
+        "bank records",
+        "emails/messages"
+      ],
+      "productHints": [
+        "partnership dispute intake"
+      ],
+      "riskFlags": [
+        "informal founder arrangement",
+        "missing corporate records",
+        "funds misuse allegation",
+        "wrong regulator",
+        "shareholding unclear"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "companies_act_2017",
+      "title": "Companies Act, 2017",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "corporate",
+      "useCases": [
+        "company disputes",
+        "shareholder issues",
+        "director obligations"
+      ],
+      "summary": "Primary company law framework for corporate formation, management, directors, shareholders, filings, records, and governance.",
+      "issueSpotting": [
+        "Is entity registered?",
+        "Who are shareholders/directors?",
+        "What corporate record governs?",
+        "Is SECP/regulator involved?",
+        "Is it governance/funds/shares dispute?"
+      ],
+      "evidenceChecklist": [
+        "SECP/company documents",
+        "memorandum/articles",
+        "board resolutions",
+        "shareholding proof",
+        "bank records",
+        "emails/messages"
+      ],
+      "productHints": [
+        "corporate dispute intake",
+        "company record checklist"
+      ],
+      "riskFlags": [
+        "informal founder arrangement",
+        "missing corporate records",
+        "funds misuse allegation",
+        "wrong regulator",
+        "shareholding unclear"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "securities_act_2015",
+      "title": "Securities Act, 2015",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "corporate",
+      "useCases": [
+        "securities regulation",
+        "investment complaints",
+        "broker disputes"
+      ],
+      "summary": "Capital-market framework relevant for securities offerings, market conduct, intermediaries, and investor protection.",
+      "issueSpotting": [
+        "Is entity registered?",
+        "Who are shareholders/directors?",
+        "What corporate record governs?",
+        "Is SECP/regulator involved?",
+        "Is it governance/funds/shares dispute?"
+      ],
+      "evidenceChecklist": [
+        "SECP/company documents",
+        "memorandum/articles",
+        "board resolutions",
+        "shareholding proof",
+        "bank records",
+        "emails/messages"
+      ],
+      "productHints": [
+        "investment complaint triage"
+      ],
+      "riskFlags": [
+        "informal founder arrangement",
+        "missing corporate records",
+        "funds misuse allegation",
+        "wrong regulator",
+        "shareholding unclear"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "secp_act_1997",
+      "title": "Securities and Exchange Commission of Pakistan Act, 1997",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "corporate",
+      "useCases": [
+        "SECP regulation",
+        "company complaints",
+        "regulated entities"
+      ],
+      "summary": "Regulatory context for corporate and securities supervision.",
+      "issueSpotting": [
+        "Is entity registered?",
+        "Who are shareholders/directors?",
+        "What corporate record governs?",
+        "Is SECP/regulator involved?",
+        "Is it governance/funds/shares dispute?"
+      ],
+      "evidenceChecklist": [
+        "SECP/company documents",
+        "memorandum/articles",
+        "board resolutions",
+        "shareholding proof",
+        "bank records",
+        "emails/messages"
+      ],
+      "productHints": [
+        "SECP routing",
+        "company profile verification"
+      ],
+      "riskFlags": [
+        "informal founder arrangement",
+        "missing corporate records",
+        "funds misuse allegation",
+        "wrong regulator",
+        "shareholding unclear"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "negotiable_instruments_act_1881",
+      "title": "Negotiable Instruments Act, 1881",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "cheque disputes",
+        "promissory notes",
+        "dishonoured instruments"
+      ],
+      "summary": "Relevant for negotiable instruments such as cheques, promissory notes, bills of exchange, and dishonour/payment contexts.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "cheque dispute intake"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_negotiable_instruments_1881"
+      ]
+    },
+    {
+      "key": "financial_institutions_recovery_finances_2001",
+      "title": "Financial Institutions (Recovery of Finances) Ordinance, 2001",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "bank recovery",
+        "loan default",
+        "finance facility disputes"
+      ],
+      "summary": "Relevant to financial institution recovery suits and banking finance disputes involving borrowers, guarantors, security, and recovery proceedings.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "banking court triage"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_financial_institutions_recovery_2001"
+      ]
+    },
+    {
+      "key": "financial_institutions_secured_transactions_2016",
+      "title": "Financial Institutions (Secured Transactions) Act, 2016",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "secured financing",
+        "collateral",
+        "movable assets security"
+      ],
+      "summary": "Relevant where movable assets or receivables are used as collateral in secured financing transactions.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "collateral checklist"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_f"
+      ]
+    },
+    {
+      "key": "state_bank_of_pakistan_act_1956",
+      "title": "State Bank of Pakistan Act, 1956",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "banking regulation",
+        "central bank context"
+      ],
+      "summary": "Establishes central bank regulatory context useful for banking complaint and regulated-finance routing.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "banking regulator route"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "banking_companies_ordinance_1962",
+      "title": "Banking Companies Ordinance, 1962",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "bank-customer disputes",
+        "regulated banking"
+      ],
+      "summary": "Banking-law context for banks and banking business, useful in bank-customer and account disputes.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "bank dispute intake"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_banking_financial_category"
+      ]
+    },
+    {
+      "key": "income_tax_ordinance_2001",
+      "title": "Income Tax Ordinance, 2001",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "income tax",
+        "tax notices",
+        "withholding tax"
+      ],
+      "summary": "Core income tax framework useful for tax notices, business verification, and evidence in commercial/employment disputes.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "tax notice triage"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_income_tax_2001"
+      ]
+    },
+    {
+      "key": "sales_tax_act_1990",
+      "title": "Sales Tax Act, 1990",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "sales tax",
+        "invoices",
+        "GST records"
+      ],
+      "summary": "Sales tax framework relevant for business invoices, registered persons, refund/assessment notices, and commercial evidence.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "invoice verification",
+        "FBR notice triage"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_sales_tax_1990"
+      ]
+    },
+    {
+      "key": "stamp_act_1899",
+      "title": "Stamp Act, 1899",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan provinces",
+      "category": "property",
+      "useCases": [
+        "stamp duty",
+        "document admissibility",
+        "property documents"
+      ],
+      "summary": "Relevant for stamp duty on instruments and document-use issues, subject to provincial amendments.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "stamp duty warning"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "transfer_of_property_act_1882",
+      "title": "Transfer of Property Act, 1882",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "property",
+      "useCases": [
+        "property transfer",
+        "sale agreement",
+        "lease",
+        "mortgage"
+      ],
+      "summary": "Property-law framework for transfers of property, sale, mortgage, lease, exchange, gift, and related interests.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "property dispute intake"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "registration_act_1908",
+      "title": "Registration Act, 1908",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan provinces",
+      "category": "property",
+      "useCases": [
+        "registered documents",
+        "property transactions"
+      ],
+      "summary": "Relevant for registration of instruments, especially property-related documents, subject to provincial registration practice.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "registration checklist"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_civil_laws_category"
+      ]
+    },
+    {
+      "key": "land_acquisition_act_1894",
+      "title": "Land Acquisition Act, 1894",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan provinces",
+      "category": "property",
+      "useCases": [
+        "compulsory acquisition",
+        "compensation disputes"
+      ],
+      "summary": "Framework historically used for compulsory land acquisition and compensation issues, with provincial amendments and newer regimes to verify.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "acquisition notice tracker"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_land_property_category"
+      ]
+    },
+    {
+      "key": "partition_act_1893",
+      "title": "Partition Act, 1893",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "property",
+      "useCases": [
+        "joint property partition",
+        "co-owner disputes"
+      ],
+      "summary": "Relevant where co-owners seek partition, sale, or division of jointly held property.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "partition case intake"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "powers_of_attorney_act_1882",
+      "title": "Powers-of-Attorney Act, 1882",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "property",
+      "useCases": [
+        "power of attorney",
+        "authorized representative"
+      ],
+      "summary": "Relevant where a person acts through an attorney/agent under a power of attorney.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "POA authority checker"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_law_justice_division"
+      ]
+    },
+    {
+      "key": "succession_act_1925",
+      "title": "Succession Act, 1925",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "family",
+      "useCases": [
+        "succession certificates",
+        "probate",
+        "estate management"
+      ],
+      "summary": "Relevant for succession certificates, probate/letters of administration, debts/securities, and estate representation issues.",
+      "issueSpotting": [
+        "What family relief is requested?",
+        "Which court/forum applies?",
+        "Are children involved?",
+        "Is safety/privacy at risk?",
+        "Are marriage/family records available?"
+      ],
+      "evidenceChecklist": [
+        "CNICs",
+        "nikahnama/marriage record",
+        "birth certificates",
+        "income/expense proof",
+        "communications",
+        "prior orders/notices"
+      ],
+      "productHints": [
+        "succession certificate checklist"
+      ],
+      "riskFlags": [
+        "child safety",
+        "domestic violence",
+        "privacy sensitivity",
+        "missing marriage record",
+        "forum mismatch"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_succession_1925"
+      ]
+    },
+    {
+      "key": "guardians_and_wards_act_1890",
+      "title": "Guardians and Wards Act, 1890",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "family",
+      "useCases": [
+        "child custody",
+        "guardianship",
+        "minor property"
+      ],
+      "summary": "Relevant to guardianship and welfare of minors, usually interfacing with family courts.",
+      "issueSpotting": [
+        "What family relief is requested?",
+        "Which court/forum applies?",
+        "Are children involved?",
+        "Is safety/privacy at risk?",
+        "Are marriage/family records available?"
+      ],
+      "evidenceChecklist": [
+        "CNICs",
+        "nikahnama/marriage record",
+        "birth certificates",
+        "income/expense proof",
+        "communications",
+        "prior orders/notices"
+      ],
+      "productHints": [
+        "custody/guardianship intake"
+      ],
+      "riskFlags": [
+        "child safety",
+        "domestic violence",
+        "privacy sensitivity",
+        "missing marriage record",
+        "forum mismatch"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_family_laws_category"
+      ]
+    },
+    {
+      "key": "family_courts_act_1964",
+      "title": "The Family Courts Act, 1964",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "family",
+      "useCases": [
+        "family court claims",
+        "maintenance",
+        "dower",
+        "custody"
+      ],
+      "summary": "Procedural framework for family court matters; local amendments and rules should be verified.",
+      "issueSpotting": [
+        "What family relief is requested?",
+        "Which court/forum applies?",
+        "Are children involved?",
+        "Is safety/privacy at risk?",
+        "Are marriage/family records available?"
+      ],
+      "evidenceChecklist": [
+        "CNICs",
+        "nikahnama/marriage record",
+        "birth certificates",
+        "income/expense proof",
+        "communications",
+        "prior orders/notices"
+      ],
+      "productHints": [
+        "family court checklist"
+      ],
+      "riskFlags": [
+        "child safety",
+        "domestic violence",
+        "privacy sensitivity",
+        "missing marriage record",
+        "forum mismatch"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_family_courts_1964"
+      ]
+    },
+    {
+      "key": "muslim_family_laws_ordinance_1961",
+      "title": "Muslim Family Laws Ordinance, 1961",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "family",
+      "useCases": [
+        "marriage record",
+        "talaq process",
+        "family documentation"
+      ],
+      "summary": "Important Muslim family-law framework in marriage/divorce procedural contexts and family documentation.",
+      "issueSpotting": [
+        "What family relief is requested?",
+        "Which court/forum applies?",
+        "Are children involved?",
+        "Is safety/privacy at risk?",
+        "Are marriage/family records available?"
+      ],
+      "evidenceChecklist": [
+        "CNICs",
+        "nikahnama/marriage record",
+        "birth certificates",
+        "income/expense proof",
+        "communications",
+        "prior orders/notices"
+      ],
+      "productHints": [
+        "nikahnama checklist"
+      ],
+      "riskFlags": [
+        "child safety",
+        "domestic violence",
+        "privacy sensitivity",
+        "missing marriage record",
+        "forum mismatch"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_family_laws_category"
+      ]
+    },
+    {
+      "key": "dissolution_muslim_marriages_act_1939",
+      "title": "Dissolution of Muslim Marriages Act, 1939",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "family",
+      "useCases": [
+        "dissolution of marriage",
+        "family court claims"
+      ],
+      "summary": "Relevant for dissolution of Muslim marriages and grounds/process themes.",
+      "issueSpotting": [
+        "What family relief is requested?",
+        "Which court/forum applies?",
+        "Are children involved?",
+        "Is safety/privacy at risk?",
+        "Are marriage/family records available?"
+      ],
+      "evidenceChecklist": [
+        "CNICs",
+        "nikahnama/marriage record",
+        "birth certificates",
+        "income/expense proof",
+        "communications",
+        "prior orders/notices"
+      ],
+      "productHints": [
+        "dissolution intake"
+      ],
+      "riskFlags": [
+        "child safety",
+        "domestic violence",
+        "privacy sensitivity",
+        "missing marriage record",
+        "forum mismatch"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_dissolution_muslim_marriages_1939"
+      ]
+    },
+    {
+      "key": "dowry_bridal_gifts_restriction_act_1976",
+      "title": "Dowry and Bridal Gifts (Restriction) Act, 1976",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "family",
+      "useCases": [
+        "dowry disputes",
+        "bridal gifts"
+      ],
+      "summary": "Relevant where disputes involve dowry, bridal gifts, marriage-related articles, and related claims.",
+      "issueSpotting": [
+        "What family relief is requested?",
+        "Which court/forum applies?",
+        "Are children involved?",
+        "Is safety/privacy at risk?",
+        "Are marriage/family records available?"
+      ],
+      "evidenceChecklist": [
+        "CNICs",
+        "nikahnama/marriage record",
+        "birth certificates",
+        "income/expense proof",
+        "communications",
+        "prior orders/notices"
+      ],
+      "productHints": [
+        "dowry item inventory"
+      ],
+      "riskFlags": [
+        "child safety",
+        "domestic violence",
+        "privacy sensitivity",
+        "missing marriage record",
+        "forum mismatch"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_family_laws_category"
+      ]
+    },
+    {
+      "key": "protection_against_harassment_workplace_2010",
+      "title": "Protection Against Harassment of Women at the Workplace Act, 2010",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "employment",
+      "useCases": [
+        "workplace harassment",
+        "internal inquiry",
+        "ombudsperson complaint"
+      ],
+      "summary": "Relevant for workplace harassment complaints, inquiry structure, and escalation to competent forums/ombudsperson.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "grievance draft",
+        "incident timeline"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_law_justice_division_harassment_2010"
+      ]
+    },
+    {
+      "key": "payment_of_wages_act_1936",
+      "title": "Payment of Wages Act, 1936",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "employment",
+      "useCases": [
+        "salary deductions",
+        "delayed wages",
+        "unpaid wages"
+      ],
+      "summary": "Supports issue spotting for wage timing, unauthorized deductions, and delayed wage disputes.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "wage proof checklist"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "industrial_relations_act_2012",
+      "title": "Industrial Relations Act, 2012",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "employment",
+      "useCases": [
+        "labour disputes",
+        "trade unions",
+        "industrial disputes"
+      ],
+      "summary": "Relevant to industrial relations, collective bargaining, and certain labour dispute frameworks.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "labour forum classifier"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "factories_act_1934",
+      "title": "Factories Act, 1934",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan provinces",
+      "category": "employment",
+      "useCases": [
+        "factory workers",
+        "workplace safety",
+        "hours and welfare"
+      ],
+      "summary": "Factory labour framework for working conditions, safety, welfare, hours, and industrial establishment compliance.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "factory compliance checklist"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_labour_laws_category"
+      ]
+    },
+    {
+      "key": "workmens_compensation_act_1923",
+      "title": "Workmen's Compensation Act, 1923 / Employees Compensation Context",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan provinces",
+      "category": "employment",
+      "useCases": [
+        "workplace injury",
+        "compensation claim"
+      ],
+      "summary": "Relevant to workplace injury/death compensation contexts, subject to provincial adaptations/current nomenclature.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "injury compensation checklist"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "official_context",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_labour_laws_category"
+      ]
+    },
+    {
+      "key": "shops_establishments_context",
+      "title": "Shops and Establishments Legal Context",
+      "level": "provincial",
+      "jurisdiction": "Pakistan provinces",
+      "category": "employment",
+      "useCases": [
+        "shop workers",
+        "commercial establishment employment"
+      ],
+      "summary": "Provincial shops and establishments laws/rules often govern retail/commercial establishment employment conditions.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "province-based labour route"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "provincial_context",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_labour_laws_category"
+      ]
+    },
+    {
+      "key": "punjab_rented_premises_act_2009",
+      "title": "Punjab Rented Premises Act, 2009",
+      "level": "provincial",
+      "jurisdiction": "Punjab, Pakistan",
+      "category": "property",
+      "useCases": [
+        "Punjab tenancy disputes",
+        "eviction",
+        "rent arrears"
+      ],
+      "summary": "Punjab tenancy framework regulating landlord-tenant relationships, tenancy agreements, rent-related obligations, and dispute procedure.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "tenancy intake",
+        "rent arrears tracker"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official_provincial",
+      "confidence": "high",
+      "sourceRefs": [
+        "punjab_code_rented_premises_2009"
+      ]
+    },
+    {
+      "key": "islamabad_rent_restriction_ordinance_2001",
+      "title": "Islamabad Rent Restriction Ordinance, 2001",
+      "level": "ict",
+      "jurisdiction": "Islamabad Capital Territory",
+      "category": "property",
+      "useCases": [
+        "ICT rental disputes",
+        "landlord-tenant issues"
+      ],
+      "summary": "ICT rent framework for Islamabad-linked tenancy matters.",
+      "issueSpotting": [
+        "What property interest is claimed?",
+        "Is title clear?",
+        "Was document registered/stamped?",
+        "Who has possession?",
+        "Which province/record authority applies?"
+      ],
+      "evidenceChecklist": [
+        "sale/title/lease deed",
+        "registry/mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "power of attorney if used"
+      ],
+      "productHints": [
+        "ICT tenancy route"
+      ],
+      "riskFlags": [
+        "unclear title",
+        "unregistered document",
+        "possession mismatch",
+        "stamp/registration issue",
+        "multiple heirs/sellers"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_2001_chronological"
+      ]
+    },
+    {
+      "key": "punjab_consumer_protection_act_2005",
+      "title": "Punjab Consumer Protection Act, 2005",
+      "level": "provincial",
+      "jurisdiction": "Punjab, Pakistan",
+      "category": "consumer",
+      "useCases": [
+        "Punjab consumer complaints",
+        "defective goods",
+        "service deficiency"
+      ],
+      "summary": "Punjab consumer framework for consumer rights, defective products/services, unfair practices, and complaint redress.",
+      "issueSpotting": [
+        "Is claimant a consumer?",
+        "Which province applies?",
+        "What product/service failed?",
+        "Is invoice/warranty available?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "invoice",
+        "payment proof",
+        "warranty card",
+        "seller identity/address",
+        "photos/videos of defect",
+        "communications",
+        "refund/repair request"
+      ],
+      "productHints": [
+        "consumer complaint draft"
+      ],
+      "riskFlags": [
+        "no invoice",
+        "wrong province",
+        "business-to-business dispute",
+        "seller identity missing",
+        "warranty expired"
+      ],
+      "sourceType": "official_provincial",
+      "confidence": "high",
+      "sourceRefs": [
+        "punjab_consumer_protection_2005"
+      ]
+    },
+    {
+      "key": "sindh_consumer_protection_act_2014",
+      "title": "Sindh Consumer Protection Act, 2014",
+      "level": "provincial",
+      "jurisdiction": "Sindh, Pakistan",
+      "category": "consumer",
+      "useCases": [
+        "Sindh consumer complaints",
+        "defective goods/services"
+      ],
+      "summary": "Sindh consumer protection framework providing complaint redress for consumers in Sindh.",
+      "issueSpotting": [
+        "Is claimant a consumer?",
+        "Which province applies?",
+        "What product/service failed?",
+        "Is invoice/warranty available?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "invoice",
+        "payment proof",
+        "warranty card",
+        "seller identity/address",
+        "photos/videos of defect",
+        "communications",
+        "refund/repair request"
+      ],
+      "productHints": [
+        "Sindh consumer complaint"
+      ],
+      "riskFlags": [
+        "no invoice",
+        "wrong province",
+        "business-to-business dispute",
+        "seller identity missing",
+        "warranty expired"
+      ],
+      "sourceType": "official_provincial",
+      "confidence": "high",
+      "sourceRefs": [
+        "sindh_consumer_protection_2014"
+      ]
+    },
+    {
+      "key": "kp_consumer_protection_act_1997",
+      "title": "Khyber Pakhtunkhwa Consumer Protection Act, 1997",
+      "level": "provincial",
+      "jurisdiction": "Khyber Pakhtunkhwa, Pakistan",
+      "category": "consumer",
+      "useCases": [
+        "KP consumer complaints",
+        "consumer court"
+      ],
+      "summary": "KP consumer protection context referenced by KP commercial and sectoral laws, with consumer courts playing a forum role.",
+      "issueSpotting": [
+        "Is claimant a consumer?",
+        "Which province applies?",
+        "What product/service failed?",
+        "Is invoice/warranty available?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "invoice",
+        "payment proof",
+        "warranty card",
+        "seller identity/address",
+        "photos/videos of defect",
+        "communications",
+        "refund/repair request"
+      ],
+      "productHints": [
+        "KP consumer route"
+      ],
+      "riskFlags": [
+        "no invoice",
+        "wrong province",
+        "business-to-business dispute",
+        "seller identity missing",
+        "warranty expired"
+      ],
+      "sourceType": "official_provincial",
+      "confidence": "medium",
+      "sourceRefs": [
+        "kp_code_consumer_protection_references"
+      ]
+    },
+    {
+      "key": "kp_resolution_commercial_disputes_act_2022",
+      "title": "Khyber Pakhtunkhwa Resolution of Commercial Disputes Act, 2022",
+      "level": "provincial",
+      "jurisdiction": "Khyber Pakhtunkhwa, Pakistan",
+      "category": "consumer",
+      "useCases": [
+        "KP commercial disputes",
+        "business litigation"
+      ],
+      "summary": "KP framework for commercial dispute resolution and commercial courts.",
+      "issueSpotting": [
+        "Is claimant a consumer?",
+        "Which province applies?",
+        "What product/service failed?",
+        "Is invoice/warranty available?",
+        "What remedy is requested?"
+      ],
+      "evidenceChecklist": [
+        "invoice",
+        "payment proof",
+        "warranty card",
+        "seller identity/address",
+        "photos/videos of defect",
+        "communications",
+        "refund/repair request"
+      ],
+      "productHints": [
+        "commercial case triage"
+      ],
+      "riskFlags": [
+        "no invoice",
+        "wrong province",
+        "business-to-business dispute",
+        "seller identity missing",
+        "warranty expired"
+      ],
+      "sourceType": "official_provincial",
+      "confidence": "high",
+      "sourceRefs": [
+        "kp_resolution_commercial_disputes_2022"
+      ]
+    },
+    {
+      "key": "punjab_protection_women_violence_act_2016",
+      "title": "Punjab Protection of Women Against Violence Act, 2016",
+      "level": "provincial",
+      "jurisdiction": "Punjab, Pakistan",
+      "category": "family",
+      "useCases": [
+        "domestic violence",
+        "protection orders",
+        "women protection"
+      ],
+      "summary": "Punjab framework for protection of women against violence and support/protection mechanisms.",
+      "issueSpotting": [
+        "What family relief is requested?",
+        "Which court/forum applies?",
+        "Are children involved?",
+        "Is safety/privacy at risk?",
+        "Are marriage/family records available?"
+      ],
+      "evidenceChecklist": [
+        "CNICs",
+        "nikahnama/marriage record",
+        "birth certificates",
+        "income/expense proof",
+        "communications",
+        "prior orders/notices"
+      ],
+      "productHints": [
+        "safety triage"
+      ],
+      "riskFlags": [
+        "child safety",
+        "domestic violence",
+        "privacy sensitivity",
+        "missing marriage record",
+        "forum mismatch"
+      ],
+      "sourceType": "official_provincial",
+      "confidence": "high",
+      "sourceRefs": [
+        "punjab_protection_women_violence_2016"
+      ]
+    },
+    {
+      "key": "anti_money_laundering_act_2010",
+      "title": "Anti-Money Laundering Act, 2010",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "financial crime",
+        "suspicious transactions"
+      ],
+      "summary": "Framework for anti-money laundering compliance, offences, and suspicious financial transaction contexts.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "financial crime flag"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_federal_laws"
+      ]
+    },
+    {
+      "key": "prevention_trafficking_persons_act_2018",
+      "title": "Prevention of Trafficking in Persons Act, 2018",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "criminal",
+      "useCases": [
+        "trafficking",
+        "forced labour",
+        "exploitation"
+      ],
+      "summary": "Relevant for serious trafficking, exploitation, forced labour, or related conduct.",
+      "issueSpotting": [
+        "What conduct occurred?",
+        "Is there dishonest intention/threat/force?",
+        "Is safety at risk?",
+        "Is FIR or private complaint route relevant?",
+        "Is civil/criminal overlap present?"
+      ],
+      "evidenceChecklist": [
+        "incident date/time/location",
+        "accused identity",
+        "witnesses",
+        "screenshots/recordings",
+        "complaint/FIR/application",
+        "medical/legal report if applicable"
+      ],
+      "productHints": [
+        "safety escalation"
+      ],
+      "riskFlags": [
+        "serious allegation",
+        "urgent safety issue",
+        "counter-case risk",
+        "lack of evidence",
+        "civil dispute framed as criminal"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_p"
+      ]
+    },
+    {
+      "key": "prevention_smuggling_migrants_act_2018",
+      "title": "Prevention of Smuggling of Migrants Act, 2018",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "criminal",
+      "useCases": [
+        "migrant smuggling",
+        "travel fraud"
+      ],
+      "summary": "Relevant where facts suggest facilitation of illegal migration, exploitation, travel fraud, or organized migrant smuggling.",
+      "issueSpotting": [
+        "What conduct occurred?",
+        "Is there dishonest intention/threat/force?",
+        "Is safety at risk?",
+        "Is FIR or private complaint route relevant?",
+        "Is civil/criminal overlap present?"
+      ],
+      "evidenceChecklist": [
+        "incident date/time/location",
+        "accused identity",
+        "witnesses",
+        "screenshots/recordings",
+        "complaint/FIR/application",
+        "medical/legal report if applicable"
+      ],
+      "productHints": [
+        "migration fraud triage"
+      ],
+      "riskFlags": [
+        "serious allegation",
+        "urgent safety issue",
+        "counter-case risk",
+        "lack of evidence",
+        "civil dispute framed as criminal"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_p"
+      ]
+    },
+    {
+      "key": "anti_terrorism_act_1997",
+      "title": "Anti-Terrorism Act, 1997",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "criminal",
+      "useCases": [
+        "terrorism allegations",
+        "security offences"
+      ],
+      "summary": "Serious criminal statute for terrorism-related offences and special procedures. Use only for high-risk flagging.",
+      "issueSpotting": [
+        "What conduct occurred?",
+        "Is there dishonest intention/threat/force?",
+        "Is safety at risk?",
+        "Is FIR or private complaint route relevant?",
+        "Is civil/criminal overlap present?"
+      ],
+      "evidenceChecklist": [
+        "incident date/time/location",
+        "accused identity",
+        "witnesses",
+        "screenshots/recordings",
+        "complaint/FIR/application",
+        "medical/legal report if applicable"
+      ],
+      "productHints": [
+        "urgent lawyer flag"
+      ],
+      "riskFlags": [
+        "serious allegation",
+        "urgent safety issue",
+        "counter-case risk",
+        "lack of evidence",
+        "civil dispute framed as criminal"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_criminal_laws_category"
+      ]
+    },
+    {
+      "key": "pakistan_environmental_protection_act_1997",
+      "title": "Pakistan Environmental Protection Act, 1997",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "pollution complaints",
+        "environmental impact"
+      ],
+      "summary": "Environmental protection framework for pollution, environmental quality, EIA/IEE, and complaint contexts.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "environment complaint intake"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official_context",
+      "confidence": "medium",
+      "sourceRefs": [
+        "kp_code_reference_environmental_protection_1997"
+      ]
+    },
+    {
+      "key": "legal_practitioners_bar_councils_act_1973",
+      "title": "Legal Practitioners and Bar Councils Act, 1973",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "lawyer regulation",
+        "bar council context"
+      ],
+      "summary": "Regulatory framework for legal practitioners and bar councils; useful for lawyer-profile verification and professional-conduct context.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "lawyer profile verification"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_1973_chronological"
+      ]
+    },
+    {
+      "key": "civil_servants_act_1973",
+      "title": "Civil Servants Act, 1973",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "employment",
+      "useCases": [
+        "civil service disputes",
+        "departmental proceedings"
+      ],
+      "summary": "Relevant for federal civil servant employment/service matters, including appointment, terms, disciplinary context, and service rights.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "service law classifier"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_1973_chronological"
+      ]
+    },
+    {
+      "key": "service_tribunals_act_1973",
+      "title": "Service Tribunals Act, 1973",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "employment",
+      "useCases": [
+        "service tribunal",
+        "civil servant appeals"
+      ],
+      "summary": "Service tribunal framework for certain civil/service disputes after departmental orders/remedies.",
+      "issueSpotting": [
+        "What is worker status?",
+        "Which province/sector applies?",
+        "What employment right is claimed?",
+        "Was departmental/internal remedy used?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "HR messages",
+        "termination/show cause notice",
+        "grievance record"
+      ],
+      "productHints": [
+        "service appeal route"
+      ],
+      "riskFlags": [
+        "informal employment",
+        "wrong forum",
+        "cash salary no receipt",
+        "provincial variation",
+        "service law overlap"
+      ],
+      "sourceType": "official",
+      "confidence": "high",
+      "sourceRefs": [
+        "pakistan_code_service_tribunals_1973"
+      ]
+    },
+    {
+      "key": "notaries_ordinance_1961",
+      "title": "Notaries Ordinance, 1961",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "evidence",
+      "useCases": [
+        "notarization",
+        "affidavits",
+        "document attestation"
+      ],
+      "summary": "Relevant for notarization and notarial acts in legal documentation workflows.",
+      "issueSpotting": [
+        "Is the document original/copy?",
+        "Can source be authenticated?",
+        "Is metadata preserved?",
+        "Are witnesses available?",
+        "Is expert evidence needed?"
+      ],
+      "evidenceChecklist": [
+        "original/certified documents",
+        "screenshots with date/time",
+        "source links",
+        "metadata",
+        "witness names",
+        "chain of custody notes"
+      ],
+      "productHints": [
+        "notarization checklist"
+      ],
+      "riskFlags": [
+        "cropped screenshots",
+        "missing originals",
+        "no timestamp",
+        "unclear source",
+        "alteration risk"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_law_justice_division"
+      ]
+    },
+    {
+      "key": "oaths_act_1873",
+      "title": "Oaths Act, 1873",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "evidence",
+      "useCases": [
+        "affidavits",
+        "sworn statements"
+      ],
+      "summary": "Relevant to oath/affirmation formalities in court or affidavit contexts.",
+      "issueSpotting": [
+        "Is the document original/copy?",
+        "Can source be authenticated?",
+        "Is metadata preserved?",
+        "Are witnesses available?",
+        "Is expert evidence needed?"
+      ],
+      "evidenceChecklist": [
+        "original/certified documents",
+        "screenshots with date/time",
+        "source links",
+        "metadata",
+        "witness names",
+        "chain of custody notes"
+      ],
+      "productHints": [
+        "affidavit caution"
+      ],
+      "riskFlags": [
+        "cropped screenshots",
+        "missing originals",
+        "no timestamp",
+        "unclear source",
+        "alteration risk"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_law_justice_division"
+      ]
+    },
+    {
+      "key": "suits_valuation_act_1887",
+      "title": "Suits Valuation Act, 1887",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "suit valuation",
+        "jurisdiction",
+        "civil filing"
+      ],
+      "summary": "Relevant to valuation of suits for jurisdiction and court-fee contexts, with provincial adaptations.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "suit valuation flag"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "court_fees_act_1870",
+      "title": "Court Fees Act, 1870",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan provinces",
+      "category": "civil_procedure",
+      "useCases": [
+        "court fee",
+        "filing cost",
+        "civil suits"
+      ],
+      "summary": "Relevant for court fee assessment on suits, appeals, and applications; schedules may vary by province/forum.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "court fee warning"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official_context",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_civil_laws_category"
+      ]
+    },
+    {
+      "key": "small_claims_minor_offences_courts_ordinance_2002",
+      "title": "Small Claims and Minor Offences Courts Ordinance, 2002",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "civil_procedure",
+      "useCases": [
+        "small claims",
+        "low-value disputes"
+      ],
+      "summary": "Framework intended for small claims/minor offences contexts where available and operational in relevant jurisdiction.",
+      "issueSpotting": [
+        "Which forum/court applies?",
+        "Who are necessary parties?",
+        "What relief is needed?",
+        "Is interim relief required?",
+        "What deadline applies?"
+      ],
+      "evidenceChecklist": [
+        "chronology",
+        "party details",
+        "documents relied upon",
+        "notices",
+        "proof of loss/relief",
+        "prior proceedings"
+      ],
+      "productHints": [
+        "small claim suitability"
+      ],
+      "riskFlags": [
+        "wrong forum",
+        "missing party",
+        "unclear relief",
+        "limitation issue",
+        "procedural delay"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "societies_registration_act_1860",
+      "title": "Societies Registration Act, 1860",
+      "level": "federal/provincial",
+      "jurisdiction": "Pakistan",
+      "category": "corporate",
+      "useCases": [
+        "NGO/society registration",
+        "association governance"
+      ],
+      "summary": "Relevant for registered societies, associations, governance documents, member disputes, and registration records.",
+      "issueSpotting": [
+        "Is entity registered?",
+        "Who are shareholders/directors?",
+        "What corporate record governs?",
+        "Is SECP/regulator involved?",
+        "Is it governance/funds/shares dispute?"
+      ],
+      "evidenceChecklist": [
+        "SECP/company documents",
+        "memorandum/articles",
+        "board resolutions",
+        "shareholding proof",
+        "bank records",
+        "emails/messages"
+      ],
+      "productHints": [
+        "society record checklist"
+      ],
+      "riskFlags": [
+        "informal founder arrangement",
+        "missing corporate records",
+        "funds misuse allegation",
+        "wrong regulator",
+        "shareholding unclear"
+      ],
+      "sourceType": "official",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_alpha_s"
+      ]
+    },
+    {
+      "key": "foreign_exchange_regulation_context",
+      "title": "Foreign Exchange Regulation Context",
+      "level": "federal",
+      "jurisdiction": "Pakistan",
+      "category": "banking_tax",
+      "useCases": [
+        "foreign exchange",
+        "remittances",
+        "currency accounts"
+      ],
+      "summary": "Foreign exchange and currency-account issues often involve SBP/FBR/regulatory context and current circulars.",
+      "issueSpotting": [
+        "Which bank/tax authority applies?",
+        "What notice/transaction is disputed?",
+        "What deadline applies?",
+        "Is a specialized forum needed?",
+        "Are portal/bank records complete?"
+      ],
+      "evidenceChecklist": [
+        "notices",
+        "statements",
+        "transaction IDs",
+        "returns/challans",
+        "loan/security documents",
+        "correspondence"
+      ],
+      "productHints": [
+        "foreign payment triage"
+      ],
+      "riskFlags": [
+        "strict deadline",
+        "specialized forum",
+        "calculation dispute",
+        "privacy/security issue",
+        "regulatory exposure"
+      ],
+      "sourceType": "regulatory_context",
+      "confidence": "medium",
+      "sourceRefs": [
+        "pakistan_code_banking_financial_category"
+      ]
+    },
+    {
+      "key": "legal_notice_workflow_context",
+      "title": "Legal Notice Workflow Context",
+      "level": "workflow",
+      "jurisdiction": "Pakistan",
+      "category": "workflow",
+      "useCases": [
+        "legal notices",
+        "demand notices",
+        "warning letters"
+      ],
+      "summary": "Practical pre-litigation workflow used across contract, tenancy, employment, consumer, defamation, and payment disputes.",
+      "issueSpotting": [
+        "What action is requested?",
+        "What facts support it?",
+        "What evidence exists?",
+        "What is missing?",
+        "What is the safest next step?"
+      ],
+      "evidenceChecklist": [
+        "case summary",
+        "timeline",
+        "documents",
+        "evidence index",
+        "deadlines",
+        "party details"
+      ],
+      "productHints": [
+        "notice template",
+        "delivery proof checklist"
+      ],
+      "riskFlags": [
+        "unsupported allegation",
+        "missing identity/address",
+        "unclear relief",
+        "sensitive data exposure",
+        "lawyer review needed"
+      ],
+      "sourceType": "workflow_context",
+      "confidence": "medium",
+      "sourceRefs": []
+    },
+    {
+      "key": "lawyer_handoff_workflow_context",
+      "title": "Lawyer Handoff Workflow Context",
+      "level": "workflow",
+      "jurisdiction": "Pakistan",
+      "category": "workflow",
+      "useCases": [
+        "lawyer handoff",
+        "case brief",
+        "proposal review"
+      ],
+      "summary": "Workflow for converting messy client material into a concise, lawyer-ready brief before proposal or consultation.",
+      "issueSpotting": [
+        "What action is requested?",
+        "What facts support it?",
+        "What evidence exists?",
+        "What is missing?",
+        "What is the safest next step?"
+      ],
+      "evidenceChecklist": [
+        "case summary",
+        "timeline",
+        "documents",
+        "evidence index",
+        "deadlines",
+        "party details"
+      ],
+      "productHints": [
+        "handoff brief generator"
+      ],
+      "riskFlags": [
+        "unsupported allegation",
+        "missing identity/address",
+        "unclear relief",
+        "sensitive data exposure",
+        "lawyer review needed"
+      ],
+      "sourceType": "workflow_context",
+      "confidence": "medium",
+      "sourceRefs": []
+    },
+    {
+      "key": "redaction_privacy_workflow_context",
+      "title": "Privacy and Redaction Workflow Context",
+      "level": "workflow",
+      "jurisdiction": "Pakistan",
+      "category": "workflow",
+      "useCases": [
+        "redaction",
+        "safe sharing",
+        "PII masking"
+      ],
+      "summary": "Workflow context for safely sharing legal documents by masking sensitive identifiers while preserving legal meaning.",
+      "issueSpotting": [
+        "What action is requested?",
+        "What facts support it?",
+        "What evidence exists?",
+        "What is missing?",
+        "What is the safest next step?"
+      ],
+      "evidenceChecklist": [
+        "case summary",
+        "timeline",
+        "documents",
+        "evidence index",
+        "deadlines",
+        "party details"
+      ],
+      "productHints": [
+        "safe export generation"
+      ],
+      "riskFlags": [
+        "unsupported allegation",
+        "missing identity/address",
+        "unclear relief",
+        "sensitive data exposure",
+        "lawyer review needed"
+      ],
+      "sourceType": "workflow_context",
+      "confidence": "medium",
+      "sourceRefs": []
+    }
+  ],
+  "agencies": [
+    {
+      "key": "fia_complaint_portal",
+      "name": "FIA Complaint Portal",
+      "category": "public complaint intake",
+      "useCases": [
+        "cyber complaints",
+        "online fraud",
+        "digital harassment"
+      ],
+      "notes": "Useful for cybercrime complaint routing; verify current portal/agency routing."
+    },
+    {
+      "key": "nccia",
+      "name": "National Cyber Crime Investigation Agency",
+      "category": "cyber complaint",
+      "useCases": [
+        "cyber harassment",
+        "fake profiles",
+        "online threats"
+      ],
+      "notes": "Relevant for cyber complaint direction; verify current operational portal and jurisdiction."
+    },
+    {
+      "key": "secp",
+      "name": "Securities and Exchange Commission of Pakistan",
+      "category": "corporate regulator",
+      "useCases": [
+        "company records",
+        "company complaints",
+        "corporate compliance"
+      ],
+      "notes": "Useful for company registration/status and corporate compliance context."
+    },
+    {
+      "key": "fbr",
+      "name": "Federal Board of Revenue",
+      "category": "tax authority",
+      "useCases": [
+        "tax notices",
+        "income tax",
+        "sales tax"
+      ],
+      "notes": "Useful for tax records and notices; specialist tax counsel may be required."
+    },
+    {
+      "key": "sbp",
+      "name": "State Bank of Pakistan",
+      "category": "banking regulator",
+      "useCases": [
+        "banking complaints",
+        "regulated financial institutions"
+      ],
+      "notes": "Useful for banking regulator context and escalation routes."
+    },
+    {
+      "key": "ombudsperson_harassment",
+      "name": "Federal/Provincial Ombudsperson for Harassment",
+      "category": "workplace harassment forum",
+      "useCases": [
+        "workplace harassment",
+        "retaliation"
+      ],
+      "notes": "Forum depends on jurisdiction and workplace context."
+    },
+    {
+      "key": "consumer_courts_provincial",
+      "name": "Provincial Consumer Forums / Consumer Courts",
+      "category": "consumer dispute forum",
+      "useCases": [
+        "defective product",
+        "service deficiency",
+        "refund complaint"
+      ],
+      "notes": "Consumer forum depends on province and statutory regime."
+    },
+    {
+      "key": "labour_courts_authorities",
+      "name": "Labour Courts and Labour Authorities",
+      "category": "employment/labour forum",
+      "useCases": [
+        "wage claims",
+        "termination disputes"
+      ],
+      "notes": "Forum depends on worker status, sector, employer, and province."
+    },
+    {
+      "key": "family_courts",
+      "name": "Family Courts",
+      "category": "family law forum",
+      "useCases": [
+        "maintenance",
+        "dower",
+        "custody",
+        "dissolution"
+      ],
+      "notes": "Sensitive matters require careful privacy and safety handling."
+    },
+    {
+      "key": "nadra",
+      "name": "NADRA",
+      "category": "identity records",
+      "useCases": [
+        "identity verification",
+        "family registration certificate",
+        "succession/family documentation"
+      ],
+      "notes": "Often relevant for evidence documents, not a dispute forum."
+    }
+  ],
+  "caseTypeProfiles": [
+    {
+      "key": "payment_dispute",
+      "label": "Payment Dispute",
+      "likelyActs": [
+        "contract_act_1872",
+        "limitation_act_1908",
+        "qanun_e_shahadat_1984",
+        "legal_notice_workflow_context",
+        "negotiable_instruments_act_1881"
+      ],
+      "mustHaveEvidence": [
+        "agreement/proof of obligation",
+        "payment proof",
+        "invoice/messages",
+        "opposite party identity/address",
+        "demand/notice history"
+      ],
+      "commonMissingEvidence": [
+        "opposite party address",
+        "payment proof",
+        "delivery/performance proof",
+        "formal demand notice"
+      ],
+      "recommendedRoadmap": [
+        "organize obligation and payment proof",
+        "calculate amount due",
+        "send demand/legal notice",
+        "wait response window",
+        "request lawyer review if unresolved"
+      ]
+    },
+    {
+      "key": "contract_review",
+      "label": "Contract Review",
+      "likelyActs": [
+        "contract_act_1872",
+        "specific_relief_act_1877",
+        "arbitration_act_1940",
+        "limitation_act_1908"
+      ],
+      "mustHaveEvidence": [
+        "full contract",
+        "annexures",
+        "messages negotiating terms",
+        "payment/performance records"
+      ],
+      "commonMissingEvidence": [
+        "missing pages",
+        "unsigned copy",
+        "unclear party names",
+        "no termination/dispute clause"
+      ],
+      "recommendedRoadmap": [
+        "upload full contract",
+        "identify risky clauses",
+        "extract notice periods/deadlines",
+        "generate revision suggestions",
+        "lawyer review before signing"
+      ]
+    },
+    {
+      "key": "rental_tenancy_dispute",
+      "label": "Rental / Tenancy Dispute",
+      "likelyActs": [
+        "punjab_rented_premises_act_2009",
+        "islamabad_rent_restriction_ordinance_2001",
+        "contract_act_1872",
+        "qanun_e_shahadat_1984"
+      ],
+      "mustHaveEvidence": [
+        "tenancy agreement",
+        "rent proof",
+        "notice copy",
+        "property address",
+        "party CNIC/address details"
+      ],
+      "commonMissingEvidence": [
+        "no written tenancy agreement",
+        "no rent receipts",
+        "no notice delivery proof",
+        "security deposit proof missing"
+      ],
+      "recommendedRoadmap": [
+        "identify province",
+        "upload tenancy agreement",
+        "prepare rent/payment timeline",
+        "verify notice",
+        "route to appropriate rent forum/lawyer"
+      ]
+    },
+    {
+      "key": "employment_wage_dispute",
+      "label": "Employment / Wage Dispute",
+      "likelyActs": [
+        "payment_of_wages_act_1936",
+        "industrial_relations_act_2012",
+        "shops_establishments_context",
+        "contract_act_1872"
+      ],
+      "mustHaveEvidence": [
+        "appointment letter",
+        "salary slips",
+        "bank statement",
+        "attendance record",
+        "termination/deduction notice"
+      ],
+      "commonMissingEvidence": [
+        "no appointment letter",
+        "cash salary proof missing",
+        "unclear employment status",
+        "forum risk"
+      ],
+      "recommendedRoadmap": [
+        "classify worker status",
+        "collect salary/employment proof",
+        "prepare calculation",
+        "send grievance/demand",
+        "route to labour authority/lawyer"
+      ]
+    },
+    {
+      "key": "cyber_complaint",
+      "label": "Cyber Complaint",
+      "likelyActs": [
+        "prevention_electronic_crimes_act_2016",
+        "electronic_transactions_ordinance_2002",
+        "qanun_e_shahadat_1984",
+        "pakistan_penal_code_1860"
+      ],
+      "mustHaveEvidence": [
+        "screenshots",
+        "profile URLs",
+        "phone/usernames",
+        "timestamps",
+        "platform details",
+        "threat/blackmail proof"
+      ],
+      "commonMissingEvidence": [
+        "source URL missing",
+        "cropped screenshot",
+        "no timestamp",
+        "accused identity uncertain",
+        "messages deleted"
+      ],
+      "recommendedRoadmap": [
+        "preserve evidence",
+        "capture URLs/timestamps",
+        "avoid deleting messages",
+        "prepare cyber complaint facts",
+        "route to FIA/NCCIA or lawyer for serious threats"
+      ]
+    },
+    {
+      "key": "workplace_harassment",
+      "label": "Workplace Harassment",
+      "likelyActs": [
+        "protection_against_harassment_workplace_2010",
+        "qanun_e_shahadat_1984",
+        "industrial_relations_act_2012"
+      ],
+      "mustHaveEvidence": [
+        "incident timeline",
+        "messages/emails",
+        "witness names",
+        "employment record",
+        "HR/internal complaint"
+      ],
+      "commonMissingEvidence": [
+        "no dates",
+        "no witnesses",
+        "no workplace link",
+        "no HR complaint record",
+        "retaliation proof missing"
+      ],
+      "recommendedRoadmap": [
+        "build incident timeline",
+        "preserve communications",
+        "identify forum/internal mechanism",
+        "prepare grievance",
+        "seek lawyer/ombudsperson route if serious"
+      ]
+    },
+    {
+      "key": "consumer_refund_dispute",
+      "label": "Consumer Refund / Service Dispute",
+      "likelyActs": [
+        "punjab_consumer_protection_act_2005",
+        "sindh_consumer_protection_act_2014",
+        "kp_consumer_protection_act_1997",
+        "sale_of_goods_act_1930",
+        "contract_act_1872"
+      ],
+      "mustHaveEvidence": [
+        "invoice",
+        "payment proof",
+        "seller identity",
+        "defect/service proof",
+        "communications"
+      ],
+      "commonMissingEvidence": [
+        "no invoice",
+        "seller address missing",
+        "no defect proof",
+        "province/forum uncertain"
+      ],
+      "recommendedRoadmap": [
+        "identify province",
+        "collect invoice and defect proof",
+        "send refund/replacement demand",
+        "prepare consumer complaint if unresolved"
+      ]
+    },
+    {
+      "key": "family_matter",
+      "label": "Family Matter",
+      "likelyActs": [
+        "family_courts_act_1964",
+        "muslim_family_laws_ordinance_1961",
+        "dissolution_muslim_marriages_act_1939",
+        "guardians_and_wards_act_1890",
+        "succession_act_1925"
+      ],
+      "mustHaveEvidence": [
+        "CNICs",
+        "marriage/family record",
+        "children documents if relevant",
+        "income/expense proof",
+        "communications",
+        "prior orders"
+      ],
+      "commonMissingEvidence": [
+        "nikahnama missing",
+        "income proof missing",
+        "children documents missing",
+        "forum/province unclear"
+      ],
+      "recommendedRoadmap": [
+        "identify relief sought",
+        "collect family records",
+        "build timeline",
+        "prepare sensitive evidence bundle",
+        "lawyer review before filing"
+      ]
+    },
+    {
+      "key": "property_dispute",
+      "label": "Property Dispute",
+      "likelyActs": [
+        "transfer_of_property_act_1882",
+        "registration_act_1908",
+        "stamp_act_1899",
+        "land_acquisition_act_1894",
+        "partition_act_1893",
+        "powers_of_attorney_act_1882"
+      ],
+      "mustHaveEvidence": [
+        "title/registry documents",
+        "mutation/land record",
+        "possession proof",
+        "payment proof",
+        "property address",
+        "POA if applicable"
+      ],
+      "commonMissingEvidence": [
+        "registered deed missing",
+        "unclear title",
+        "possession proof missing",
+        "multiple heir/share issue"
+      ],
+      "recommendedRoadmap": [
+        "identify property/province",
+        "verify title documents",
+        "build payment/possession timeline",
+        "flag registration/stamp risks",
+        "lawyer review"
+      ]
+    },
+    {
+      "key": "tax_notice",
+      "label": "Tax Notice / FBR Matter",
+      "likelyActs": [
+        "income_tax_ordinance_2001",
+        "sales_tax_act_1990"
+      ],
+      "mustHaveEvidence": [
+        "tax notice",
+        "return/assessment",
+        "CPR/challan",
+        "withholding certificates",
+        "business NTN/STRN",
+        "portal record"
+      ],
+      "commonMissingEvidence": [
+        "tax year unclear",
+        "notice deadline missing",
+        "portal document not downloaded",
+        "advisor record missing"
+      ],
+      "recommendedRoadmap": [
+        "identify tax type/year",
+        "download portal documents",
+        "calendar deadline",
+        "collect payment/return records",
+        "specialist review"
+      ]
+    }
+  ],
+  "tags": {
+    "contract review": [
+      "offer",
+      "acceptance",
+      "consideration",
+      "consent",
+      "capacity",
+      "termination",
+      "penalty",
+      "payment",
+      "ownership",
+      "indemnity",
+      "warranty",
+      "arbitration",
+      "jurisdiction",
+      "notice period"
+    ],
+    "payment disputes": [
+      "payment proof",
+      "invoice",
+      "receipt",
+      "bank transfer",
+      "cheque",
+      "demand notice",
+      "amount due",
+      "breach",
+      "refund",
+      "delivery proof"
+    ],
+    "business/vendor disputes": [
+      "purchase order",
+      "delivery challan",
+      "service agreement",
+      "refund",
+      "warranty",
+      "defective goods",
+      "non-performance",
+      "vendor"
+    ],
+    "rental/tenancy disputes": [
+      "rent agreement",
+      "notice",
+      "arrears",
+      "eviction",
+      "rent registrar",
+      "security deposit",
+      "possession",
+      "utility bills"
+    ],
+    "employment issues": [
+      "wages",
+      "deductions",
+      "delay",
+      "termination",
+      "appointment letter",
+      "salary slip",
+      "grievance",
+      "attendance",
+      "HR"
+    ],
+    "cyber complaints": [
+      "harassment",
+      "impersonation",
+      "data theft",
+      "blackmail",
+      "threat",
+      "fake profile",
+      "unauthorized access",
+      "screenshot",
+      "URL"
+    ],
+    "family law": [
+      "nikahnama",
+      "maintenance",
+      "custody",
+      "dower",
+      "talaq",
+      "union council",
+      "family court",
+      "guardianship"
+    ],
+    "property disputes": [
+      "sale deed",
+      "mutation",
+      "possession",
+      "title",
+      "lease",
+      "power of attorney",
+      "registry",
+      "land record",
+      "stamp duty"
+    ],
+    "consumer protection": [
+      "invoice",
+      "warranty",
+      "defective product",
+      "service deficiency",
+      "refund",
+      "false advertising",
+      "consumer court"
+    ],
+    "banking finance": [
+      "loan",
+      "guarantee",
+      "security",
+      "bank statement",
+      "recovery suit",
+      "cheque",
+      "dishonour",
+      "SBP"
+    ],
+    "tax": [
+      "income tax",
+      "sales tax",
+      "FBR",
+      "notice",
+      "return",
+      "assessment",
+      "withholding",
+      "CPR",
+      "STRN",
+      "NTN"
+    ]
+  },
+  "draftTypes": [
+    {
+      "key": "legal_notice",
+      "label": "Legal Notice",
+      "bestFor": [
+        "payment_dispute",
+        "contract_review",
+        "rental_tenancy_dispute",
+        "consumer_refund_dispute",
+        "defamation_reputation"
+      ],
+      "requiredInputs": [
+        "party names",
+        "addresses",
+        "facts",
+        "demand",
+        "deadline",
+        "supporting documents"
+      ],
+      "qualityChecks": [
+        "clear demand",
+        "chronological facts",
+        "reasonable response deadline",
+        "evidence referenced",
+        "professional tone"
+      ]
+    },
+    {
+      "key": "complaint_letter",
+      "label": "Complaint Letter",
+      "bestFor": [
+        "cyber_complaint",
+        "workplace_harassment",
+        "consumer_refund_dispute",
+        "employment_wage_dispute"
+      ],
+      "requiredInputs": [
+        "complainant details",
+        "respondent details",
+        "incident facts",
+        "dates",
+        "evidence list",
+        "requested action"
+      ],
+      "qualityChecks": [
+        "authority identified",
+        "facts specific",
+        "evidence attached",
+        "relief requested",
+        "safety concerns flagged"
+      ]
+    },
+    {
+      "key": "refund_request",
+      "label": "Refund Request",
+      "bestFor": [
+        "consumer_refund_dispute",
+        "payment_dispute"
+      ],
+      "requiredInputs": [
+        "invoice",
+        "payment proof",
+        "defect/non-performance details",
+        "requested refund amount",
+        "deadline"
+      ],
+      "qualityChecks": [
+        "amount clear",
+        "seller identified",
+        "proof referenced"
+      ]
+    },
+    {
+      "key": "lawyer_handoff_brief",
+      "label": "Lawyer Handoff Brief",
+      "bestFor": [
+        "all"
+      ],
+      "requiredInputs": [
+        "case summary",
+        "key facts",
+        "uploaded evidence",
+        "timeline",
+        "missing evidence",
+        "client goal"
+      ],
+      "qualityChecks": [
+        "matter type clear",
+        "relief requested",
+        "evidence gaps identified",
+        "deadline risk shown",
+        "questions for lawyer listed"
+      ]
+    }
+  ],
+  "aiSafetyRules": [
+    "Do not present AI output as final legal advice.",
+    "Always recommend qualified lawyer review for serious, urgent, high-value, criminal, harassment, family, property, tax, banking, or court-facing matters.",
+    "When facts are missing, state uncertainty clearly.",
+    "Do not invent statutory sections unless they are available in retrieved source text.",
+    "Use legal act titles as context anchors, not as guaranteed final conclusions.",
+    "For provincial laws, ask for province/city before forum-specific guidance.",
+    "For limitation/deadline issues, flag urgency and advise verification against the exact claim type.",
+    "Separate AI-generated analysis from lawyer-verified content.",
+    "Never encourage evidence alteration, fabrication, or deletion."
+  ],
+  "retrievalHints": {
+    "highPriorityFields": [
+      "useCases",
+      "issueSpotting",
+      "evidenceChecklist",
+      "riskFlags",
+      "productHints",
+      "tags"
+    ],
+    "caseClassificationFlow": [
+      "match user facts to caseTypeProfiles",
+      "retrieve likelyActs",
+      "extract evidenceChecklist",
+      "compare against uploaded evidence",
+      "generate evidence gaps",
+      "generate roadmap",
+      "flag risks and uncertainty"
+    ],
+    "responseStructure": [
+      "Issue Summary",
+      "Likely Legal Context",
+      "Evidence Available",
+      "Evidence Missing",
+      "Risk / Urgency",
+      "Recommended Next Steps",
+      "Confidence"
+    ]
+  }
+}
