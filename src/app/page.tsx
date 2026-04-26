@@ -38,6 +38,7 @@ import {
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { useLanguage } from "@/hooks/use-language";
 import { t } from "@/lib/translations";
 import { Badge } from "@/components/ui/badge";
@@ -304,7 +305,7 @@ export default function LandingPage() {
       </div>
 
       <div className="mx-auto max-w-[1440px] px-6 py-4 xl:px-8">
-        <header className={`${surfaceClass} sticky top-4 z-40 bg-card/92 backdrop-blur`}>
+        <header className={`${surfaceClass} nav-surface sticky top-4 z-40 bg-card/92 backdrop-blur`}>
           <div className="grid h-14 grid-cols-12 items-center gap-x-6 px-6">
             <div className="col-span-6 flex items-center lg:col-span-3">
               <Logo />
@@ -327,6 +328,7 @@ export default function LandingPage() {
 
             <div className="col-span-6 flex items-center justify-end gap-3 lg:col-span-4">
               <LanguageToggle compact />
+              <UiModeToggle compact className="h-8 rounded-xl px-2.5" />
               <ThemeToggle className="h-8 w-8 rounded-xl" />
               <Button asChild variant="ghost" className="hidden h-8 rounded-xl px-3 text-[14px] sm:inline-flex">
                 <Link href="/login">{t(language, "login")}</Link>

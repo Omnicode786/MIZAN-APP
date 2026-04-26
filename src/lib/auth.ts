@@ -1,52 +1,32 @@
-import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import {
+  SESSION_COOKIE_NAME,
+  getExpiredSessionCookieOptions,
+  getSessionCookieOptions,
+  signSessionToken,
+  verifySessionToken,
+  type SessionPayload
+} from "@/lib/session";
 
-export type SessionPayload = {
-  sub: string;
-  role: "CLIENT" | "LAWYER" | "ADMIN";
-  name: string;
-  email: string;
-};
-
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "mizan-dev-secret-key"
-);
-
-const COOKIE_NAME = "mizan_session";
+export type { SessionPayload };
 
 export async function createSession(payload: SessionPayload) {
-  const token = await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("7d")
-    .sign(secret);
-
-  cookies().set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7
-  });
+  const token = await signSessionToken(payload);
+  cookies().set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 
   return token;
 }
 
 export function destroySession() {
-  cookies().delete(COOKIE_NAME);
+  cookies().set(SESSION_COOKIE_NAME, "", getExpiredSessionCookieOptions());
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
-  const token = cookies().get(COOKIE_NAME)?.value;
+  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
 
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload as SessionPayload;
-  } catch {
-    return null;
-  }
+  return verifySessionToken(token);
 }
 
 export async function getCurrentUserWithProfile() {

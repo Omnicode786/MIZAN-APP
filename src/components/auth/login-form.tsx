@@ -22,12 +22,14 @@ export function LoginForm() {
     setError("");
 
     try {
+      const next = new URLSearchParams(window.location.search).get("next") || undefined;
       const response = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "same-origin",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, next })
       });
 
       const data = await response.json().catch(() => null);

@@ -1,8 +1,10 @@
 import fs from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { runAiTask, runVisionAiTask } from "@/lib/ai";
+import { readUploadedFileBytes } from "@/lib/document-pipeline/extract";
 import { buildPakistanLawContext } from "@/lib/pakistan-law/retrieval";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
+import { stripAssistantActionMeta } from "@/lib/assistant-message-meta";
 import {
   getLanguageInstruction,
   normalizeLanguage,
@@ -11,6 +13,50 @@ import {
 
 function compact(text: string | null | undefined, fallback = "") {
   return (text || fallback).replace(/\s+/g, " ").trim();
+}
+
+export function hasReadableDocumentText(text: string | null | undefined) {
+  const normalized = compact(text);
+  const meaningfulCharacters = normalized.replace(/[^A-Za-z0-9\u0600-\u06FF]/g, "");
+
+  return normalized.length >= 80 && meaningfulCharacters.length >= 40;
+}
+
+export function unreadableDocumentSummary(fileName?: string) {
+  const safeFileName = compact(fileName).replace(/[<>]/g, "").slice(0, 120);
+  const fileLabel = safeFileName && !safeFileName.includes("\n") ? ` **${safeFileName}**` : "";
+
+  return {
+    text: [
+      "## Document Uploaded",
+      "",
+      `The file${fileLabel} was saved successfully, but MIZAN could not safely extract readable text from it.`,
+      "",
+      "No parties, FIR sections, police station details, dates, allegations, deadlines, or legal conclusions have been inferred from this file.",
+      "",
+      "Please review the PDF manually in the viewer/download option, or upload a clearer/OCR-readable copy if you want AI analysis."
+    ].join("\n"),
+    confidence: 0.1
+  };
+}
+
+type RecentThreadMessage = {
+  role: string;
+  content: string | null;
+};
+
+function formatRecentThreadMessages(messages?: RecentThreadMessage[]) {
+  if (!messages?.length) return "";
+
+  return messages
+    .map((message) => {
+      const role = message.role === "AI" ? "Assistant" : message.role === "USER" ? "User" : message.role;
+      const content = compact(stripAssistantActionMeta(message.content || "")).slice(0, 1200);
+      return content ? `${role}: ${content}` : "";
+    })
+    .filter(Boolean)
+    .join("\n\n")
+    .slice(0, 5000);
 }
 
 function cleanThreadTitle(value: string, fallback: string) {
@@ -175,7 +221,8 @@ export async function answerPakistaniLegalQuestion({
   documentId,
   role,
   simpleLanguageMode,
-  language
+  language,
+  recentMessages
 }: {
   question: string;
   caseId?: string;
@@ -183,10 +230,12 @@ export async function answerPakistaniLegalQuestion({
   role: "CLIENT" | "LAWYER" | "ADMIN";
   simpleLanguageMode?: boolean;
   language?: AppLanguage;
+  recentMessages?: RecentThreadMessage[];
 }) {
   const outputLanguage = normalizeLanguage(language);
   let context = "";
   let sources: string[] = [];
+  const recentThreadContext = formatRecentThreadMessages(recentMessages);
   const useLegalAnalysisFormat = needsLegalAnalysisFormat(question, Boolean(caseId || documentId));
   const asksAboutLawyers = /\b(lawyer|advocate|attorney|counsel|hire|find|proposal|represent|representation)\b/i.test(question);
   const lawyerDirectoryContext = asksAboutLawyers ? await buildMizanLawyerDirectoryContext() : "";
@@ -213,9 +262,17 @@ export async function answerPakistaniLegalQuestion({
   }
 
   const law = useLegalAnalysisFormat
-    ? buildPakistanLawContext(`${question}\n${context}`)
+    ? buildPakistanLawContext(`${question}\n${recentThreadContext}\n${context}`)
     : { context: "", matches: [] };
   sources.push(...law.matches.map((item) => item.title));
+
+  const modelInput = [
+    recentThreadContext ? `Recent conversation from this same thread:\n${recentThreadContext}` : "",
+    context ? `Current grounded case/document context:\n${context}` : "",
+    `Current user question: ${question}`
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   const prompt = [
     "You are MIZAN's in-app Pakistani legal assistant for clients and lawyers.",
@@ -224,6 +281,9 @@ export async function answerPakistaniLegalQuestion({
     "For non-legal greetings, app-capability questions, thanks, or casual messages, answer like a helpful product assistant instead of forcing a legal memo. Don't entertain fishy/useless messages.",
     "For law-related or case-specific questions, be assistive, careful, and structured like a professional Pakistani lawyer reasoning through a file. This lawyer should work upon existing pakistan law data both from the given data and your existing data as well of the vast law of Pakistan. Act as a senior licensed lawyer make the client believe on you",
     getLanguageInstruction(outputLanguage),
+    recentThreadContext
+      ? "Use the recent conversation context only for this thread to resolve references and remember what the user just told you. Do not treat it as global memory."
+      : "No recent conversation context was supplied.",
 
     useLegalAnalysisFormat
       ? "Reason from the provided Pakistan-law context, MIZAN platform context, and uploaded case record. Do not invent facts outside the record."
@@ -239,11 +299,12 @@ export async function answerPakistaniLegalQuestion({
       ? LEGAL_MARKDOWN_RESPONSE_INSTRUCTIONS
       : CONVERSATIONAL_MARKDOWN_RESPONSE_INSTRUCTIONS,
     useLegalAnalysisFormat ? `Pakistan-law context:\n${law.context}` : "Pakistan-law context was not attached because this is not a legal-analysis question.",
+    recentThreadContext ? `Recent conversation context:\n${recentThreadContext}` : "No recent thread messages were supplied.",
     context ? `Grounded case/document context:\n${context}` : "No case file was supplied.",
     `User question: ${question}`
   ].join("\n\n");
 
-  const response = await runAiTask(prompt, context || question);
+  const response = await runAiTask(prompt, modelInput || question);
   return {
     ...response,
     sources: Array.from(new Set(sources)).slice(0, 8)
@@ -290,14 +351,55 @@ export async function summarizeDocumentWithAi(
   fallbackText: string,
   language?: AppLanguage
 ) {
+  const bytes = mimeType.startsWith("image/")
+    ? /^https?:\/\//i.test(filePath) || filePath.startsWith("/uploads/")
+      ? await readUploadedFileBytes(filePath)
+      : await fs.readFile(filePath)
+    : undefined;
+
+  return summarizeDocumentContentWithAi({
+    bytes,
+    mimeType,
+    fallbackText,
+    language
+  });
+}
+
+export async function summarizeDocumentContentWithAi({
+  bytes,
+  mimeType,
+  fallbackText,
+  language
+}: {
+  bytes?: Buffer;
+  mimeType: string;
+  fallbackText: string;
+  language?: AppLanguage;
+}) {
   const outputLanguage = normalizeLanguage(language);
   const languageInstruction = getLanguageInstruction(outputLanguage);
+  const readableFallbackText = hasReadableDocumentText(fallbackText);
 
   if (mimeType.startsWith("image/")) {
-    const bytes = await fs.readFile(filePath);
+    if (!bytes) {
+      return runAiTask(
+        [
+          "Summarize the uploaded legal document.",
+          "Use only the text supplied by the app. If the text is too short or unreadable, say that the document could not be safely analyzed.",
+          "Do not infer parties, FIR sections, police station details, dates, allegations, deadlines, money amounts, or legal conclusions from the filename or document type.",
+          "Return Markdown only. Use concise headings and bullets.",
+          languageInstruction
+        ].join("\n\n"),
+        fallbackText
+      );
+    }
+
     const response = await runVisionAiTask(
       [
         "You are reading an uploaded legal document or screenshot from Pakistan.",
+        "Use only text and facts clearly visible in the supplied image.",
+        "If a field is unclear or absent, write that it is not stated/readable.",
+        "Never invent parties, FIR sections, police station details, dates, allegations, deadlines, money amounts, or legal conclusions from context.",
         "Return Markdown only. Use concise headings, bullets, and **bold** for important dates, parties, deadlines, money amounts, threats, and demands.",
         "Do not wrap the answer in a code block.",
         "Extract the key legal facts, the parties, dates, deadlines, money amounts, and any threats or demands. Keep it concise and professional.",
@@ -309,9 +411,15 @@ export async function summarizeDocumentWithAi(
     return response;
   }
 
+  if (!readableFallbackText) {
+    return unreadableDocumentSummary(fallbackText);
+  }
+
   return runAiTask(
     [
       "Summarize the uploaded legal document.",
+      "Use only the supplied extracted text. Do not infer facts from the filename, document type, examples, or likely legal templates.",
+      "If a party, FIR section, police station, date, allegation, obligation, breach, deadline, money amount, or next action is not stated in the text, say it is not stated.",
       "Return Markdown only. Use concise headings, bullets, and **bold** for important parties, dates, obligations, breach points, and next actions.",
       "Do not wrap the answer in a code block.",
       "Extract parties, dates, obligations, breach points, and what the document is most useful for in a Pakistani legal workflow.",

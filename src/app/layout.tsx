@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { LanguageRuntime } from "@/components/language-runtime";
-import { ThemeProvider, THEME_STORAGE_KEY } from "@/components/theme-provider";
+import { ThemeProvider, THEME_STORAGE_KEY, UI_MODE_STORAGE_KEY } from "@/components/theme-provider";
 import { APP_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -25,10 +25,13 @@ export default function RootLayout({
       try {
         var root = document.documentElement;
         var stored = localStorage.getItem("${THEME_STORAGE_KEY}");
+        var storedUiMode = localStorage.getItem("${UI_MODE_STORAGE_KEY}");
         var system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         var theme = stored === "light" || stored === "dark" ? stored : system;
+        var uiMode = storedUiMode === "classic" ? "classic" : "glass";
         root.classList.toggle("dark", theme === "dark");
         root.dataset.theme = theme;
+        root.dataset.uiMode = uiMode;
         root.style.colorScheme = theme;
       } catch (error) {}
     })();

@@ -12,16 +12,21 @@ import {
 
 export type ThemeSetting = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
+export type UiMode = "classic" | "glass";
 
 const THEME_STORAGE_KEY = "mizan-theme";
+const UI_MODE_STORAGE_KEY = "mizan-ui-mode";
 const THEME_MEDIA_QUERY = "(prefers-color-scheme: dark)";
 
 type ThemeContextValue = {
   mounted: boolean;
   theme: ThemeSetting;
   resolvedTheme: ResolvedTheme;
+  uiMode: UiMode;
   setTheme: (theme: ThemeSetting) => void;
   toggleTheme: () => void;
+  setUiMode: (mode: UiMode) => void;
+  toggleUiMode: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -41,6 +46,10 @@ function applyTheme(theme: ResolvedTheme) {
   root.style.colorScheme = theme;
 }
 
+function applyUiMode(mode: UiMode) {
+  document.documentElement.dataset.uiMode = mode;
+}
+
 function getStoredTheme(): ThemeSetting {
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
@@ -50,35 +59,48 @@ function getStoredTheme(): ThemeSetting {
   return "system";
 }
 
+function getStoredUiMode(): UiMode {
+  const storedMode = window.localStorage.getItem(UI_MODE_STORAGE_KEY);
+  return storedMode === "classic" ? "classic" : "glass";
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [theme, setThemeState] = useState<ThemeSetting>("system");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+  const [uiMode, setUiModeState] = useState<UiMode>("glass");
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(THEME_MEDIA_QUERY);
     const storedTheme = getStoredTheme();
+    const storedUiMode = getStoredUiMode();
     const nextResolvedTheme = resolveTheme(storedTheme, mediaQuery.matches);
 
     setThemeState(storedTheme);
     setResolvedTheme(nextResolvedTheme);
+    setUiModeState(storedUiMode);
     applyTheme(nextResolvedTheme);
+    applyUiMode(storedUiMode);
     setMounted(true);
 
     const onStorage = (event: StorageEvent) => {
-      if (event.key !== THEME_STORAGE_KEY) {
-        return;
+      if (event.key === THEME_STORAGE_KEY) {
+        const nextTheme =
+          event.newValue === "light" || event.newValue === "dark" || event.newValue === "system"
+            ? event.newValue
+            : "system";
+        const nextThemeResolved = resolveTheme(nextTheme, mediaQuery.matches);
+
+        setThemeState(nextTheme);
+        setResolvedTheme(nextThemeResolved);
+        applyTheme(nextThemeResolved);
       }
 
-      const nextTheme =
-        event.newValue === "light" || event.newValue === "dark" || event.newValue === "system"
-          ? event.newValue
-          : "system";
-      const nextThemeResolved = resolveTheme(nextTheme, mediaQuery.matches);
-
-      setThemeState(nextTheme);
-      setResolvedTheme(nextThemeResolved);
-      applyTheme(nextThemeResolved);
+      if (event.key === UI_MODE_STORAGE_KEY) {
+        const nextUiMode = event.newValue === "classic" ? "classic" : "glass";
+        setUiModeState(nextUiMode);
+        applyUiMode(nextUiMode);
+      }
     };
 
     window.addEventListener("storage", onStorage);
@@ -131,15 +153,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
 
+  const setUiMode = useCallback((nextUiMode: UiMode) => {
+    setUiModeState(nextUiMode);
+    window.localStorage.setItem(UI_MODE_STORAGE_KEY, nextUiMode);
+    applyUiMode(nextUiMode);
+  }, []);
+
+  const toggleUiMode = useCallback(() => {
+    setUiMode(uiMode === "glass" ? "classic" : "glass");
+  }, [setUiMode, uiMode]);
+
   const value = useMemo(
     () => ({
       mounted,
       theme,
       resolvedTheme,
+      uiMode,
       setTheme,
-      toggleTheme
+      toggleTheme,
+      setUiMode,
+      toggleUiMode
     }),
-    [mounted, theme, resolvedTheme, setTheme, toggleTheme]
+    [mounted, theme, resolvedTheme, uiMode, setTheme, toggleTheme, setUiMode, toggleUiMode]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
@@ -155,4 +190,4 @@ export function useTheme() {
   return context;
 }
 
-export { THEME_STORAGE_KEY };
+export { THEME_STORAGE_KEY, UI_MODE_STORAGE_KEY };

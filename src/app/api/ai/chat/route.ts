@@ -3,6 +3,8 @@ import { z } from "zod";
 import { apiError, handleApiError, notFound, unauthorized, validationError } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/lib/legal-ai";
+import { runAgentTurn } from "@/lib/ai/agent-runner";
+import { createAgentActionReviewFromAssistantMessage } from "@/lib/agent-action-reviews";
 import { normalizeLanguage } from "@/lib/language";
 import { getAccessibleCase } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -13,8 +15,12 @@ const schema = z.object({
   documentId: z.string().optional(),
   question: z.string().min(2),
   title: z.string().optional(),
-  language: z.enum(["en", "ur", "roman-ur"]).optional()
+  language: z.enum(["en", "ur", "roman-ur"]).optional(),
+  agentMode: z.boolean().optional()
 });
+
+const AGENT_INTENT_PATTERN =
+  /\b(create|open|start|make|file|save|add|update|change|generate|prepare|build|summarize|explain|find|list|analyze|classify|review|check|score|rate|request|book|schedule|propose)\b[\s\S]{0,90}\b(case|matter|database|workspace|deadline|timeline|event|draft|notice|template|roadmap|handoff|packet|bundle|court|annexure|consultation|meeting|hearing|evidence|document|gap|checklist|health|lawyer|note|it|this)\b/i;
 
 export async function POST(request: Request) {
   try {
@@ -32,6 +38,8 @@ export async function POST(request: Request) {
     }
 
     let threadId = body.threadId;
+    let recentMessages: { role: string; content: string | null }[] = [];
+
     if (threadId) {
       const existingThread = await prisma.assistantThread.findFirst({
         where: { id: threadId, createdById: user.id }
@@ -45,16 +53,53 @@ export async function POST(request: Request) {
       ) {
         return validationError("This conversation belongs to a different assistant context.");
       }
+
+      const latestMessages = await prisma.assistantMessage.findMany({
+        where: { threadId },
+        orderBy: { createdAt: "desc" },
+        take: 12,
+        select: {
+          role: true,
+          content: true
+        }
+      });
+
+      recentMessages = latestMessages.reverse().map((message) => ({
+        role: message.role,
+        content: message.content
+      }));
     }
 
-    const ai = await answerPakistaniLegalQuestion({
-      question: body.question,
-      caseId: body.caseId,
-      documentId: body.documentId,
-      role: user.role,
-      simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
-      language
-    });
+    const hasPendingAgentProposal = recentMessages.some(
+      (message) =>
+        message.role === "AI" &&
+        ((message.content || "").includes("MIZAN_CASE_PREVIEW") ||
+          (message.content || "").includes("MIZAN_AGENT_PROPOSAL"))
+    );
+    const shouldRunAgent =
+      Boolean(body.agentMode) ||
+      hasPendingAgentProposal ||
+      AGENT_INTENT_PATTERN.test(body.question);
+
+    const ai = shouldRunAgent
+      ? await runAgentTurn({
+          currentUser: user,
+          question: body.question,
+          caseId: body.caseId,
+          documentId: body.documentId,
+          simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
+          language,
+          recentMessages
+        })
+      : await answerPakistaniLegalQuestion({
+          question: body.question,
+          caseId: body.caseId,
+          documentId: body.documentId,
+          role: user.role,
+          simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
+          language,
+          recentMessages
+        });
 
     if (!threadId) {
       let threadTitle = body.title?.trim() || "New conversation";
@@ -105,6 +150,19 @@ export async function POST(request: Request) {
         data: { updatedAt: new Date() }
       })
     ]);
+
+    try {
+      await createAgentActionReviewFromAssistantMessage({
+        userId: user.id,
+        caseId: body.caseId,
+        documentId: body.documentId,
+        assistantThreadId: threadId,
+        assistantMessageId: message.id,
+        content: ai.text
+      });
+    } catch (error) {
+      console.error("[AI_ACTION_REVIEW_CREATE_ERROR]", error);
+    }
 
     const thread = await prisma.assistantThread.findUnique({
       where: { id: threadId },

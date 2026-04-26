@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/workspace/app-shell";
 import { SectionHeader } from "@/components/workspace/section-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +9,8 @@ import { formatDate } from "@/lib/utils";
 
 export default async function NotificationsPage() {
   const user = await getCurrentUserWithProfile();
+  if (!user) redirect("/login");
+
   const notifications = await getNotifications();
   const nav = user?.role === 'LAWYER' ? LAWYER_NAV : CLIENT_NAV;
   const heading = user?.role === 'LAWYER' ? 'Lawyer Workspace' : 'Client Workspace';

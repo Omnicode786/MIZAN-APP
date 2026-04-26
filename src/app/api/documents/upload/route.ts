@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { handleApiError, notFound, validationError } from "@/lib/api-response";
 import { buildClauseHeatmap } from "@/lib/document-pipeline/heatmap";
 import { extractDeadlines } from "@/lib/document-pipeline/deadlines";
-import { extractTextFromFile } from "@/lib/document-pipeline/extract";
+import { extractTextFromBufferWithDiagnostics, inferDocumentMimeType } from "@/lib/document-pipeline/extract";
 import { extractTimeline } from "@/lib/document-pipeline/timeline";
 import { saveUploadedFile } from "@/lib/file-storage";
-import { summarizeDocumentWithAi } from "@/lib/legal-ai";
+import {
+  hasReadableDocumentText,
+  summarizeDocumentContentWithAi,
+  unreadableDocumentSummary
+} from "@/lib/legal-ai";
 import { normalizeLanguage } from "@/lib/language";
 import { getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -26,18 +30,85 @@ export async function POST(request: Request) {
     const { legalCase } = await getAccessibleCase(caseId);
     if (!legalCase) return notFound();
 
-    const stored = await saveUploadedFile(file);
-    const extractedText = await extractTextFromFile(stored.absolutePath, file.type);
-    const aiSummary = await summarizeDocumentWithAi(
-      stored.absolutePath,
-      file.type || "application/octet-stream",
-      extractedText || file.name,
-      language
-    );
-    const textForAnalysis = extractedText || aiSummary.text || file.name;
-    const timeline = extractTimeline(textForAnalysis);
-    const deadlines = extractDeadlines(textForAnalysis);
-    const heatmap = buildClauseHeatmap(textForAnalysis);
+    const mimeType = inferDocumentMimeType(file.name, file.type || "application/octet-stream");
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const stored = await saveUploadedFile(file, fileBuffer);
+
+    let extractedText = "";
+    let extraction = {
+      engine: "unsupported",
+      warning: "Text extraction was not started."
+    };
+
+    try {
+      const result = await extractTextFromBufferWithDiagnostics(fileBuffer, mimeType, {
+        enableAiOcr: true,
+        fileName: file.name
+      });
+      extractedText = result.text;
+      extraction = {
+        engine: result.engine,
+        warning: result.warning || ""
+      };
+    } catch (error) {
+      console.error("Document text extraction failed after upload.", error);
+      extraction.warning = "Document text extraction failed.";
+    }
+
+    const extractedTextIsReadable = hasReadableDocumentText(extractedText);
+    const isImageUpload = mimeType.startsWith("image/");
+    let aiSummary = unreadableDocumentSummary(file.name);
+
+    if (extractedTextIsReadable || isImageUpload) {
+      try {
+        aiSummary = await summarizeDocumentContentWithAi({
+          bytes: isImageUpload ? fileBuffer : undefined,
+          mimeType,
+          fallbackText: extractedText,
+          language
+        });
+      } catch (error) {
+        console.error("Document AI summary failed after upload.", error);
+      }
+    }
+
+    const summaryLooksReadable =
+      isImageUpload &&
+      aiSummary.confidence > 0.2 &&
+      !/could not safely extract|not contain any legal document|not readable|not stated\/readable/i.test(aiSummary.text);
+    const textForAnalysis = extractedTextIsReadable
+      ? extractedText
+      : summaryLooksReadable
+        ? aiSummary.text
+        : "";
+    const analysisUsable = hasReadableDocumentText(textForAnalysis);
+    let timeline: ReturnType<typeof extractTimeline> = [];
+    let deadlines: ReturnType<typeof extractDeadlines> = [];
+    let heatmap: ReturnType<typeof buildClauseHeatmap> = [];
+
+    if (analysisUsable) {
+      try {
+        timeline = extractTimeline(textForAnalysis);
+        deadlines = extractDeadlines(textForAnalysis);
+        heatmap = buildClauseHeatmap(textForAnalysis);
+      } catch (error) {
+        console.error("Document secondary analysis failed after upload.", error);
+      }
+    }
+
+    const documentMetadata = {
+      storage: stored.metadata,
+      analysisStatus: analysisUsable ? "completed" : "text_unreadable",
+      extraction,
+      ...(analysisUsable
+        ? {}
+        : {
+            analysisWarning: "Text could not be safely extracted. AI facts were not inferred from this upload."
+          }),
+      clauses: heatmap,
+      timelineDetected: timeline.length,
+      deadlinesDetected: deadlines.length
+    };
 
     const document = await prisma.document.create({
       data: {
@@ -45,20 +116,16 @@ export async function POST(request: Request) {
         uploadedById: user.id,
         fileName: file.name,
         filePath: stored.publicPath,
-        mimeType: file.type || "application/octet-stream",
+        mimeType,
         sizeBytes: file.size,
-        fileType: inferDocumentType(file.type),
+        fileType: inferDocumentType(mimeType),
         sourceType: user.role === "LAWYER" ? "LAWYER_UPLOAD" : "USER_UPLOAD",
         probableCategory: legalCase.category,
         extractedText,
         aiSummary: aiSummary.text,
         tags: heatmap.map((item) => item.clause.toLowerCase().replace(/\s+/g, "-")),
         confidence: aiSummary.confidence,
-        metadata: {
-          clauses: heatmap,
-          timelineDetected: timeline.length,
-          deadlinesDetected: deadlines.length
-        }
+        metadata: documentMetadata
       }
     });
 
@@ -68,13 +135,13 @@ export async function POST(request: Request) {
         documentId: document.id,
         label: file.name,
         summary: aiSummary.text.slice(0, 400),
-        sourceType: file.type || "file",
+        sourceType: mimeType || "file",
         searchableText: textForAnalysis.slice(0, 5000),
         extractedEntities: {
           clauses: heatmap.map((item) => item.clause),
           keywords: heatmap.map((item) => item.excerpt)
         },
-        evidenceStrength: Math.min(100, 35 + Math.round(textForAnalysis.length / 30))
+        evidenceStrength: analysisUsable ? Math.min(100, 35 + Math.round(textForAnalysis.length / 30)) : 15
       },
     });
 
@@ -126,16 +193,21 @@ export async function POST(request: Request) {
 
     await prisma.case.update({
       where: { id: caseId },
-      data: {
-        stage: "Analysis ready",
-        status: "ACTIVE",
-        caseHealthScore: Math.min(100, legalCase.caseHealthScore + 12),
-        evidenceCompleteness: Math.min(100, legalCase.evidenceCompleteness + 18),
-        evidenceStrength: Math.min(100, legalCase.evidenceStrength + 14),
-        draftReadiness: Math.min(100, legalCase.draftReadiness + 10),
-        deadlineRisk: Math.max(5, deadlines.length ? legalCase.deadlineRisk + 8 : legalCase.deadlineRisk),
-        escalationReadiness: Math.min(100, legalCase.escalationReadiness + 12)
-      }
+      data: analysisUsable
+        ? {
+            stage: "Analysis ready",
+            status: "ACTIVE",
+            caseHealthScore: Math.min(100, legalCase.caseHealthScore + 12),
+            evidenceCompleteness: Math.min(100, legalCase.evidenceCompleteness + 18),
+            evidenceStrength: Math.min(100, legalCase.evidenceStrength + 14),
+            draftReadiness: Math.min(100, legalCase.draftReadiness + 10),
+            deadlineRisk: Math.max(5, deadlines.length ? legalCase.deadlineRisk + 8 : legalCase.deadlineRisk),
+            escalationReadiness: Math.min(100, legalCase.escalationReadiness + 12)
+          }
+        : {
+            stage: "Document uploaded",
+            status: "ACTIVE"
+          }
     });
 
     await logActivity(caseId, user.id, "DOCUMENT_UPLOADED", `Uploaded ${file.name}.`);
@@ -147,8 +219,15 @@ export async function POST(request: Request) {
 
 function inferDocumentType(mimeType: string) {
   if (mimeType === "application/pdf") return "PDF";
+  if (mimeType === "application/msword") return "DOC";
   if (mimeType.includes("wordprocessingml")) return "DOCX";
+  if (mimeType === "message/rfc822") return "EMAIL";
   if (mimeType.startsWith("image/")) return "IMAGE";
-  if (mimeType.startsWith("text/")) return "TEXT";
+  if (
+    mimeType.startsWith("text/") ||
+    ["application/json", "application/xml", "application/rtf", "application/csv"].includes(mimeType)
+  ) {
+    return "TEXT";
+  }
   return "OTHER";
 }

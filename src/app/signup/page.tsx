@@ -1,21 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
   BriefcaseBusiness,
   LockKeyhole,
-  Moon,
   Scale,
   ShieldCheck,
-  Sun,
   UserRoundCheck
 } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { SignupForm } from "@/components/auth/signup-form";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { useLanguage } from "@/hooks/use-language";
 import { t } from "@/lib/translations";
 import { Badge } from "@/components/ui/badge";
@@ -43,27 +42,7 @@ const trustItems = [
 ];
 
 export default function SignupPage() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
   const language = useLanguage();
-
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("mizan-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const nextTheme = storedTheme === "dark" || (!storedTheme && prefersDark) ? "dark" : "light";
-
-    setTheme(nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    setMounted(true);
-  }, []);
-
-  function toggleTheme() {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-
-    setTheme(nextTheme);
-    localStorage.setItem("mizan-theme", nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-  }
 
   return (
     <div className="min-h-screen overflow-hidden bg-background">
@@ -91,20 +70,8 @@ export default function SignupPage() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <LanguageToggle compact />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label="Toggle dark mode"
-              className="rounded-full"
-            >
-              {mounted && theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
+            <UiModeToggle compact className="rounded-full px-3" />
+            <ThemeToggle className="rounded-full" />
 
             <Button asChild variant="ghost" className="hidden sm:inline-flex">
               <Link href="/login">{t(language, "login")}</Link>

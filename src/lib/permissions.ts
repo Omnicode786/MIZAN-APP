@@ -1,5 +1,82 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+
+export type AppUser = NonNullable<Awaited<ReturnType<typeof getCurrentUserWithProfile>>>;
+
+export function buildAccessibleCaseWhereForUser(user: AppUser, caseId?: string): Prisma.CaseWhereInput {
+  const baseWhere =
+    user.role === "LAWYER"
+      ? {
+          assignments: {
+            some: {
+              lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__"
+            }
+          }
+        }
+      : {
+          clientProfileId: user.clientProfile?.id || "__NO_CLIENT_PROFILE__"
+        };
+
+  if (!caseId) {
+    return baseWhere;
+  }
+
+  return {
+    AND: [baseWhere, { id: caseId }]
+  };
+}
+
+export async function getAccessibleCaseForUser<T extends Prisma.CaseInclude | undefined = undefined>(
+  user: AppUser,
+  caseId: string,
+  include?: T
+) {
+  return prisma.case.findFirst({
+    where: buildAccessibleCaseWhereForUser(user, caseId),
+    include
+  });
+}
+
+export async function canAccessCase(user: AppUser, caseId: string) {
+  const legalCase = await prisma.case.findFirst({
+    where: buildAccessibleCaseWhereForUser(user, caseId),
+    select: { id: true }
+  });
+  return Boolean(legalCase);
+}
+
+export async function assertClientOwnsCase(user: AppUser, caseId: string) {
+  if (user.role !== "CLIENT" || !user.clientProfile) {
+    throw new Error("Forbidden");
+  }
+
+  const legalCase = await prisma.case.findFirst({
+    where: buildAccessibleCaseWhereForUser(user, caseId),
+    select: { id: true, clientProfileId: true }
+  });
+  if (!legalCase) {
+    throw new Error("Not found");
+  }
+
+  return legalCase;
+}
+
+export async function assertLawyerAssignedToCase(user: AppUser, caseId: string) {
+  if (user.role !== "LAWYER" || !user.lawyerProfile) {
+    throw new Error("Forbidden");
+  }
+
+  const legalCase = await prisma.case.findFirst({
+    where: buildAccessibleCaseWhereForUser(user, caseId),
+    select: { id: true }
+  });
+  if (!legalCase) {
+    throw new Error("Not found");
+  }
+
+  return legalCase;
+}
 
 export async function requireUser() {
   const user = await getCurrentUserWithProfile();
