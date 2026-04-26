@@ -102,9 +102,13 @@ function isPlainTextLike(mimeType: string) {
 
 function canUseAiOcr(mimeType: string) {
   const provider = (process.env.AI_PROVIDER || "gemini").trim().replace(/^["']|["']$/g, "").toLowerCase();
+  const mockEnabled =
+    process.env.NODE_ENV === "test" ||
+    (process.env.AI_ENABLE_MOCK_PROVIDER || "").trim().replace(/^["']|["']$/g, "").toLowerCase() === "true";
+  const activeProvider = provider === "mock" && !mockEnabled ? "gemini" : provider;
 
   if (mimeType.startsWith("image/")) return true;
-  return provider === "gemini" && mimeType === PDF_MIME;
+  return activeProvider === "gemini" && mimeType === PDF_MIME;
 }
 
 function cleanAiOcrText(value: string) {

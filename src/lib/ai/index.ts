@@ -21,17 +21,18 @@ export class AiProviderError extends Error {
 
 function normalizeProvider(value: string | undefined): AiProvider {
   const provider = (value || "gemini").trim().replace(/^["']|["']$/g, "").toLowerCase();
-  if (provider === "openai" || provider === "gemini" || provider === "mock") return provider;
+  if (provider === "mock" && canUseMockProvider()) return "mock";
+  if (provider === "openai" || provider === "gemini") return provider;
   return "gemini";
 }
 
-function allowMockFallback(provider: AiProvider) {
-  const configured = (process.env.AI_ALLOW_MOCK_FALLBACK || "")
+function canUseMockProvider() {
+  const enabled = (process.env.AI_ENABLE_MOCK_PROVIDER || "")
     .trim()
     .replace(/^["']|["']$/g, "")
     .toLowerCase();
 
-  return provider === "mock" || configured === "true";
+  return process.env.NODE_ENV === "test" || enabled === "true";
 }
 
 function withoutExtraWhitespace(value: string) {
@@ -77,7 +78,6 @@ export async function runAiTask(prompt: string, context?: string, options?: AiTa
     return await generateMockInsight(prompt, context);
   } catch (error) {
     console.error(`AI provider "${provider}" failed.`, error);
-    if (allowMockFallback(provider)) return generateMockInsight(prompt, context);
     throw new AiProviderError(provider, error);
   }
 }
@@ -103,7 +103,6 @@ export async function runVisionAiTask(
     return await generateMockVisionInsight(prompt, images, context);
   } catch (error) {
     console.error(`Vision AI provider "${provider}" failed.`, error);
-    if (allowMockFallback(provider)) return generateMockVisionInsight(prompt, images, context);
     throw new AiProviderError(provider, error);
   }
 }

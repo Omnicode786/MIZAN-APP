@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   Activity,
   CalendarClock,
-  CheckCircle2,
+  ClipboardCheck,
+  CreditCard,
   Download,
   Eye,
   FileText,
   FolderOpen,
   MessageSquare,
+  PackageCheck,
   Scale,
   ShieldCheck,
   Upload
@@ -97,6 +99,9 @@ export function CaseWorkspaceLive({
   const activityLogs = asArray(initialCase.activityLogs);
   const timelineEvents = asArray(initialCase.timelineEvents);
   const assignments = asArray(initialCase.assignments);
+  const agentActionReviews = asArray(initialCase.agentActionReviews);
+  const exportBundles = asArray(initialCase.exportBundles);
+  const consultationBookings = asArray(initialCase.consultationBookings);
 
   const pendingAssignments = useMemo(
     () => assignments.filter((item: any) => item.status === "PENDING"),
@@ -403,6 +408,116 @@ export function CaseWorkspaceLive({
     }
   }
 
+  async function reviewAgentAction(id: string, decision: "APPROVE" | "REJECT") {
+    try {
+      setBusy(`agent-action-${id}`);
+      setNotice(null);
+      const res = await fetch(`/api/ai/actions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision, language })
+      });
+      await requireOk(res, "Unable to review assistant action.");
+      showSuccess(decision === "APPROVE" ? "Assistant action approved." : "Assistant action rejected.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to review assistant action.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function generateHandoffPacket() {
+    try {
+      setBusy("handoff");
+      setNotice(null);
+      const res = await fetch("/api/handoffs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId: initialCase.id })
+      });
+      await requireOk(res, "Unable to create lawyer handoff packet.");
+      showSuccess("Lawyer handoff packet created.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to create lawyer handoff packet.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function generateCourtBundle() {
+    try {
+      setBusy("court-bundle");
+      setNotice(null);
+      const res = await fetch("/api/exports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caseId: initialCase.id,
+          bundleType: "court_ready_bundle",
+          includePrivateNotes: role === "LAWYER"
+        })
+      });
+      await requireOk(res, "Unable to create court-ready bundle.");
+      showSuccess("Court-ready bundle created.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to create court-ready bundle.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function requestConsultation(input: {
+    assignmentId?: string;
+    lawyerProfileId?: string;
+    scheduledAt?: string;
+    notes?: string;
+  }) {
+    try {
+      setBusy(`consultation-${input.assignmentId || input.lawyerProfileId || "new"}`);
+      setNotice(null);
+      const res = await fetch("/api/consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caseId: initialCase.id,
+          assignmentId: input.assignmentId,
+          lawyerProfileId: input.lawyerProfileId,
+          scheduledAt: input.scheduledAt,
+          notes: input.notes
+        })
+      });
+      await requireOk(res, "Unable to request consultation.");
+      showSuccess("Consultation request sent.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to request consultation.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function updateConsultation(id: string, updates: Record<string, unknown>) {
+    try {
+      setBusy(`consultation-${id}`);
+      setNotice(null);
+      const res = await fetch(`/api/consultations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+      await requireOk(res, "Unable to update consultation.");
+      showSuccess("Consultation updated.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to update consultation.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div className="space-y-7 fade-in-up">
       {notice ? (
@@ -596,6 +711,15 @@ export function CaseWorkspaceLive({
                   />
                 ))}
               </div>
+
+              <ConsultationDesk
+                assignments={assignments}
+                consultations={consultationBookings}
+                role={role}
+                busy={busy}
+                onRequest={requestConsultation}
+                onUpdate={updateConsultation}
+              />
             </PanelCard>
           ) : null}
 
@@ -605,6 +729,12 @@ export function CaseWorkspaceLive({
             threads={initialCase.assistantThreads || []}
             role={role}
             simpleLanguageMode={simpleLanguageMode}
+          />
+
+          <AgentActionReviewQueue
+            reviews={agentActionReviews}
+            busy={busy}
+            onReview={reviewAgentAction}
           />
 
           <PanelCard>
@@ -761,6 +891,63 @@ export function CaseWorkspaceLive({
 
           <PanelCard>
             <MiniSectionHeader
+              icon={PackageCheck}
+              title="Handoff and court bundles"
+              description="Create lawyer handoff packets and court-ready organizers from the live workspace record."
+              action={
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={generateHandoffPacket}
+                    disabled={busy === "handoff"}
+                  >
+                    {busy === "handoff" ? "Preparing..." : "Lawyer handoff"}
+                  </Button>
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={generateCourtBundle}
+                    disabled={busy === "court-bundle"}
+                  >
+                    {busy === "court-bundle" ? "Preparing..." : "Court bundle"}
+                  </Button>
+                </div>
+              }
+            />
+
+            <div className="mt-4 space-y-3">
+              {exportBundles.slice(0, 4).map((bundle: any) => (
+                <div key={bundle.id} className="glass-subtle min-w-0 rounded-2xl p-4">
+                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="break-words font-medium">
+                        {bundle.title || toTitleCase(bundle.bundleType || "Export bundle")}
+                      </p>
+                      <p className="mt-1 break-words text-xs text-muted-foreground">
+                        {bundle.summary || toTitleCase(bundle.bundleType || "Export")} · {relativeDate(bundle.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <SafePill variant="outline">{bundle.bundleType}</SafePill>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={bundle.filePath} target="_blank" rel="noreferrer">
+                          <Download className="h-4 w-4" />
+                          Open
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {!exportBundles.length ? (
+                <EmptyState compact text="No export bundles yet. Create a handoff packet or court-ready organizer when the file is ready." />
+              ) : null}
+            </div>
+          </PanelCard>
+
+          <PanelCard>
+            <MiniSectionHeader
               icon={Activity}
               title={t(language, "activity")}
               description="Recent structured actions taken on the case."
@@ -775,6 +962,338 @@ export function CaseWorkspaceLive({
           ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AgentActionReviewQueue({
+  reviews,
+  busy,
+  onReview
+}: {
+  reviews: any[];
+  busy: string | null;
+  onReview: (id: string, decision: "APPROVE" | "REJECT") => void;
+}) {
+  const pending = reviews.filter((review) => review.status === "PENDING");
+  const recent = reviews.filter((review) => review.status !== "PENDING").slice(0, 3);
+
+  return (
+    <PanelCard>
+      <MiniSectionHeader
+        icon={ClipboardCheck}
+        title="AI action review queue"
+        description="Agent-proposed workspace changes wait here until you approve or reject them."
+      />
+
+      <div className="mt-4 space-y-3">
+        {pending.map((review) => (
+          <div key={review.id} className="glass-subtle min-w-0 rounded-2xl p-4">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <SafePill variant="warning">Pending approval</SafePill>
+                  <SafePill variant="outline">{review.tool}</SafePill>
+                </div>
+                <p className="mt-3 break-words font-medium">{review.title}</p>
+                {review.message ? (
+                  <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
+                    {review.message}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => onReview(review.id, "APPROVE")}
+                  disabled={busy === `agent-action-${review.id}`}
+                >
+                  {busy === `agent-action-${review.id}` ? "Applying..." : "Approve"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onReview(review.id, "REJECT")}
+                  disabled={busy === `agent-action-${review.id}`}
+                >
+                  Reject
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {!pending.length ? (
+          <EmptyState compact text="No pending AI actions. When the assistant proposes a case update, draft, deadline, or roadmap, it will appear here for approval." />
+        ) : null}
+
+        {recent.length ? (
+          <div className="grid gap-2">
+            {recent.map((review) => (
+              <div
+                key={review.id}
+                className="flex min-w-0 flex-col gap-2 rounded-2xl border border-border/60 bg-muted/10 p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <p className="min-w-0 break-words text-sm text-muted-foreground">{review.title}</p>
+                <SafePill
+                  variant={
+                    review.status === "COMPLETED"
+                      ? "success"
+                      : review.status === "FAILED"
+                        ? "destructive"
+                        : "secondary"
+                  }
+                >
+                  {review.status}
+                </SafePill>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </PanelCard>
+  );
+}
+
+function ConsultationDesk({
+  assignments,
+  consultations,
+  role,
+  busy,
+  onRequest,
+  onUpdate
+}: {
+  assignments: any[];
+  consultations: any[];
+  role: "CLIENT" | "LAWYER";
+  busy: string | null;
+  onRequest: (input: {
+    assignmentId?: string;
+    lawyerProfileId?: string;
+    scheduledAt?: string;
+    notes?: string;
+  }) => void;
+  onUpdate: (id: string, updates: Record<string, unknown>) => void;
+}) {
+  const usableAssignments = assignments.filter((assignment) => assignment.status !== "DECLINED");
+
+  return (
+    <div className="mt-5 rounded-2xl border border-border/60 bg-muted/10 p-4">
+      <MiniSectionHeader
+        icon={CreditCard}
+        title="Paid consultation desk"
+        description="Request, propose, confirm, and track consultation slots connected to this case."
+      />
+
+      <div className="mt-4 space-y-3">
+        {usableAssignments.slice(0, 3).map((assignment) => (
+          <ConsultationRequestCard
+            key={assignment.id}
+            assignment={assignment}
+            role={role}
+            busy={busy}
+            onRequest={onRequest}
+          />
+        ))}
+
+        {consultations.map((consultation) => (
+          <ConsultationStatusCard
+            key={consultation.id}
+            consultation={consultation}
+            role={role}
+            busy={busy}
+            onUpdate={onUpdate}
+          />
+        ))}
+
+        {!usableAssignments.length && !consultations.length ? (
+          <EmptyState compact text="No lawyer is connected yet. Send a lawyer request first, then consultations can be proposed or requested here." />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ConsultationRequestCard({
+  assignment,
+  role,
+  busy,
+  onRequest
+}: {
+  assignment: any;
+  role: "CLIENT" | "LAWYER";
+  busy: string | null;
+  onRequest: (input: {
+    assignmentId?: string;
+    lawyerProfileId?: string;
+    scheduledAt?: string;
+    notes?: string;
+  }) => void;
+}) {
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [notes, setNotes] = useState("");
+  const label = role === "LAWYER" ? "Propose consultation" : "Request consultation";
+  const lawyerName = assignment.lawyer?.user?.name || "Lawyer";
+
+  return (
+    <div className="glass-subtle min-w-0 rounded-2xl p-4">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-medium">{lawyerName}</p>
+          <p className="break-words text-xs text-muted-foreground">
+            {assignment.status === "ACCEPTED" ? "Engaged lawyer" : "Proposal/request in progress"}
+          </p>
+        </div>
+
+        <Input
+          type="datetime-local"
+          value={scheduledAt}
+          onChange={(event) => setScheduledAt(event.target.value)}
+          className="min-w-0 lg:w-[210px]"
+        />
+        <Input
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+          placeholder="Short note"
+          className="min-w-0 lg:w-[220px]"
+        />
+        <Button
+          className="w-full lg:w-auto"
+          onClick={() =>
+            onRequest({
+              assignmentId: assignment.id,
+              scheduledAt,
+              notes
+            })
+          }
+          disabled={busy === `consultation-${assignment.id}`}
+        >
+          {busy === `consultation-${assignment.id}` ? "Sending..." : label}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ConsultationStatusCard({
+  consultation,
+  role,
+  busy,
+  onUpdate
+}: {
+  consultation: any;
+  role: "CLIENT" | "LAWYER";
+  busy: string | null;
+  onUpdate: (id: string, updates: Record<string, unknown>) => void;
+}) {
+  const [meetingLink, setMeetingLink] = useState(consultation.meetingLink || "");
+  const [feeAmount, setFeeAmount] = useState(consultation.feeAmount || "");
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/70 p-4">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="break-words font-medium">
+            {role === "LAWYER"
+              ? consultation.client?.user?.name || "Client"
+              : consultation.lawyer?.user?.name || "Lawyer"}
+          </p>
+          <p className="mt-1 break-words text-xs text-muted-foreground">
+            {consultation.scheduledAt ? formatDate(consultation.scheduledAt) : "Slot not confirmed"} ·{" "}
+            {consultation.durationMinutes || 30} min · {consultation.paymentStatus}
+          </p>
+        </div>
+
+        <SafePill
+          variant={
+            consultation.status === "CONFIRMED" || consultation.status === "COMPLETED"
+              ? "success"
+              : consultation.status === "CANCELLED"
+                ? "destructive"
+                : "warning"
+          }
+        >
+          {consultation.status}
+        </SafePill>
+      </div>
+
+      {consultation.notes ? (
+        <p className="mt-3 break-words text-sm leading-6 text-muted-foreground">{consultation.notes}</p>
+      ) : null}
+
+      {role === "LAWYER" ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <Input
+            value={meetingLink}
+            onChange={(event) => setMeetingLink(event.target.value)}
+            placeholder="Meeting link"
+          />
+          <Input
+            type="number"
+            value={feeAmount}
+            onChange={(event) => setFeeAmount(event.target.value)}
+            placeholder="Fee"
+          />
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
+            <Button
+              size="sm"
+              onClick={() =>
+                onUpdate(consultation.id, {
+                  status: "PROPOSED",
+                  meetingLink,
+                  feeAmount: Number(feeAmount || 0)
+                })
+              }
+              disabled={busy === `consultation-${consultation.id}`}
+            >
+              Send terms
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onUpdate(consultation.id, { status: "COMPLETED" })}
+              disabled={busy === `consultation-${consultation.id}`}
+            >
+              Complete
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onUpdate(consultation.id, { status: "CANCELLED" })}
+              disabled={busy === `consultation-${consultation.id}`}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={() => onUpdate(consultation.id, { status: "CONFIRMED" })}
+            disabled={busy === `consultation-${consultation.id}`}
+          >
+            Confirm
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onUpdate(consultation.id, { paymentStatus: "PAID" })}
+            disabled={busy === `consultation-${consultation.id}`}
+          >
+            Mark paid
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onUpdate(consultation.id, { status: "CANCELLED" })}
+            disabled={busy === `consultation-${consultation.id}`}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

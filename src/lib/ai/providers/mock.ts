@@ -27,7 +27,7 @@ export async function generateMockInsight(prompt: string, context?: string) {
       "",
       "## Caution",
       "",
-      `**AI provider fallback is active**, so this is a limited workspace response rather than a live model answer. Context preview: ${snippet}`
+      `**Mock AI provider is active for testing**, so this is not a live model answer. Context preview: ${snippet}`
     ].join("\n"),
     confidence: 0.35,
     provider: "mock" as const,

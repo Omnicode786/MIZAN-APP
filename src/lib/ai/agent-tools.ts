@@ -7,6 +7,11 @@ import { buildCaseContext } from "@/lib/legal-ai";
 import { runAiTask } from "@/lib/ai";
 import { getLanguageInstruction, type AppLanguage } from "@/lib/language";
 import {
+  buildCourtReadyBundleMarkdown,
+  buildLawyerHandoffMarkdown,
+  writeMarkdownPacket
+} from "@/lib/case-packets";
+import {
   buildAccessibleCaseWhereForUser,
   type AppUser
 } from "@/lib/permissions";
@@ -25,6 +30,9 @@ export type AgentToolName =
   | "prepare_lawyer_handoff"
   | "recommend_lawyer_search_filters"
   | "create_template_document"
+  | "create_lawyer_handoff_packet"
+  | "create_court_ready_bundle"
+  | "request_paid_consultation"
   | "summarize_assigned_case"
   | "create_internal_note"
   | "create_draft_review_note"
@@ -215,6 +223,17 @@ const templateDocumentSchema = caseReferenceSchema.extend({
   extraInstructions: z.string().optional()
 });
 
+const bundleSchema = caseReferenceSchema.extend({
+  includePrivateNotes: z.boolean().optional()
+});
+
+const consultationSchema = caseReferenceSchema.extend({
+  assignmentId: z.string().optional(),
+  lawyerProfileId: z.string().optional(),
+  scheduledAt: z.string().optional(),
+  notes: z.string().optional()
+});
+
 const ROLE_TOOL_SET: Record<Role, AgentToolName[]> = {
   CLIENT: [
     "create_case",
@@ -229,6 +248,9 @@ const ROLE_TOOL_SET: Record<Role, AgentToolName[]> = {
     "prepare_lawyer_handoff",
     "recommend_lawyer_search_filters",
     "create_template_document",
+    "create_lawyer_handoff_packet",
+    "create_court_ready_bundle",
+    "request_paid_consultation",
     "search_user_cases",
     "search_case_documents",
     "search_evidence",
@@ -248,6 +270,9 @@ const ROLE_TOOL_SET: Record<Role, AgentToolName[]> = {
     "create_internal_note",
     "create_draft_review_note",
     "prepare_case_brief",
+    "create_lawyer_handoff_packet",
+    "create_court_ready_bundle",
+    "request_paid_consultation",
     "generate_cross_examination_questions",
     "generate_opposition_arguments",
     "prepare_debate_session_context",
@@ -1688,6 +1713,314 @@ const toolDefinitions: AgentToolDefinition[] = [
         },
         status: "success",
         data: { caseId: legalCase.id }
+      };
+    }
+  },
+  {
+    name: "create_lawyer_handoff_packet",
+    description:
+      "Create and save a structured lawyer handoff packet for an accessible case with summary, evidence index, chronology, deadlines, drafts, and lawyer review questions.",
+    kind: "mutation",
+    allowedRoles: ["CLIENT", "LAWYER"],
+    schema: bundleSchema,
+    async execute({ currentUser }, args) {
+      const resolved = await resolveCaseReference(currentUser, args);
+      if ("error" in resolved) return { ok: false, message: resolved.error, status: "info" };
+
+      const legalCase = await prisma.case.findFirst({
+        where: buildAccessibleCaseWhereForUser(currentUser, resolved.legalCase.id),
+        include: {
+          client: { include: { user: true } },
+          assignments: { include: { lawyer: { include: { user: true } } } },
+          documents: { orderBy: { createdAt: "desc" } },
+          evidenceItems: { orderBy: { createdAt: "desc" } },
+          timelineEvents: { orderBy: { eventDate: "asc" } },
+          deadlines: { orderBy: { dueDate: "asc" } },
+          drafts: { orderBy: { updatedAt: "desc" } }
+        }
+      });
+      if (!legalCase) return { ok: false, message: "I could not find that case right now.", status: "error" };
+
+      const markdown = buildLawyerHandoffMarkdown(legalCase);
+      const packet = await writeMarkdownPacket({
+        caseId: legalCase.id,
+        title: legalCase.title,
+        kind: "lawyer-handoff",
+        markdown
+      });
+
+      const bundle = await prisma.exportBundle.create({
+        data: {
+          caseId: legalCase.id,
+          createdById: currentUser.id,
+          bundleType: "lawyer_handoff_packet",
+          title: `Lawyer handoff - ${legalCase.title}`,
+          summary: "Structured case summary, evidence index, chronology, deadlines, and lawyer review questions.",
+          filePath: packet.publicPath,
+          includePrivateNotes: false,
+          metadata: {
+            format: "markdown",
+            documentCount: legalCase.documents.length,
+            timelineCount: legalCase.timelineEvents.length,
+            deadlineCount: legalCase.deadlines.length
+          }
+        }
+      });
+
+      await prisma.activityLog.create({
+        data: {
+          caseId: legalCase.id,
+          actorId: currentUser.id,
+          action: "LAWYER_HANDOFF_CREATED",
+          detail: "Created a lawyer handoff packet from the assistant."
+        }
+      });
+
+      return {
+        ok: true,
+        message: `## Lawyer Handoff Packet Created\nI created a lawyer handoff packet for **${legalCase.title}** and saved it in this case workspace.`,
+        cardTitle: "Lawyer handoff created",
+        cardMessage: "The handoff packet is ready to open from the workspace.",
+        action: {
+          type: "open_export",
+          label: "Open packet",
+          href: bundle.filePath
+        },
+        status: "success",
+        data: { bundleId: bundle.id, filePath: bundle.filePath }
+      };
+    }
+  },
+  {
+    name: "create_court_ready_bundle",
+    description:
+      "Create and save a court-ready workspace bundle with cover sheet, chronology, annexure index, deadlines, draft list, and readiness checklist.",
+    kind: "mutation",
+    allowedRoles: ["CLIENT", "LAWYER"],
+    schema: bundleSchema,
+    async execute({ currentUser }, args) {
+      const resolved = await resolveCaseReference(currentUser, args);
+      if ("error" in resolved) return { ok: false, message: resolved.error, status: "info" };
+
+      const includePrivateNotes = currentUser.role === "LAWYER" ? Boolean(args.includePrivateNotes) : false;
+      const legalCase = await prisma.case.findFirst({
+        where: buildAccessibleCaseWhereForUser(currentUser, resolved.legalCase.id),
+        include: {
+          client: { include: { user: true } },
+          documents: { orderBy: { createdAt: "desc" } },
+          timelineEvents: { orderBy: { eventDate: "asc" } },
+          deadlines: { orderBy: { dueDate: "asc" } },
+          drafts: { orderBy: { updatedAt: "desc" } },
+          internalNotes: includePrivateNotes
+            ? { include: { author: true }, orderBy: { createdAt: "desc" } }
+            : false
+        }
+      });
+      if (!legalCase) return { ok: false, message: "I could not find that case right now.", status: "error" };
+
+      const markdown = buildCourtReadyBundleMarkdown(legalCase, includePrivateNotes);
+      const packet = await writeMarkdownPacket({
+        caseId: legalCase.id,
+        title: legalCase.title,
+        kind: "court-ready-bundle",
+        markdown
+      });
+
+      const bundle = await prisma.exportBundle.create({
+        data: {
+          caseId: legalCase.id,
+          createdById: currentUser.id,
+          bundleType: "court_ready_bundle",
+          title: `Court-ready bundle - ${legalCase.title}`,
+          summary: "Chronology, annexure index, deadlines, drafts, and readiness checklist.",
+          filePath: packet.publicPath,
+          includePrivateNotes,
+          metadata: {
+            format: "markdown",
+            documentCount: legalCase.documents.length,
+            timelineCount: legalCase.timelineEvents.length,
+            deadlineCount: legalCase.deadlines.length
+          }
+        }
+      });
+
+      await prisma.activityLog.create({
+        data: {
+          caseId: legalCase.id,
+          actorId: currentUser.id,
+          action: "COURT_BUNDLE_CREATED",
+          detail: "Created a court-ready bundle from the assistant."
+        }
+      });
+
+      return {
+        ok: true,
+        message: `## Court Bundle Created\nI created a court-ready organizer for **${legalCase.title}** and saved it in this case workspace.`,
+        cardTitle: "Court bundle created",
+        cardMessage: "The court-ready organizer is ready to open from the workspace.",
+        action: {
+          type: "open_export",
+          label: "Open bundle",
+          href: bundle.filePath
+        },
+        status: "success",
+        data: { bundleId: bundle.id, filePath: bundle.filePath }
+      };
+    }
+  },
+  {
+    name: "request_paid_consultation",
+    description:
+      "Create a consultation request or lawyer proposal connected to an accessible case and existing lawyer assignment.",
+    kind: "mutation",
+    allowedRoles: ["CLIENT", "LAWYER"],
+    schema: consultationSchema,
+    async execute({ currentUser }, args) {
+      const resolved = await resolveCaseReference(currentUser, args);
+      if ("error" in resolved) return { ok: false, message: resolved.error, status: "info" };
+
+      const legalCase = await prisma.case.findFirst({
+        where: buildAccessibleCaseWhereForUser(currentUser, resolved.legalCase.id),
+        include: {
+          client: { include: { user: true } },
+          assignments: { include: { lawyer: { include: { user: true } } } }
+        }
+      });
+      if (!legalCase) return { ok: false, message: "I could not find that case right now.", status: "error" };
+
+      const scheduledAt = parseDate(args.scheduledAt) || undefined;
+
+      if (currentUser.role === "CLIENT") {
+        if (!currentUser.clientProfile) {
+          return { ok: false, message: "This action is available only to client accounts.", status: "error" };
+        }
+
+        let assignment = args.assignmentId
+          ? legalCase.assignments.find((item) => item.id === args.assignmentId)
+          : null;
+
+        if (!assignment && args.lawyerProfileId) {
+          assignment = legalCase.assignments.find((item) => item.lawyerProfileId === args.lawyerProfileId) || null;
+        }
+
+        if (!assignment && legalCase.assignments.length === 1) {
+          assignment = legalCase.assignments[0];
+        }
+
+        if (!assignment) {
+          return {
+            ok: false,
+            message: "Please select one lawyer in the workspace first, then I can request the consultation.",
+            status: "info"
+          };
+        }
+
+        const consultation = await prisma.consultationBooking.create({
+          data: {
+            caseId: legalCase.id,
+            clientProfileId: currentUser.clientProfile.id,
+            lawyerProfileId: assignment.lawyerProfileId,
+            assignmentId: assignment.id,
+            requestedById: currentUser.id,
+            status: "REQUESTED",
+            scheduledAt,
+            notes: args.notes,
+            durationMinutes: 30,
+            meetingMode: "ONLINE"
+          }
+        });
+
+        await prisma.activityLog.create({
+          data: {
+            caseId: legalCase.id,
+            actorId: currentUser.id,
+            action: "CONSULTATION_REQUESTED",
+            detail: "Requested a paid consultation from the assistant."
+          }
+        });
+
+        await prisma.notification.create({
+          data: {
+            userId: assignment.lawyer.userId,
+            title: "Consultation requested",
+            body: `${legalCase.client.user.name} requested a consultation for ${legalCase.title}.`,
+            kind: "consultation",
+            link: `/lawyer/cases/${legalCase.id}`
+          }
+        });
+
+        return {
+          ok: true,
+          message: `## Consultation Requested\nI sent a consultation request for **${legalCase.title}** to **${assignment.lawyer.user.name}**.`,
+          cardTitle: "Consultation requested",
+          cardMessage: "The lawyer can now propose terms or confirm the slot.",
+          action: {
+            type: "open_case",
+            label: "Open case",
+            href: `/client/cases/${legalCase.id}`
+          },
+          status: "success",
+          data: { consultationId: consultation.id }
+        };
+      }
+
+      if (currentUser.role !== "LAWYER" || !currentUser.lawyerProfile) {
+        return { ok: false, message: "This action is not available from this account.", status: "error" };
+      }
+
+      const assignment = legalCase.assignments.find(
+        (item) => item.lawyerProfileId === currentUser.lawyerProfile?.id
+      );
+      if (!assignment) {
+        return { ok: false, message: "You can only propose consultations for assigned matters.", status: "error" };
+      }
+
+      const consultation = await prisma.consultationBooking.create({
+        data: {
+          caseId: legalCase.id,
+          clientProfileId: legalCase.clientProfileId,
+          lawyerProfileId: currentUser.lawyerProfile.id,
+          assignmentId: assignment.id,
+          requestedById: currentUser.id,
+          status: "PROPOSED",
+          scheduledAt,
+          notes: args.notes,
+          durationMinutes: 30,
+          meetingMode: "ONLINE"
+        }
+      });
+
+      await prisma.activityLog.create({
+        data: {
+          caseId: legalCase.id,
+          actorId: currentUser.id,
+          action: "CONSULTATION_PROPOSED",
+          detail: "Proposed a paid consultation from the assistant."
+        }
+      });
+
+      await prisma.notification.create({
+        data: {
+          userId: legalCase.client.userId,
+          title: "Consultation proposed",
+          body: `${currentUser.name} proposed a consultation for ${legalCase.title}.`,
+          kind: "consultation",
+          link: `/client/cases/${legalCase.id}`
+        }
+      });
+
+      return {
+        ok: true,
+        message: `## Consultation Proposed\nI created a consultation proposal for **${legalCase.title}**.`,
+        cardTitle: "Consultation proposed",
+        cardMessage: "The client can review and confirm it from the workspace.",
+        action: {
+          type: "open_case",
+          label: "Open case",
+          href: `/lawyer/cases/${legalCase.id}`
+        },
+        status: "success",
+        data: { consultationId: consultation.id }
       };
     }
   },

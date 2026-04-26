@@ -77,6 +77,17 @@ export async function getCaseDetail(caseId?: string) {
         ? { include: { author: true }, orderBy: { createdAt: "desc" } }
         : false,
       assignments: { include: { lawyer: { include: { user: true } } } },
+      agentActionReviews: { orderBy: { createdAt: "desc" }, take: 30 },
+      exportBundles: { orderBy: { createdAt: "desc" }, take: 20 },
+      consultationBookings: {
+        include: {
+          lawyer: { include: { user: true } },
+          client: { include: { user: true } },
+          assignment: true
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 20
+      },
       riskScores: true,
       activityLogs: { include: { actor: true }, orderBy: { createdAt: "desc" } },
       assistantThreads: {

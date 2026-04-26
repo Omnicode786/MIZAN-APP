@@ -4,6 +4,7 @@ import { apiError, handleApiError, notFound, unauthorized, validationError } fro
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/lib/legal-ai";
 import { runAgentTurn } from "@/lib/ai/agent-runner";
+import { createAgentActionReviewFromAssistantMessage } from "@/lib/agent-action-reviews";
 import { normalizeLanguage } from "@/lib/language";
 import { getAccessibleCase } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -19,7 +20,7 @@ const schema = z.object({
 });
 
 const AGENT_INTENT_PATTERN =
-  /\b(create|open|start|make|file|save|add|update|change|generate|prepare|build|summarize|explain|find|list|analyze|classify|review|check|score|rate)\b[\s\S]{0,90}\b(case|matter|database|workspace|deadline|timeline|event|draft|notice|template|roadmap|handoff|evidence|document|gap|checklist|meeting|hearing|health|lawyer|note|it|this)\b/i;
+  /\b(create|open|start|make|file|save|add|update|change|generate|prepare|build|summarize|explain|find|list|analyze|classify|review|check|score|rate|request|book|schedule|propose)\b[\s\S]{0,90}\b(case|matter|database|workspace|deadline|timeline|event|draft|notice|template|roadmap|handoff|packet|bundle|court|annexure|consultation|meeting|hearing|evidence|document|gap|checklist|health|lawyer|note|it|this)\b/i;
 
 export async function POST(request: Request) {
   try {
@@ -149,6 +150,19 @@ export async function POST(request: Request) {
         data: { updatedAt: new Date() }
       })
     ]);
+
+    try {
+      await createAgentActionReviewFromAssistantMessage({
+        userId: user.id,
+        caseId: body.caseId,
+        documentId: body.documentId,
+        assistantThreadId: threadId,
+        assistantMessageId: message.id,
+        content: ai.text
+      });
+    } catch (error) {
+      console.error("[AI_ACTION_REVIEW_CREATE_ERROR]", error);
+    }
 
     const thread = await prisma.assistantThread.findUnique({
       where: { id: threadId },

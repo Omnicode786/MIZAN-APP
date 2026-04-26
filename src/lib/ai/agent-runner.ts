@@ -73,6 +73,9 @@ const MUTATION_INTENT_PATTERNS: Partial<Record<AgentToolName, RegExp[]>> = {
   add_timeline_event: [/\b(add|log|record|put)\b[\s\S]{0,32}\b(timeline|event)\b/i],
   create_draft: [/\b(create|draft|write|make|prepare|generate)\b[\s\S]{0,32}\b(notice|letter|draft|response|refund|complaint|brief)\b/i],
   create_template_document: [/\b(create|draft|write|make|prepare|generate)\b[\s\S]{0,32}\b(template|format|notice|letter|complaint|document)\b/i],
+  create_lawyer_handoff_packet: [/\b(create|prepare|generate|build)\b[\s\S]{0,48}\b(lawyer handoff|handoff packet|handoff brief|lawyer packet)\b/i],
+  create_court_ready_bundle: [/\b(create|prepare|generate|build)\b[\s\S]{0,48}\b(court bundle|court-ready|court ready|annexure|case bundle)\b/i],
+  request_paid_consultation: [/\b(request|book|schedule|propose|create)\b[\s\S]{0,48}\b(consultation|meeting|paid call|lawyer call)\b/i],
   create_internal_note: [/\b(add|create|save|make)\b[\s\S]{0,32}\b(note|internal note)\b/i],
   create_draft_review_note: [/\b(add|create|save|make)\b[\s\S]{0,32}\b(review note|draft note|internal note)\b/i],
   generate_case_roadmap: [/\b(build|create|generate|add)\b[\s\S]{0,32}\b(roadmap|timeline steps|next-step roadmap)\b/i]
@@ -433,6 +436,12 @@ function getMutationProposalTitle(toolName: AgentToolName, args: Record<string, 
       return `Create draft${stringValue(args.title) ? `: ${stringValue(args.title)}` : ""}`;
     case "create_template_document":
       return `Create editable document${stringValue(args.title) ? `: ${stringValue(args.title)}` : ""}`;
+    case "create_lawyer_handoff_packet":
+      return "Create lawyer handoff packet";
+    case "create_court_ready_bundle":
+      return "Create court-ready bundle";
+    case "request_paid_consultation":
+      return "Request paid consultation";
     case "create_internal_note":
       return "Create internal note";
     case "create_draft_review_note":
@@ -456,6 +465,12 @@ function getMutationProposalIntro(toolName: AgentToolName) {
       return "I can generate and save this editable draft. I have not created it yet.";
     case "create_template_document":
       return "I can create this editable template document. I have not created it yet.";
+    case "create_lawyer_handoff_packet":
+      return "I can create and save a lawyer handoff packet from the current case record. I have not created it yet.";
+    case "create_court_ready_bundle":
+      return "I can create and save a court-ready bundle organizer from the current case record. I have not created it yet.";
+    case "request_paid_consultation":
+      return "I can create a paid consultation request/proposal connected to this case. I have not saved it yet.";
     case "create_internal_note":
     case "create_draft_review_note":
       return "I can save this lawyer-only note. I have not saved anything yet.";
@@ -508,6 +523,211 @@ function hasMinimumCasePreviewData(args: Record<string, unknown>) {
   return hasCategory && hasNarrative;
 }
 
+function uniqueStrings(values: unknown[]) {
+  return Array.from(
+    new Set(
+      values
+        .flatMap((value) => (Array.isArray(value) ? value : [value]))
+        .filter((value): value is string => typeof value === "string")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+function mergeCreateCaseArgs(
+  base: Record<string, unknown>,
+  override: Record<string, unknown>
+) {
+  const merged: Record<string, unknown> = {
+    ...base,
+    ...Object.fromEntries(
+      Object.entries(override).filter(([, value]) => {
+        if (typeof value === "undefined" || value === null || value === "") return false;
+        if (Array.isArray(value) && !value.length) return false;
+        return true;
+      })
+    )
+  };
+
+  for (const key of [
+    "facts",
+    "parties",
+    "availableEvidence",
+    "documentsMentioned",
+    "evidenceGaps",
+    "recommendedNextSteps"
+  ]) {
+    merged[key] = uniqueStrings([base[key], override[key]]);
+  }
+
+  for (const key of ["timeline", "timelineEvents", "deadlines"]) {
+    const baseList = objectList(base[key]);
+    const overrideList = objectList(override[key]);
+    merged[key] = [...overrideList, ...baseList].slice(0, 8);
+  }
+
+  return merged;
+}
+
+function extractUserStoryText(recentThreadContext: string, question: string) {
+  const userSegments = (recentThreadContext || "")
+    .split(/\n{2,}/)
+    .map((segment) => segment.trim())
+    .filter((segment) => /^User:/i.test(segment))
+    .map((segment) => segment.replace(/^User:\s*/i, "").trim())
+    .filter(Boolean);
+
+  return [...userSegments, question].join("\n\n").trim();
+}
+
+function extractAmount(text: string) {
+  const match = text.match(/(?:PKR|Rs\.?|Rupees?)\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:PKR|rupees?)/i);
+  const value = match?.[1] || match?.[2];
+  return value ? `PKR ${value.replace(/,/g, ",")}` : "";
+}
+
+function extractTenantName(text: string) {
+  const match = text.match(/tenant(?:['\u2019]s)?\s+name\s+is\s+([A-Z][A-Za-z\s.'-]{2,80}?)(?:\.|,|\n|$)/i);
+  return match?.[1]?.trim() || "";
+}
+
+function extractSimpleSentences(text: string, patterns: RegExp[]) {
+  return text
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length > 8 && patterns.some((pattern) => pattern.test(sentence)))
+    .slice(0, 8);
+}
+
+function nextMonthlyDay(dayOfMonth: number) {
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth(), dayOfMonth);
+  if (target <= now) {
+    target.setMonth(target.getMonth() + 1);
+  }
+  return localDateString(target);
+}
+
+function localDateString(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function deriveCreateCaseArgsFromText(text: string): Record<string, unknown> | null {
+  const source = text.replace(/\s+/g, " ").trim();
+  if (!source || source.length < 20) return null;
+
+  const amount = extractAmount(source);
+  const tenantName = extractTenantName(source);
+
+  let category = "OTHER";
+  if (/\b(rent|rental|tenant|landlord|vacate|evict|property|house)\b/i.test(source)) {
+    category = "RENTAL_TENANCY";
+  } else if (/\b(payment|paid|vendor|delivery|refund|dues|outstanding)\b/i.test(source)) {
+    category = "PAYMENT_DISPUTE";
+  } else if (/\b(contract|agreement|clause)\b/i.test(source)) {
+    category = "CONTRACT_REVIEW";
+  } else if (/\b(job|salary|employment|termination|employee|employer)\b/i.test(source)) {
+    category = "EMPLOYMENT";
+  } else if (/\b(online|cyber|scam|account|digital)\b/i.test(source)) {
+    category = "CYBER_COMPLAINT";
+  } else if (/\b(harass|threat|abuse)\b/i.test(source)) {
+    category = "HARASSMENT";
+  }
+
+  const facts = extractSimpleSentences(source, [
+    /\b(not paid|unpaid|outstanding|dues|rent|tenant|vacate|occupying|reminders?|payment|delivery|agreement|evidence)\b/i
+  ]);
+
+  if (!facts.length && !amount && !tenantName && category === "OTHER") return null;
+
+  const parties = uniqueStrings([
+    tenantName ? `Tenant: ${tenantName}` : "",
+    /\blandlord\b/i.test(source) || /\bmy tenant\b/i.test(source) ? "Landlord/client: current user" : ""
+  ]);
+
+  const availableEvidence = uniqueStrings([
+    /\brental agreement|rent agreement|tenancy agreement|lease\b/i.test(source) ? "Rental/tenancy agreement" : "",
+    /\bwhatsapp|chat|messages?\b/i.test(source) ? "WhatsApp chats/messages and reminders" : "",
+    /\breminders?\b/i.test(source) ? "Reminder records" : "",
+    /\bbank|transfer|receipt|ledger\b/i.test(source) ? "Payment or rent ledger/receipts" : ""
+  ]);
+
+  // This fallback never invents missing evidence or legal next steps. Those
+  // richer fields are accepted only from the live AI extraction.
+  const evidenceGaps: string[] = [];
+  const recommendedNextSteps: string[] = [];
+
+  const title =
+    category === "RENTAL_TENANCY"
+      ? tenantName
+        ? `Rental dispute with ${tenantName}`
+        : "Rental arrears and possession dispute"
+      : facts[0]?.slice(0, 72) || "New legal matter";
+
+  const summaryParts = [
+    category === "RENTAL_TENANCY" ? "Rental/tenancy dispute" : "Legal matter",
+    tenantName ? `involving tenant ${tenantName}` : "",
+    amount ? `with outstanding amount of ${amount}` : "",
+    /\bpast two months|two months|2 months\b/i.test(source) ? "for the past two months" : "",
+    /\bvacate|occupying|occupation|possession\b/i.test(source)
+      ? "and continued occupation of the property"
+      : ""
+  ].filter(Boolean);
+
+  const timeline = [
+    {
+      title: "Rent arrears reported",
+      description: amount
+        ? `Client reports unpaid rent totaling ${amount}.`
+        : "Client reports unpaid rent/dues.",
+      eventDate: localDateString(new Date()),
+      sourceLabel: "user-provided",
+      confidence: 0.78
+    },
+    /\breminders?\b/i.test(source)
+      ? {
+          title: "Payment reminders sent",
+          description: "Client states that multiple reminders were sent but payment was not made.",
+          eventDate: localDateString(new Date()),
+          sourceLabel: "user-provided",
+          confidence: 0.74
+        }
+      : null
+  ].filter(Boolean);
+
+  const deadlines = /\bdue on the 20th|20th of each month|20 of each month\b/i.test(source)
+    ? [
+        {
+          title: "Next monthly rent due date",
+          dueDate: nextMonthlyDay(20),
+          importance: "HIGH",
+          notes: "Derived from the user's statement that rent is due on the 20th of each month."
+        }
+      ]
+    : [];
+
+  return {
+    title,
+    category,
+    priority: category === "RENTAL_TENANCY" && /\bvacate|occupying|possession\b/i.test(source) ? "HIGH" : "MEDIUM",
+    summary: summaryParts.join(" ") || facts[0] || title,
+    description: source.slice(0, 1400),
+    facts: facts.length ? facts : [source.slice(0, 240)],
+    parties,
+    availableEvidence,
+    documentsMentioned: availableEvidence,
+    evidenceGaps,
+    recommendedNextSteps,
+    lawyerReviewRecommended: true,
+    timeline,
+    deadlines
+  };
+}
+
 function isExplicitCreateCaseRequest(question: string) {
   const normalized = question.toLowerCase().replace(/\s+/g, " ").trim();
 
@@ -528,12 +748,18 @@ async function extractCreateCaseArgsFromThread({
   recentThreadContext: string;
   language: AppLanguage;
 }) {
+  const fallbackArgs = deriveCreateCaseArgsFromText(
+    extractUserStoryText(recentThreadContext, question)
+  );
+
   try {
     const result = await runAiTask(
       [
         "Extract a MIZAN create_case tool argument object from the user's request and recent same-thread context.",
         "Return JSON only. Do not answer in prose.",
         "Do not invent facts. If facts are missing, return only the fields you can support.",
+        "Do not use placeholder values such as unknown, TBD, not specified, sample, demo, or fake names.",
+        "For evidenceGaps and recommendedNextSteps, include only items supported by the user's facts or clearly necessary to organize the stated matter.",
         "Use valid internal enum-like strings in English for category and priority.",
         "Valid category values: CONTRACT_REVIEW, RENTAL_TENANCY, EMPLOYMENT, CYBER_COMPLAINT, HARASSMENT, PAYMENT_DISPUTE, BUSINESS_VENDOR, LEGAL_NOTICE, EVIDENCE_ORGANIZATION, OTHER.",
         "Valid priority values: LOW, MEDIUM, HIGH, CRITICAL.",
@@ -593,18 +819,20 @@ async function extractCreateCaseArgsFromThread({
 
     if (!candidate) {
       console.error("[AGENT_CASE_EXTRACTION_ERROR] No valid JSON found in response");
-      return null;
+      return fallbackArgs;
     }
 
     const parsed = JSON.parse(candidate);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return null;
+      return fallbackArgs;
     }
 
-    return parsed as Record<string, unknown>;
+    return fallbackArgs
+      ? mergeCreateCaseArgs(fallbackArgs, parsed as Record<string, unknown>)
+      : (parsed as Record<string, unknown>);
   } catch (error) {
     console.error("[AGENT_CASE_EXTRACTION_ERROR]", error);
-    return null;
+    return fallbackArgs;
   }
 }
 
@@ -838,6 +1066,131 @@ async function fallbackAnswer(options: {
   return answerPakistaniLegalQuestion(options);
 }
 
+export async function executeAgentMutationProposal({
+  currentUser,
+  proposal,
+  question,
+  caseId,
+  documentId,
+  language
+}: {
+  currentUser: AppUser;
+  proposal: AssistantAgentProposalMeta;
+  question: string;
+  caseId?: string;
+  documentId?: string;
+  language: AppLanguage;
+}): Promise<AgentRunnerResult> {
+  const proposalTool = getAgentTool(proposal.tool);
+
+  if (!proposalTool || !proposalTool.allowedRoles.includes(currentUser.role) || !isMutationTool(proposalTool.name)) {
+    const deniedMessage = await localizeSimpleText(
+      "I cannot apply that action from this account. I can still help you prepare the information manually.",
+      language
+    );
+
+    return {
+      text: appendAssistantActionMeta(deniedMessage, {
+        tool: proposal.tool,
+        title: "Action not allowed",
+        message: deniedMessage,
+        status: "error"
+      }),
+      confidence: 0.86,
+      sources: ["Pending assistant proposal"]
+    };
+  }
+
+  const parsedProposal = proposalTool.schema.safeParse(
+    withContextDefaults(proposal.arguments || {}, { caseId, documentId })
+  );
+  if (!parsedProposal.success) {
+    const validationMessage = await localizeSimpleText(
+      "The saved action preview is missing essential details. Please tell me the request again and I will prepare a fresh preview before saving anything.",
+      language
+    );
+
+    return {
+      text: appendAssistantActionMeta(validationMessage, {
+        tool: proposalTool.name,
+        title: "Action needs a fresh preview",
+        message: validationMessage,
+        status: "error"
+      }),
+      confidence: 0.78,
+      sources: ["Pending assistant proposal"],
+      toolName: proposalTool.name
+    };
+  }
+
+  if (
+    proposalTool.name === "create_case" &&
+    !hasMinimumCasePreviewData(parsedProposal.data as Record<string, unknown>)
+  ) {
+    const validationMessage = await localizeSimpleText(
+      "The saved case preview is missing essential details. Please tell me the key facts again and I will prepare a fresh preview before saving it.",
+      language
+    );
+
+    return {
+      text: appendAssistantActionMeta(validationMessage, {
+        tool: proposalTool.name,
+        title: "Case preview needs details",
+        message: validationMessage,
+        status: "error"
+      }),
+      confidence: 0.78,
+      sources: ["Pending case preview"],
+      toolName: proposalTool.name
+    };
+  }
+
+  try {
+    const rawResult = await proposalTool.execute(
+      {
+        currentUser,
+        question,
+        language,
+        caseId,
+        documentId,
+        prisma
+      },
+      parsedProposal.data
+    );
+    const localizedResult = await localizeToolResult(rawResult, language);
+    const actionMeta = toMutationConclusionMeta(proposalTool.name, localizedResult);
+
+    return {
+      text: appendAssistantActionMeta(localizedResult.message, actionMeta),
+      confidence: localizedResult.ok ? 0.94 : 0.85,
+      sources: Array.from(new Set([`Tool: ${proposalTool.name}`, ...(localizedResult.sources || [])])).slice(0, 8),
+      toolName: proposalTool.name
+    };
+  } catch (error) {
+    console.error("[AGENT_ACTION_CONFIRMATION_ERROR]", {
+      tool: proposal.tool,
+      error
+    });
+
+    const failureMessage = await localizeSimpleText(
+      "I could not complete that action right now. Please try again.",
+      language
+    );
+
+    return {
+      text: appendAssistantActionMeta(failureMessage, {
+        tool: proposalTool.name,
+        title: "Agent action failed",
+        message: failureMessage,
+        status: "error"
+      }),
+      confidence: 0.7,
+      sources: [`Tool: ${proposalTool.name}`],
+      toolName: proposalTool.name
+    };
+  }
+}
+
 export async function runAgentTurn({
   currentUser,
   question,
@@ -884,112 +1237,14 @@ export async function runAgentTurn({
   }
 
   if (pendingMutationProposal && isActionConfirmation(question)) {
-    const proposalTool = getAgentTool(pendingMutationProposal.tool);
-
-    if (!proposalTool || !proposalTool.allowedRoles.includes(currentUser.role) || !isMutationTool(proposalTool.name)) {
-      const deniedMessage = await localizeSimpleText(
-        "I cannot apply that action from this account. I can still help you prepare the information manually.",
-        language
-      );
-
-      return {
-        text: appendAssistantActionMeta(deniedMessage, {
-          tool: pendingMutationProposal.tool,
-          title: "Action not allowed",
-          message: deniedMessage,
-          status: "error"
-        }),
-        confidence: 0.86,
-        sources: ["Pending assistant proposal"]
-      };
-    }
-
-    const parsedProposal = proposalTool.schema.safeParse(
-      withContextDefaults(pendingMutationProposal.arguments || {}, { caseId, documentId })
-    );
-    if (!parsedProposal.success) {
-      const validationMessage = await localizeSimpleText(
-        "The saved action preview is missing essential details. Please tell me the request again and I will prepare a fresh preview before saving anything.",
-        language
-      );
-
-      return {
-        text: appendAssistantActionMeta(validationMessage, {
-          tool: proposalTool.name,
-          title: "Action needs a fresh preview",
-          message: validationMessage,
-          status: "error"
-        }),
-        confidence: 0.78,
-        sources: ["Pending assistant proposal"]
-      };
-    }
-
-    if (
-      proposalTool.name === "create_case" &&
-      !hasMinimumCasePreviewData(parsedProposal.data as Record<string, unknown>)
-    ) {
-      const validationMessage = await localizeSimpleText(
-        "The saved case preview is missing essential details. Please tell me the key facts again and I will prepare a fresh preview before saving it.",
-        language
-      );
-
-      return {
-        text: appendAssistantActionMeta(validationMessage, {
-          tool: proposalTool.name,
-          title: "Case preview needs details",
-          message: validationMessage,
-          status: "error"
-        }),
-        confidence: 0.78,
-        sources: ["Pending case preview"]
-      };
-    }
-
-    try {
-      const rawResult = await proposalTool.execute(
-        {
-          currentUser,
-          question,
-          language,
-          caseId,
-          documentId,
-          prisma
-        },
-        parsedProposal.data
-      );
-      const localizedResult = await localizeToolResult(rawResult, language);
-      const actionMeta = toMutationConclusionMeta(proposalTool.name, localizedResult);
-
-      return {
-        text: appendAssistantActionMeta(localizedResult.message, actionMeta),
-        confidence: localizedResult.ok ? 0.94 : 0.85,
-        sources: Array.from(new Set([`Tool: ${proposalTool.name}`, ...(localizedResult.sources || [])])).slice(0, 8),
-        toolName: proposalTool.name
-      };
-    } catch (error) {
-      console.error("[AGENT_ACTION_CONFIRMATION_ERROR]", {
-        tool: pendingMutationProposal.tool,
-        error
-      });
-
-      const failureMessage = await localizeSimpleText(
-        "I could not complete that action right now. Please try again.",
-        language
-      );
-
-      return {
-        text: appendAssistantActionMeta(failureMessage, {
-          tool: proposalTool.name,
-          title: "Agent action failed",
-          message: failureMessage,
-          status: "error"
-        }),
-        confidence: 0.7,
-        sources: [`Tool: ${proposalTool.name}`],
-        toolName: proposalTool.name
-      };
-    }
+    return executeAgentMutationProposal({
+      currentUser,
+      proposal: pendingMutationProposal,
+      question,
+      caseId,
+      documentId,
+      language
+    });
   }
 
   const shouldPrepareCasePreview =

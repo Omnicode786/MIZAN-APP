@@ -519,10 +519,14 @@ When the user asks for help, the assistant decides whether to:
 - **Approval-first writes**: Case creation, case updates, deadlines, timeline events, drafts, templates, roadmap entries, and internal notes are previewed first and saved only after the user approves
 - **Timeline and deadline management**: Add dated events and deadlines to accessible cases through confirmed agent actions
 - **Draft and template generation**: Generate editable legal notices, refund requests, complaint letters, handoff briefs, and template-style drafts through the existing draft/version system
+- **AI action review queue**: Pending agent proposals are also stored in `AgentActionReview`, so users can approve/reject actions from the case workspace instead of relying only on a chat reply
 - **Evidence intake agent**: Classify uploaded evidence, extract grounded parties/dates/amounts, identify contradictions, map possible timeline facts, and suggest what to upload next
 - **Case roadmap agent**: Generate or persist roadmap steps for a selected case after approval
 - **Case health score**: Produce a practical readiness report covering evidence strength, timeline completeness, missing party details, draft readiness, and lawyer handoff readiness
-- **Lawyer handoff agent**: Prepare a structured lawyer brief from the case record without exposing other users' data
+- **Lawyer handoff packets**: Create saved Markdown handoff packets with matter summary, evidence index, chronology, deadlines, drafts, and lawyer review questions
+- **Court-ready bundle builder**: Create saved court organizer bundles with cover sheet, chronology, annexure index, deadline table, draft list, and readiness checklist
+- **Paid consultation workflow**: Clients can request consultations and lawyers can propose consultation terms connected to existing case assignments
+- **Lawyer handoff agent**: Prepare or save structured lawyer handoff materials from the case record without exposing other users' data
 - **Hearing and meeting prep**: Generate questions, documents to carry, weak points, and likely counterarguments from the current case record
 - **Case search**: Search the user's accessible cases, documents, and evidence
 - **Strategy materials**: Prepare lawyer-side strategy materials on assigned matters only
@@ -537,16 +541,18 @@ sequenceDiagram
     participant API as /api/ai/chat
     participant Agent as agent-runner.ts
     participant Tools as agent-tools.ts
+    participant Queue as AgentActionReview
     participant DB as Prisma/PostgreSQL
 
-    User->>UI: "Create a case / add deadline / make a draft"
+    User->>UI: "Create a case / add deadline / make a draft / build a bundle"
     UI->>API: Send message with thread, language, case/document context
     API->>Agent: Last 12 same-thread messages + current request
     Agent->>Agent: Decide answer, follow-up, analysis tool, or mutation proposal
+    Agent->>Queue: Store pending proposal for workspace review
     Agent-->>UI: Preview with hidden pending-action metadata
-    UI-->>User: Show formatted preview + Approve / Cancel card
-    User->>UI: "Yes", "yes please", "approve", "go ahead", etc.
-    UI->>API: Confirmation in the same thread
+    UI-->>User: Show formatted preview + approval queue card
+    User->>UI: "Yes", "approve", or Approve in queue
+    UI->>API: Confirmation in chat or /api/ai/actions/[id]
     API->>Agent: Recover latest pending proposal
     Agent->>Tools: Validate role, case access, schema, and current user
     Tools->>DB: Write only after approval
@@ -563,6 +569,7 @@ sequenceDiagram
 - lawyer actions are scoped to assigned matters
 - destructive delete tools are intentionally not implemented
 - write actions always require a confirmation turn before database mutation
+- approval can happen from the chat thread or from the case workspace action review queue
 - failed or denied actions close the pending proposal so the assistant does not loop forever asking for "yes"
 - pending proposals are recovered from recent same-thread messages only, not global memory
 - internal IDs, provider errors, prompts, and stack traces are not exposed to the user
@@ -577,8 +584,10 @@ sequenceDiagram
 - `/api/ai/chat` now supports normal chat and agent mode without changing the public route shape
 - `/api/ai/chat` includes the latest 12 messages from the same assistant thread so confirmations and short follow-ups remain context-aware
 - pending write proposals are stored inside assistant messages using hidden metadata from `src/lib/assistant-message-meta.ts`
+- pending write proposals are also indexed in `AgentActionReview` and reviewed through `/api/ai/actions`
 - the client assistant renders approval cards through `src/components/workspace/client-ai-assistant.tsx`
 - successful actions can return a UI action card, such as an "Open case" button after AI intake creates a new matter
+- case workspaces include handoff/court bundle buttons and a consultation desk connected to `/api/handoffs`, `/api/exports`, and `/api/consultations`
 
 ### Example
 
@@ -731,10 +740,12 @@ erDiagram
 | `CaseAssignment` | Lawyer request / proposal / approval workflow | caseId, lawyerId, status (PENDING/ACCEPTED/DECLINED), proposal, respondedAt |
 | `AssistantThread` | Persisted AI conversation container | userId, caseId, title, createdAt |
 | `AssistantMessage` | Individual AI chat message with role and metadata | threadId, role (USER/ASSISTANT), content, metadata, createdAt |
+| `AgentActionReview` | Approval queue for AI-proposed database writes | tool, arguments, status, result, thread/message links, reviewedAt |
+| `ConsultationBooking` | Paid consultation request/proposal workflow | caseId, clientId, lawyerId, assignmentId, status, fee, meeting link, payment status |
 | `DebateSession` | Lawyer-vs-AI argument simulation with scoring | caseId, lawyerId, topic, status, score, createdAt |
 | `DebateTurn` | Individual argument exchange in debate | sessionId, speaker (LAWYER/AI), content, rebuttal, timestamp |
 | `RedactionJob` | Masked output generation job tracking | caseId, documentId, maskedPath, status, createdAt |
-| `ExportBundle` | Generated case bundle artifact | caseId, pdfPath, documentIds[], exportedAt |
+| `ExportBundle` | Generated case bundle artifact | caseId, filePath, bundleType, title, summary, metadata, exportedAt |
 | `Notification` | Workflow update feed item | userId, type, relatedId, message, isRead, createdAt |
 | `ActivityLog` | Audit trail of all significant case actions | caseId, userId, actionType, description, timestamp |
 | `RiskScore` | Case risk assessment and health metrics | caseId, evidenceGaps, riskLevel, strength, recommendations |
@@ -806,7 +817,7 @@ erDiagram
 </details>
 
 <details>
-<summary><strong>Cases and lawyer requests (4 routes)</strong></summary>
+<summary><strong>Cases, lawyer requests, and consultations (5 routes)</strong></summary>
 
 | Route | Method | Purpose |
 | --- | --- | --- |
@@ -814,11 +825,12 @@ erDiagram
 | `/api/cases/[id]` | GET, PATCH, DELETE | Get, update (title, description, stage, status, priority), or delete a specific case |
 | `/api/cases/[id]/share` | POST | Request lawyer review for a case, create CaseAssignment |
 | `/api/assignments/[id]` | PATCH, GET | Lawyer proposal submission, client decision (ACCEPT/DECLINE) |
+| `/api/consultations` and `/api/consultations/[id]` | GET, POST, PATCH | Paid consultation requests, lawyer proposals, confirmation, cancellation, and payment status updates |
 
 </details>
 
 <details>
-<summary><strong>Documents, evidence, search, and exports (5 routes)</strong></summary>
+<summary><strong>Documents, evidence, search, and exports (6 routes)</strong></summary>
 
 | Route | Method | Purpose |
 | --- | --- | --- |
@@ -826,16 +838,18 @@ erDiagram
 | `/api/documents/[id]` | GET, DELETE | Document-level management and metadata |
 | `/api/search` | POST | Investigation-style search with Urdu support, filtering, relevance ranking |
 | `/api/redactions` | POST, GET | Create redacted text output for a case document |
-| `/api/exports` | POST, GET | Build and retrieve PDF case bundles |
+| `/api/exports` | POST, GET | Build PDF bundles and court-ready Markdown organizers |
+| `/api/handoffs` | POST | Create lawyer handoff packets from the live case record |
 
 </details>
 
 <details>
-<summary><strong>AI and analysis (6 routes)</strong></summary>
+<summary><strong>AI and analysis (7 routes)</strong></summary>
 
 | Route | Method | Purpose |
 | --- | --- | --- |
 | `/api/ai/chat` | POST | Persisted AI assistant chat with optional agent-mode workflow actions |
+| `/api/ai/actions` and `/api/ai/actions/[id]` | GET, PATCH | List, approve, or reject queued AI action proposals |
 | `/api/ai/translate` | POST | Markdown-preserving translation to Urdu/Roman Urdu |
 | `/api/analysis/case/[id]` | POST | Case-level analysis with risk scoring and evidence gaps |
 | `/api/drafts/generate` | POST | Generate legal drafts from live case context with versioning |
@@ -908,7 +922,7 @@ erDiagram
 │   ├── schema.prisma               # Complete Prisma data model
 │   └── seed.ts                     # Demo data seeding script
 ├── public/                         # Static assets and generated files
-│   ├── exports/                    # Generated PDF case bundles
+│   ├── exports/                    # Generated PDF/Markdown case bundles
 │   ├── redactions/                 # Masked text output files
 │   ├── uploads/                    # Uploaded documents and files
 │   └── logo assets
@@ -926,7 +940,9 @@ erDiagram
 │   │   │   ├── debate/             # Debate mode
 │   │   │   ├── documents/          # Document upload and management
 │   │   │   ├── drafts/             # Draft generation
-│   │   │   ├── exports/            # PDF export
+│   │   │   ├── exports/            # PDF and court-bundle export
+│   │   │   ├── handoffs/           # Lawyer handoff packet generation
+│   │   │   ├── consultations/      # Paid consultation booking workflow
 │   │   │   ├── internal-notes/     # Lawyer internal notes
 │   │   │   ├── lawyer-profile/     # Lawyer settings
 │   │   │   ├── lawyers/            # Public lawyer directory
@@ -1008,6 +1024,8 @@ erDiagram
 │   │   ├── assistant-message-meta.ts # Message metadata
 │   │   ├── auth.ts                 # Authentication utilities
 │   │   ├── case-roadmap.ts         # Case timeline logic
+│   │   ├── case-packets.ts         # Handoff and court bundle builders
+│   │   ├── agent-action-reviews.ts # AI action approval queue helpers
 │   │   ├── cloudinary-storage.ts   # Optional cloud storage
 │   │   ├── constants.ts            # App constants and enums
 │   │   ├── data-access.ts          # Database query utilities
@@ -1317,7 +1335,7 @@ Local filesystem storage under `public/` is still used as a development fallback
 | Cloudinary `mizan/uploads` | Original uploaded files | PDF, DOCX, PNG, JPG, other supported documents | Primary upload storage when configured |
 | `public/uploads` | Original uploaded files | PDF, DOCX, PNG, JPG | Development fallback only |
 | `public/redactions` | Masked text outputs | PDF, TXT | Temporary redacted copies for sharing |
-| `public/exports` | PDF case bundles | PDF | Complete case export with documents |
+| `public/exports` | Generated case bundles | PDF, Markdown | PDF summaries, lawyer handoff packets, and court-ready organizers |
 
 **Production recommendation:** keep uploaded originals in durable object storage such as Cloudinary, S3, Google Cloud Storage, or Cloudflare R2 for:
 - Scalability and reliability
