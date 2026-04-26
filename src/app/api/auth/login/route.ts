@@ -7,8 +7,22 @@ import { createSession } from "@/lib/auth";
 
 const schema = z.object({
   email: z.string().email(),
-  password: z.string().min(1)
+  password: z.string().min(1),
+  next: z.string().optional()
 });
+
+function defaultRedirectForRole(role: "CLIENT" | "LAWYER" | "ADMIN") {
+  return role === "LAWYER" || role === "ADMIN" ? "/lawyer/dashboard" : "/client/dashboard";
+}
+
+function safeRedirectForRole(nextPath: string | undefined, role: "CLIENT" | "LAWYER" | "ADMIN") {
+  const fallback = defaultRedirectForRole(role);
+  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) return fallback;
+  if (nextPath.startsWith("/api") || nextPath.startsWith("/login") || nextPath.startsWith("/signup")) return fallback;
+  if (nextPath.startsWith("/client") && role !== "CLIENT") return fallback;
+  if (nextPath.startsWith("/lawyer") && role !== "LAWYER" && role !== "ADMIN") return fallback;
+  return nextPath;
+}
 
 export async function POST(request: Request) {
   try {
@@ -37,7 +51,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      redirectTo: user.role === "LAWYER" ? "/lawyer/dashboard" : "/client/dashboard"
+      redirectTo: safeRedirectForRole(body.next, user.role)
     });
   } catch (error) {
     return handleApiError(error, "AUTH_LOGIN_ROUTE", "Unable to sign in.");

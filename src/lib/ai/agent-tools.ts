@@ -37,6 +37,9 @@ export type AgentToolName =
   | "search_case_documents"
   | "search_evidence"
   | "explain_document"
+  | "analyze_uploaded_evidence"
+  | "prepare_meeting_prep"
+  | "generate_case_health_report"
   | "translate_response"
   | "generate_next_steps";
 
@@ -230,6 +233,9 @@ const ROLE_TOOL_SET: Record<Role, AgentToolName[]> = {
     "search_case_documents",
     "search_evidence",
     "explain_document",
+    "analyze_uploaded_evidence",
+    "prepare_meeting_prep",
+    "generate_case_health_report",
     "translate_response",
     "generate_next_steps"
   ],
@@ -250,6 +256,9 @@ const ROLE_TOOL_SET: Record<Role, AgentToolName[]> = {
     "search_case_documents",
     "search_evidence",
     "explain_document",
+    "analyze_uploaded_evidence",
+    "prepare_meeting_prep",
+    "generate_case_health_report",
     "translate_response",
     "generate_next_steps"
   ],
@@ -258,6 +267,9 @@ const ROLE_TOOL_SET: Record<Role, AgentToolName[]> = {
     "search_case_documents",
     "search_evidence",
     "explain_document",
+    "analyze_uploaded_evidence",
+    "prepare_meeting_prep",
+    "generate_case_health_report",
     "translate_response",
     "generate_next_steps"
   ]
@@ -1373,6 +1385,42 @@ const toolDefinitions: AgentToolDefinition[] = [
     }
   },
   {
+    name: "analyze_uploaded_evidence",
+    description:
+      "Run evidence intake on an accessible uploaded document or screenshot: classify it, extract grounded entities, link it to possible timeline facts, and list evidence gaps.",
+    kind: "analysis",
+    allowedRoles: ["CLIENT", "LAWYER", "ADMIN"],
+    schema: explainDocumentSchema,
+    async execute({ currentUser, language, question }, args) {
+      const resolved = await resolveDocumentReference(currentUser, args);
+      if ("error" in resolved) {
+        return { ok: false, message: resolved.error, status: "info" };
+      }
+
+      const artifact = await buildArtifactFromDocument({
+        language,
+        document: resolved.document,
+        question: args.question || question,
+        instruction: [
+          "Perform an evidence intake review for this uploaded item.",
+          "Only use grounded text from the document context. Do not invent parties, dates, amounts, offences, promises, or contradictions.",
+          "Include these sections: Evidence type, Extracted parties, Dates and amounts, Promises or obligations, Possible contradictions, Timeline facts this may support, Missing evidence, What to upload next.",
+          "If the document text is unreadable or insufficient, say that clearly and ask for a clearer upload or manual summary."
+        ].join("\n")
+      });
+
+      return {
+        ok: true,
+        message: artifact.markdown,
+        cardTitle: "Evidence intake ready",
+        cardMessage: `I reviewed **${resolved.document.fileName}** as evidence and listed the grounded facts and gaps.`,
+        status: "info",
+        sources: artifact.sources,
+        data: { documentId: resolved.document.id, caseId: resolved.document.caseId }
+      };
+    }
+  },
+  {
     name: "translate_response",
     description: "Translate supplied assistant content into English, Urdu, or Roman Urdu without changing the meaning.",
     kind: "analysis",
@@ -1396,6 +1444,107 @@ const toolDefinitions: AgentToolDefinition[] = [
         ok: true,
         message: result.text,
         status: "info"
+      };
+    }
+  },
+  {
+    name: "prepare_meeting_prep",
+    description:
+      "Prepare hearing, meeting, or lawyer-consultation prep from an accessible case: questions, documents to carry, weak points, and likely counterarguments.",
+    kind: "analysis",
+    allowedRoles: ["CLIENT", "LAWYER", "ADMIN"],
+    schema: caseArtifactSchema,
+    async execute({ currentUser, language, question }, args) {
+      const resolved = await resolveCaseReference(currentUser, args);
+      if ("error" in resolved) return { ok: false, message: resolved.error, status: "info" };
+
+      const artifact = await buildArtifactFromCase({
+        currentUser,
+        language,
+        caseId: resolved.legalCase.id,
+        question,
+        heading: "Hearing and meeting prep",
+        instruction:
+          "Prepare a practical prep sheet with questions to ask, facts to clarify, documents to carry, weak points, likely counterarguments, and what should be reviewed by a lawyer. Do not invent facts."
+      });
+
+      return {
+        ok: true,
+        message: artifact.markdown,
+        cardTitle: "Meeting prep ready",
+        cardMessage: `I prepared a focused meeting and hearing prep sheet for **${resolved.legalCase.title}**.`,
+        action: {
+          type: "open_case",
+          label: "Open case",
+          href: `/${currentUser.role === "LAWYER" ? "lawyer" : "client"}/cases/${resolved.legalCase.id}`
+        },
+        status: "info",
+        sources: artifact.sources
+      };
+    }
+  },
+  {
+    name: "generate_case_health_report",
+    description:
+      "Generate a practical readiness score for an accessible case: evidence strength, timeline completeness, missing party details, draft readiness, and lawyer handoff readiness.",
+    kind: "analysis",
+    allowedRoles: ["CLIENT", "LAWYER", "ADMIN"],
+    schema: caseArtifactSchema,
+    async execute({ currentUser, language, question }, args) {
+      const resolved = await resolveCaseReference(currentUser, args);
+      if ("error" in resolved) return { ok: false, message: resolved.error, status: "info" };
+
+      const snapshot = await prisma.case.findFirst({
+        where: buildAccessibleCaseWhereForUser(currentUser, resolved.legalCase.id),
+        select: {
+          title: true,
+          caseHealthScore: true,
+          evidenceCompleteness: true,
+          evidenceStrength: true,
+          deadlineRisk: true,
+          draftReadiness: true,
+          escalationReadiness: true,
+          _count: {
+            select: {
+              documents: true,
+              evidenceItems: true,
+              timelineEvents: true,
+              deadlines: true,
+              drafts: true
+            }
+          }
+        }
+      });
+
+      const artifact = await buildArtifactFromCase({
+        currentUser,
+        language,
+        caseId: resolved.legalCase.id,
+        question: [
+          question,
+          snapshot
+            ? `Current score snapshot: health ${snapshot.caseHealthScore}, evidence completeness ${snapshot.evidenceCompleteness}, evidence strength ${snapshot.evidenceStrength}, deadline risk ${snapshot.deadlineRisk}, draft readiness ${snapshot.draftReadiness}, lawyer handoff readiness ${snapshot.escalationReadiness}. Counts: ${snapshot._count.documents} documents, ${snapshot._count.evidenceItems} evidence items, ${snapshot._count.timelineEvents} timeline events, ${snapshot._count.deadlines} deadlines, ${snapshot._count.drafts} drafts.`
+            : ""
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+        heading: "Case health score",
+        instruction:
+          "Create a practical case readiness report. Include evidence strength, timeline completeness, missing party details, draft readiness, lawyer handoff readiness, risk level, and the next 3 improvements. Treat numeric scores as internal signals, not legal certainty."
+      });
+
+      return {
+        ok: true,
+        message: artifact.markdown,
+        cardTitle: "Case health report ready",
+        cardMessage: `I prepared a readiness score and improvement plan for **${resolved.legalCase.title}**.`,
+        action: {
+          type: "open_case",
+          label: "Open case",
+          href: `/${currentUser.role === "LAWYER" ? "lawyer" : "client"}/cases/${resolved.legalCase.id}`
+        },
+        status: "info",
+        sources: artifact.sources
       };
     }
   },

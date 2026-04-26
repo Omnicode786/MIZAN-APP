@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, LogOut, Search } from "lucide-react";
+import { useState } from "react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UiModeToggle } from "@/components/ui-mode-toggle";
@@ -19,6 +21,24 @@ export function Topbar({
 }) {
   const language = useLanguage();
   const displayUser = user || { name: "MIZAN user", role: "USER" };
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
+
+  async function logout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store"
+      });
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
+  }
 
   return (
     <div className="app-topbar sticky top-0 z-30 px-3 py-2 sm:px-5 lg:px-8">
@@ -66,6 +86,18 @@ export function Topbar({
               <p className="text-xs text-muted-foreground">{displayUser.role.toLowerCase()}</p>
             </div>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0"
+            onClick={logout}
+            disabled={loggingOut}
+            title={loggingOut ? "Logging out" : t(language, "logout")}
+            aria-label={t(language, "logout")}
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </GlassSurface>
     </div>

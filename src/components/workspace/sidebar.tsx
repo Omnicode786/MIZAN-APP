@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
@@ -12,7 +13,7 @@ import {
   FileCheck2,
   FileText,
   FolderKanban,
-  Home,
+  LogOut,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
@@ -65,7 +66,25 @@ export function Sidebar({
   currentPath?: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const language = useLanguage();
+  const router = useRouter();
+
+  async function logout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store"
+      });
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
+  }
 
   return (
     <aside
@@ -121,17 +140,19 @@ export function Sidebar({
           )}
 
           <nav className="glass-subtle space-y-2 rounded-[1.75rem] p-2 transition-colors duration-300">
-            <Link
-              href="/"
-              title="Back to Home"
+            <button
+              type="button"
+              title={loggingOut ? "Logging out" : "Logout"}
+              onClick={logout}
+              disabled={loggingOut}
               className={cn(
-                "flex rounded-2xl text-sm text-muted-foreground transition hover:bg-white/30 hover:text-foreground dark:hover:bg-white/10",
+                "flex w-full rounded-2xl text-sm text-muted-foreground transition hover:bg-white/30 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-white/10",
                 collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3.5"
               )}
             >
-              <Home className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>Back to Home</span>}
-            </Link>
+              <LogOut className="h-5 w-5 shrink-0" />
+              {!collapsed && <span>{loggingOut ? "Logging out..." : t(language, "logout")}</span>}
+            </button>
 
             {nav.map((item) => {
               const active = currentPath === item.href || currentPath?.startsWith(item.href + "/");

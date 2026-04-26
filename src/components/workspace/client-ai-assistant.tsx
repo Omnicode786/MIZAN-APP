@@ -6,6 +6,7 @@ import {
   Bot,
   Briefcase,
   CalendarClock,
+  CheckCircle2,
   FileText,
   FolderKanban,
   Loader2,
@@ -14,7 +15,8 @@ import {
   Scale,
   Send,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  XCircle
 } from "lucide-react";
 import { AiTranslationActions } from "@/components/ai-translation-actions";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +24,12 @@ import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/hooks/use-language";
-import { extractAssistantActionMeta, stripAssistantActionMeta } from "@/lib/assistant-message-meta";
+import {
+  extractAssistantActionMeta,
+  extractAssistantAgentProposalMeta,
+  extractAssistantCasePreviewMeta,
+  stripAssistantActionMeta
+} from "@/lib/assistant-message-meta";
 import { toTitleCase, cn } from "@/lib/utils";
 import { FormattedAiContent } from "@/utils/ai-content";
 
@@ -66,6 +73,9 @@ const GENERAL_PROMPTS = [
 
 const CASE_PROMPTS = [
   "Add a deadline to this case.",
+  "Run evidence intake on this case.",
+  "Generate a case health score.",
+  "Prepare hearing or meeting prep.",
   "Prepare a lawyer handoff for this case.",
   "Summarize this case for me.",
   "Generate next steps for this case."
@@ -396,7 +406,12 @@ export function ClientAiAssistant({
             {messages.length ? (
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <MessageBubble key={message.id} message={message} />
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    disabled={loading}
+                    onSend={ask}
+                  />
                 ))}
                 {loading ? <ThinkingBubble /> : null}
                 <div ref={scrollRef} />
@@ -590,10 +605,22 @@ function MiniMetric({
   );
 }
 
-function MessageBubble({ message }: { message: AssistantMessage }) {
+function MessageBubble({
+  message,
+  disabled,
+  onSend
+}: {
+  message: AssistantMessage;
+  disabled?: boolean;
+  onSend: (message: string) => void;
+}) {
   const isAi = message.role === "AI";
   const sources = Array.isArray(message.sources) ? message.sources : [];
   const actionMeta = isAi ? extractAssistantActionMeta(message.content) : null;
+  const proposalMeta = isAi
+    ? extractAssistantAgentProposalMeta(message.content) ||
+      extractAssistantCasePreviewMeta(message.content)
+    : null;
   const displayContent = isAi ? stripAssistantActionMeta(message.content) : message.content;
 
   return (
@@ -639,6 +666,14 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
         ) : null}
 
         {isAi && actionMeta ? <AgentActionCard meta={actionMeta} /> : null}
+        {isAi && !actionMeta && proposalMeta ? (
+          <AgentProposalCard
+            meta={proposalMeta}
+            disabled={disabled}
+            onApprove={() => onSend("Yes, apply this action to my workspace.")}
+            onReject={() => onSend("No, cancel this action.")}
+          />
+        ) : null}
       </div>
     </div>
   );
@@ -677,6 +712,73 @@ function AgentActionCard({
             <Link href={meta.action.href}>{meta.action.label}</Link>
           </Button>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function AgentProposalCard({
+  meta,
+  disabled,
+  onApprove,
+  onReject
+}: {
+  meta:
+    | ReturnType<typeof extractAssistantAgentProposalMeta>
+    | ReturnType<typeof extractAssistantCasePreviewMeta>;
+  disabled?: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
+  if (!meta) {
+    return null;
+  }
+
+  const title =
+    "title" in meta && meta.title
+      ? meta.title
+      : meta.tool === "create_case"
+        ? "Create case"
+        : "Approve action";
+  const message =
+    "message" in meta && meta.message
+      ? meta.message
+      : "This action is waiting for your confirmation before anything is saved.";
+
+  return (
+    <div className="glass-subtle mt-4 rounded-2xl p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">{message}</p>
+          <Badge variant="outline" className="mt-3 rounded-full px-3 py-1">
+            Waiting for approval
+          </Badge>
+        </div>
+
+        <div className="flex w-full gap-2 sm:w-auto">
+          <Button
+            type="button"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            disabled={disabled}
+            onClick={onApprove}
+          >
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            Approve
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="flex-1 sm:flex-none"
+            disabled={disabled}
+            onClick={onReject}
+          >
+            <XCircle className="mr-2 h-4 w-4" />
+            Cancel
+          </Button>
+        </div>
       </div>
     </div>
   );

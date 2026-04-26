@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { runAiTask, runVisionAiTask } from "@/lib/ai";
+import { readUploadedFileBytes } from "@/lib/document-pipeline/extract";
 import { buildPakistanLawContext } from "@/lib/pakistan-law/retrieval";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
 import { stripAssistantActionMeta } from "@/lib/assistant-message-meta";
@@ -12,6 +13,31 @@ import {
 
 function compact(text: string | null | undefined, fallback = "") {
   return (text || fallback).replace(/\s+/g, " ").trim();
+}
+
+export function hasReadableDocumentText(text: string | null | undefined) {
+  const normalized = compact(text);
+  const meaningfulCharacters = normalized.replace(/[^A-Za-z0-9\u0600-\u06FF]/g, "");
+
+  return normalized.length >= 80 && meaningfulCharacters.length >= 40;
+}
+
+export function unreadableDocumentSummary(fileName?: string) {
+  const safeFileName = compact(fileName).replace(/[<>]/g, "").slice(0, 120);
+  const fileLabel = safeFileName && !safeFileName.includes("\n") ? ` **${safeFileName}**` : "";
+
+  return {
+    text: [
+      "## Document Uploaded",
+      "",
+      `The file${fileLabel} was saved successfully, but MIZAN could not safely extract readable text from it.`,
+      "",
+      "No parties, FIR sections, police station details, dates, allegations, deadlines, or legal conclusions have been inferred from this file.",
+      "",
+      "Please review the PDF manually in the viewer/download option, or upload a clearer/OCR-readable copy if you want AI analysis."
+    ].join("\n"),
+    confidence: 0.1
+  };
 }
 
 type RecentThreadMessage = {
@@ -325,14 +351,55 @@ export async function summarizeDocumentWithAi(
   fallbackText: string,
   language?: AppLanguage
 ) {
+  const bytes = mimeType.startsWith("image/")
+    ? /^https?:\/\//i.test(filePath) || filePath.startsWith("/uploads/")
+      ? await readUploadedFileBytes(filePath)
+      : await fs.readFile(filePath)
+    : undefined;
+
+  return summarizeDocumentContentWithAi({
+    bytes,
+    mimeType,
+    fallbackText,
+    language
+  });
+}
+
+export async function summarizeDocumentContentWithAi({
+  bytes,
+  mimeType,
+  fallbackText,
+  language
+}: {
+  bytes?: Buffer;
+  mimeType: string;
+  fallbackText: string;
+  language?: AppLanguage;
+}) {
   const outputLanguage = normalizeLanguage(language);
   const languageInstruction = getLanguageInstruction(outputLanguage);
+  const readableFallbackText = hasReadableDocumentText(fallbackText);
 
   if (mimeType.startsWith("image/")) {
-    const bytes = await fs.readFile(filePath);
+    if (!bytes) {
+      return runAiTask(
+        [
+          "Summarize the uploaded legal document.",
+          "Use only the text supplied by the app. If the text is too short or unreadable, say that the document could not be safely analyzed.",
+          "Do not infer parties, FIR sections, police station details, dates, allegations, deadlines, money amounts, or legal conclusions from the filename or document type.",
+          "Return Markdown only. Use concise headings and bullets.",
+          languageInstruction
+        ].join("\n\n"),
+        fallbackText
+      );
+    }
+
     const response = await runVisionAiTask(
       [
         "You are reading an uploaded legal document or screenshot from Pakistan.",
+        "Use only text and facts clearly visible in the supplied image.",
+        "If a field is unclear or absent, write that it is not stated/readable.",
+        "Never invent parties, FIR sections, police station details, dates, allegations, deadlines, money amounts, or legal conclusions from context.",
         "Return Markdown only. Use concise headings, bullets, and **bold** for important dates, parties, deadlines, money amounts, threats, and demands.",
         "Do not wrap the answer in a code block.",
         "Extract the key legal facts, the parties, dates, deadlines, money amounts, and any threats or demands. Keep it concise and professional.",
@@ -344,9 +411,15 @@ export async function summarizeDocumentWithAi(
     return response;
   }
 
+  if (!readableFallbackText) {
+    return unreadableDocumentSummary(fallbackText);
+  }
+
   return runAiTask(
     [
       "Summarize the uploaded legal document.",
+      "Use only the supplied extracted text. Do not infer facts from the filename, document type, examples, or likely legal templates.",
+      "If a party, FIR section, police station, date, allegation, obligation, breach, deadline, money amount, or next action is not stated in the text, say it is not stated.",
       "Return Markdown only. Use concise headings, bullets, and **bold** for important parties, dates, obligations, breach points, and next actions.",
       "Do not wrap the answer in a code block.",
       "Extract parties, dates, obligations, breach points, and what the document is most useful for in a Pakistani legal workflow.",

@@ -6,6 +6,8 @@ import {
   Activity,
   CalendarClock,
   CheckCircle2,
+  Download,
+  Eye,
   FileText,
   FolderOpen,
   MessageSquare,
@@ -882,6 +884,10 @@ function DocumentCard({
   onAsk: () => void;
   onDelete: () => void;
 }) {
+  const documentUrl = `/api/documents/${document.id}`;
+  const isImage = typeof document.mimeType === "string" && document.mimeType.startsWith("image/");
+  const isPdf = document.mimeType === "application/pdf";
+
   return (
     <div className="glass-subtle min-w-0 rounded-2xl p-4 transition hover:border-primary/20 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]">
       <div className="flex min-w-0 flex-col gap-4 md:flex-row md:flex-wrap md:items-start md:justify-between">
@@ -897,6 +903,32 @@ function DocumentCard({
               <SafePill variant="outline">{document.probableCategory}</SafePill>
             ) : null}
           </div>
+
+          {isImage ? (
+            <a
+              href={documentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 block overflow-hidden rounded-2xl border border-border/70 bg-muted/20"
+            >
+              <img
+                src={documentUrl}
+                alt={document.fileName}
+                className="max-h-64 w-full object-contain"
+                loading="lazy"
+              />
+            </a>
+          ) : null}
+
+          {isPdf ? (
+            <div className="mt-3 overflow-hidden rounded-2xl border border-border/70 bg-muted/20">
+              <iframe
+                src={documentUrl}
+                title={document.fileName}
+                className="h-[360px] w-full bg-background"
+              />
+            </div>
+          ) : null}
 
           <div className="mt-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
             {document.aiSummary ? (
@@ -925,6 +957,18 @@ function DocumentCard({
         </div>
 
         <div className="flex min-w-0 flex-row flex-wrap items-center gap-2 md:flex-col md:items-end">
+          <Button variant="outline" size="sm" asChild>
+            <a href={documentUrl} target="_blank" rel="noreferrer">
+              <Eye className="h-4 w-4" />
+              View
+            </a>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href={`${documentUrl}?download=1`}>
+              <Download className="h-4 w-4" />
+              Download
+            </a>
+          </Button>
           <Button variant="outline" size="sm" onClick={onAsk}>
             Ask AI
           </Button>

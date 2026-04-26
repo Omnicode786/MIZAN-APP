@@ -18,10 +18,21 @@ export type AssistantCasePreviewMeta = {
   createdAt?: string;
 };
 
+export type AssistantAgentProposalMeta = {
+  tool: string;
+  status: "pending_confirmation";
+  arguments: Record<string, unknown>;
+  title: string;
+  message: string;
+  createdAt?: string;
+};
+
 const ACTION_META_PATTERN = /<!--MIZAN_ACTION:([\s\S]*?)-->/;
 const ACTION_META_STRIP_PATTERN = /<!--MIZAN_ACTION:[\s\S]*?-->/g;
 const CASE_PREVIEW_META_PATTERN = /<!--MIZAN_CASE_PREVIEW:([\s\S]*?)-->/;
 const CASE_PREVIEW_META_STRIP_PATTERN = /<!--MIZAN_CASE_PREVIEW:[\s\S]*?-->/g;
+const AGENT_PROPOSAL_META_PATTERN = /<!--MIZAN_AGENT_PROPOSAL:([\s\S]*?)-->/;
+const AGENT_PROPOSAL_META_STRIP_PATTERN = /<!--MIZAN_AGENT_PROPOSAL:[\s\S]*?-->/g;
 
 export function appendAssistantActionMeta(content: string, meta?: AssistantActionMeta | null) {
   const cleanContent = stripAssistantActionMeta(content || "");
@@ -46,6 +57,20 @@ export function appendAssistantCasePreviewMeta(
 
   const encoded = encodeURIComponent(JSON.stringify(meta));
   return `${cleanContent}\n\n<!--MIZAN_CASE_PREVIEW:${encoded}-->`;
+}
+
+export function appendAssistantAgentProposalMeta(
+  content: string,
+  meta?: AssistantAgentProposalMeta | null
+) {
+  const cleanContent = stripAssistantActionMeta(content || "");
+
+  if (!meta) {
+    return cleanContent;
+  }
+
+  const encoded = encodeURIComponent(JSON.stringify(meta));
+  return `${cleanContent}\n\n<!--MIZAN_AGENT_PROPOSAL:${encoded}-->`;
 }
 
 export function extractAssistantActionMeta(content: string) {
@@ -95,9 +120,39 @@ export function extractAssistantCasePreviewMeta(content: string) {
   }
 }
 
+export function extractAssistantAgentProposalMeta(content: string) {
+  const match = content.match(AGENT_PROPOSAL_META_PATTERN);
+  if (!match?.[1]) {
+    return null;
+  }
+
+  try {
+    const raw = decodeURIComponent(match[1]);
+    const parsed = JSON.parse(raw) as AssistantAgentProposalMeta;
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      typeof parsed.tool !== "string" ||
+      parsed.status !== "pending_confirmation" ||
+      typeof parsed.title !== "string" ||
+      typeof parsed.message !== "string" ||
+      !parsed.arguments ||
+      typeof parsed.arguments !== "object"
+    ) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function stripAssistantActionMeta(content: string) {
   return content
     .replace(ACTION_META_STRIP_PATTERN, "")
     .replace(CASE_PREVIEW_META_STRIP_PATTERN, "")
+    .replace(AGENT_PROPOSAL_META_STRIP_PATTERN, "")
     .trim();
 }

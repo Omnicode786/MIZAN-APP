@@ -181,8 +181,8 @@ export function GlassSurface({
     : Math.max(blur - 1, 6);
   const effectiveDisplace = isGlassMode
     ? isDarkMode
-      ? Math.max(displace, 0.24)
-      : Math.max(displace, 0.34)
+      ? Math.max(displace, 0.3)
+      : Math.max(displace, 0.42)
     : Math.max(displace, 0.15);
   const effectiveSaturation = isGlassMode
     ? isDarkMode
@@ -380,8 +380,8 @@ export function GlassSurface({
       : "0 16px 38px rgba(148, 163, 184, 0.16), 0 1px 0 rgba(255,255,255,0.78) inset";
   } else if (useSvgFilter) {
     const refractiveBackgroundOpacity = isDarkMode
-      ? Math.min(Math.max(resolvedBackgroundOpacity * 0.82, 0.026), 0.072)
-      : Math.min(Math.max(resolvedBackgroundOpacity * 1.24, 0.044), 0.13);
+      ? Math.min(Math.max(resolvedBackgroundOpacity * 0.88, 0.034), 0.086)
+      : Math.min(Math.max(resolvedBackgroundOpacity * 1.3, 0.052), 0.15);
     const refractiveSaturation = isDarkMode
       ? Math.min(Math.max(effectiveSaturation, 1.08), 1.24)
       : Math.min(Math.max(effectiveSaturation, 1.28), 1.48);
@@ -394,19 +394,23 @@ export function GlassSurface({
       : `url(#${filterId}) saturate(${refractiveSaturation}) brightness(1.08) contrast(1.02)`;
     containerStyles.WebkitBackdropFilter = containerStyles.backdropFilter;
     containerStyles.border = isDarkMode
-      ? "1px solid rgba(255,255,255,0.16)"
-      : "1px solid rgba(255,255,255,0.48)";
+      ? "1px solid rgba(255,255,255,0.22)"
+      : "1px solid rgba(255,255,255,0.64)";
     containerStyles.boxShadow = isDarkMode
-      ? `0 0 2px 1px rgba(255,255,255,0.13) inset,
-         0 0 16px 5px rgba(255,255,255,0.045) inset,
-         0 1px 0 rgba(255,255,255,0.12) inset,
-         0 -1px 0 rgba(255,255,255,0.035) inset,
-         0 18px 48px rgba(0,0,0,0.44)`
-      : `0 0 2px 1px rgba(15,23,42,0.07) inset,
-         0 0 18px 5px rgba(255,255,255,0.34) inset,
-         0 1px 0 rgba(255,255,255,0.72) inset,
-         0 -1px 0 rgba(255,255,255,0.20) inset,
-         0 18px 46px rgba(148,163,184,0.18)`;
+      ? `0 0 0 1px rgba(255,255,255,0.12) inset,
+         0 0 2px 1px rgba(255,255,255,0.18) inset,
+         0 0 22px 6px rgba(255,255,255,0.055) inset,
+         0 1px 0 rgba(255,255,255,0.18) inset,
+         0 -1px 0 rgba(255,255,255,0.05) inset,
+         0 20px 54px rgba(0,0,0,0.48),
+         0 2px 14px rgba(0,0,0,0.28)`
+      : `0 0 0 1px rgba(255,255,255,0.34) inset,
+         0 0 2px 1px rgba(15,23,42,0.09) inset,
+         0 0 24px 6px rgba(255,255,255,0.40) inset,
+         0 1px 0 rgba(255,255,255,0.86) inset,
+         0 -1px 0 rgba(255,255,255,0.28) inset,
+         0 20px 50px rgba(148,163,184,0.22),
+         0 2px 12px rgba(15,23,42,0.06)`;
   } else if (backdropSupported) {
     containerStyles.background = isDarkMode
       ? "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.016)), linear-gradient(135deg, rgba(8,12,22,0.54), rgba(0,0,0,0.68))"
@@ -414,15 +418,17 @@ export function GlassSurface({
     containerStyles.backdropFilter = `blur(${Math.max(effectiveBlur + 5, 15)}px) saturate(${isDarkMode ? 1.04 : Math.max(effectiveSaturation, 1.26)}) brightness(${isDarkMode ? 0.81 : 1.04}) contrast(${isDarkMode ? 1.09 : 1})`;
     containerStyles.WebkitBackdropFilter = containerStyles.backdropFilter;
     containerStyles.border = isDarkMode
-      ? "1px solid rgba(255,255,255,0.08)"
-      : "1px solid rgba(255,255,255,0.38)";
+      ? "1px solid rgba(255,255,255,0.17)"
+      : "1px solid rgba(255,255,255,0.58)";
     containerStyles.boxShadow = isDarkMode
-      ? `0 1px 0 rgba(255,255,255,0.045) inset,
-         0 -1px 0 rgba(255,255,255,0.018) inset,
-         0 18px 42px rgba(2, 6, 23, 0.32)`
-      : `0 1px 0 rgba(255,255,255,0.58) inset,
-         0 -1px 0 rgba(255,255,255,0.16) inset,
-         0 16px 40px rgba(148, 163, 184, 0.14)`;
+      ? `0 0 0 1px rgba(255,255,255,0.08) inset,
+         0 1px 0 rgba(255,255,255,0.13) inset,
+         0 -1px 0 rgba(255,255,255,0.035) inset,
+         0 20px 48px rgba(2, 6, 23, 0.38)`
+      : `0 0 0 1px rgba(255,255,255,0.28) inset,
+         0 1px 0 rgba(255,255,255,0.74) inset,
+         0 -1px 0 rgba(255,255,255,0.22) inset,
+         0 18px 44px rgba(148, 163, 184, 0.18)`;
   } else {
     containerStyles.background = isDarkMode
       ? "rgba(0, 0, 0, 0.88)"

@@ -18,8 +18,8 @@ const schema = z.object({
   agentMode: z.boolean().optional()
 });
 
-const CASE_AGENT_INTENT_PATTERN =
-  /\b(create|open|start|make|file|save|add)\b[\s\S]{0,48}\b(case|matter|database|workspace|it|this)\b/i;
+const AGENT_INTENT_PATTERN =
+  /\b(create|open|start|make|file|save|add|update|change|generate|prepare|build|summarize|explain|find|list|analyze|classify|review|check|score|rate)\b[\s\S]{0,90}\b(case|matter|database|workspace|deadline|timeline|event|draft|notice|template|roadmap|handoff|evidence|document|gap|checklist|meeting|hearing|health|lawyer|note|it|this)\b/i;
 
 export async function POST(request: Request) {
   try {
@@ -69,13 +69,16 @@ export async function POST(request: Request) {
       }));
     }
 
-    const hasPendingCasePreview = recentMessages.some(
-      (message) => message.role === "AI" && (message.content || "").includes("MIZAN_CASE_PREVIEW")
+    const hasPendingAgentProposal = recentMessages.some(
+      (message) =>
+        message.role === "AI" &&
+        ((message.content || "").includes("MIZAN_CASE_PREVIEW") ||
+          (message.content || "").includes("MIZAN_AGENT_PROPOSAL"))
     );
     const shouldRunAgent =
       Boolean(body.agentMode) ||
-      hasPendingCasePreview ||
-      CASE_AGENT_INTENT_PATTERN.test(body.question);
+      hasPendingAgentProposal ||
+      AGENT_INTENT_PATTERN.test(body.question);
 
     const ai = shouldRunAgent
       ? await runAgentTurn({

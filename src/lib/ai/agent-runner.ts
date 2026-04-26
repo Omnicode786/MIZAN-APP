@@ -1,10 +1,13 @@
 import { z } from "zod";
 import {
+  appendAssistantAgentProposalMeta,
   appendAssistantActionMeta,
   appendAssistantCasePreviewMeta,
+  extractAssistantAgentProposalMeta,
   extractAssistantActionMeta,
   extractAssistantCasePreviewMeta,
   stripAssistantActionMeta,
+  type AssistantAgentProposalMeta,
   type AssistantActionMeta,
   type AssistantCasePreviewMeta
 } from "@/lib/assistant-message-meta";
@@ -79,11 +82,19 @@ function findJsonObject(raw: string) {
   const trimmed = raw.trim();
   if (!trimmed) return null;
 
+  // Try markdown code fence with json keyword
   const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fencedMatch?.[1]) {
     return fencedMatch[1].trim();
   }
 
+  // Try markdown code fence with triple backticks only
+  const backtickMatch = trimmed.match(/```([\s\S]*?)```/);
+  if (backtickMatch?.[1]) {
+    return backtickMatch[1].trim();
+  }
+
+  // Try finding braces directly
   const firstBrace = trimmed.indexOf("{");
   const lastBrace = trimmed.lastIndexOf("}");
   if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
@@ -91,6 +102,16 @@ function findJsonObject(raw: string) {
   }
 
   return trimmed.slice(firstBrace, lastBrace + 1);
+}
+
+function stripMarkdownCodeFence(text: string): string {
+  const trimmed = text.trim();
+  
+  // Remove markdown code fence with language specifier (```json, ```typescript, etc.)
+  let cleaned = trimmed.replace(/^```(?:json|javascript|typescript|js|ts)?\s*/i, "");
+  cleaned = cleaned.replace(/\s*```\s*$/i, "");
+  
+  return cleaned.trim();
 }
 
 function parseDirective(raw: string): AgentDirective | null {
@@ -129,27 +150,35 @@ function formatRecentThreadMessages(messages?: RecentAgentMessage[]) {
     .slice(0, 5000);
 }
 
-function isCasePreviewConfirmation(question: string) {
+function isActionConfirmation(question: string) {
   const normalized = question.toLowerCase().replace(/\s+/g, " ").trim();
-  if (!normalized || isCasePreviewRejection(question)) return false;
+  if (!normalized || isActionRejection(question)) return false;
 
   return [
     /^(yes|yeah|yep|ok|okay|confirm|confirmed|proceed)$/i,
-    /\b(yes|confirm|confirmed|proceed|go ahead)\b[\s\S]{0,48}\b(create|add|save|publish|database|workspace|case|it)\b/i,
-    /\b(create|add|save|publish)\b[\s\S]{0,48}\b(it|this case|the case|case|database|workspace)\b/i,
-    /\b(add|save)\b[\s\S]{0,32}\b(database|workspace)\b/i
+    /\b(yes|confirm|confirmed|proceed|go ahead)\b[\s\S]{0,64}\b(create|add|save|publish|apply|database|workspace|case|deadline|draft|template|timeline|note|roadmap|it)\b/i,
+    /\b(create|add|save|publish|apply)\b[\s\S]{0,64}\b(it|this|this case|the case|case|deadline|draft|template|timeline|note|roadmap|database|workspace)\b/i,
+    /\b(add|save|apply)\b[\s\S]{0,32}\b(database|workspace|changes|action)\b/i
   ].some((pattern) => pattern.test(normalized));
 }
 
-function isCasePreviewRejection(question: string) {
+function isActionRejection(question: string) {
   const normalized = question.toLowerCase().replace(/\s+/g, " ").trim();
 
   return [
     /^(no|nope|cancel|stop|reject)$/i,
-    /\b(cancel|reject|stop)\b[\s\S]{0,32}\b(case|it|creation|intake)?\b/i,
-    /\b(do not|don't|dont)\b[\s\S]{0,24}\b(create|add|save|publish)\b/i,
+    /\b(cancel|reject|stop)\b[\s\S]{0,32}\b(case|it|creation|intake|action|save|draft|deadline|timeline)?\b/i,
+    /\b(do not|don't|dont)\b[\s\S]{0,24}\b(create|add|save|publish|apply)\b/i,
     /\bnot now\b/i
   ].some((pattern) => pattern.test(normalized));
+}
+
+function isCasePreviewConfirmation(question: string) {
+  return isActionConfirmation(question);
+}
+
+function isCasePreviewRejection(question: string) {
+  return isActionRejection(question);
 }
 
 function findLatestPendingCasePreview(messages?: RecentAgentMessage[]): AssistantCasePreviewMeta | null {
@@ -166,6 +195,42 @@ function findLatestPendingCasePreview(messages?: RecentAgentMessage[]): Assistan
     const preview = extractAssistantCasePreviewMeta(message.content || "");
     if (preview?.tool === "create_case" && preview.status === "pending_confirmation") {
       return preview;
+    }
+  }
+
+  return null;
+}
+
+function casePreviewToProposal(preview: AssistantCasePreviewMeta): AssistantAgentProposalMeta {
+  return {
+    tool: "create_case",
+    status: "pending_confirmation",
+    arguments: preview.arguments,
+    title: preview.title || stringValue(preview.arguments.title) || "Create case",
+    message: "Create this case in your workspace/database.",
+    createdAt: preview.createdAt
+  };
+}
+
+function findLatestPendingMutationProposal(messages?: RecentAgentMessage[]): AssistantAgentProposalMeta | null {
+  if (!messages?.length) return null;
+
+  for (const message of [...messages].reverse()) {
+    if (message.role !== "AI") continue;
+
+    const action = extractAssistantActionMeta(message.content || "");
+    if (action?.tool) {
+      return null;
+    }
+
+    const proposal = extractAssistantAgentProposalMeta(message.content || "");
+    if (proposal?.status === "pending_confirmation") {
+      return proposal;
+    }
+
+    const legacyPreview = extractAssistantCasePreviewMeta(message.content || "");
+    if (legacyPreview?.tool === "create_case" && legacyPreview.status === "pending_confirmation") {
+      return casePreviewToProposal(legacyPreview);
     }
   }
 
@@ -190,6 +255,17 @@ function objectList(value: unknown) {
   return value
     .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
     .slice(0, 8);
+}
+
+function withContextDefaults(
+  args: Record<string, unknown>,
+  defaults: { caseId?: string; documentId?: string }
+) {
+  return {
+    ...args,
+    caseId: stringValue(args.caseId) || defaults.caseId,
+    documentId: stringValue(args.documentId) || defaults.documentId
+  };
 }
 
 const CASE_CATEGORY_VALUES = [
@@ -314,6 +390,102 @@ function buildCasePreviewMarkdown(args: Record<string, unknown>) {
   ].join("\n\n");
 }
 
+function formatPreviewValue(value: unknown): string {
+  if (value === null || typeof value === "undefined" || value === "") {
+    return "Not specified";
+  }
+
+  if (Array.isArray(value)) {
+    return value.length
+      ? value
+          .slice(0, 6)
+          .map((item) => (typeof item === "object" ? JSON.stringify(item) : String(item)))
+          .join("; ")
+      : "Not specified";
+  }
+
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+}
+
+function getMutationProposalTitle(toolName: AgentToolName, args: Record<string, unknown>) {
+  switch (toolName) {
+    case "update_case":
+      return "Update case";
+    case "add_deadline":
+      return `Add deadline${stringValue(args.title) ? `: ${stringValue(args.title)}` : ""}`;
+    case "add_timeline_event":
+      return `Add timeline event${stringValue(args.title) ? `: ${stringValue(args.title)}` : ""}`;
+    case "create_draft":
+      return `Create draft${stringValue(args.title) ? `: ${stringValue(args.title)}` : ""}`;
+    case "create_template_document":
+      return `Create editable document${stringValue(args.title) ? `: ${stringValue(args.title)}` : ""}`;
+    case "create_internal_note":
+      return "Create internal note";
+    case "create_draft_review_note":
+      return "Create draft review note";
+    case "generate_case_roadmap":
+      return "Create case roadmap";
+    default:
+      return "Apply assistant action";
+  }
+}
+
+function getMutationProposalIntro(toolName: AgentToolName) {
+  switch (toolName) {
+    case "update_case":
+      return "I can update the safe case fields below. I have not saved anything yet.";
+    case "add_deadline":
+      return "I can add this deadline to the case. I have not saved anything yet.";
+    case "add_timeline_event":
+      return "I can add this event to the case timeline. I have not saved anything yet.";
+    case "create_draft":
+      return "I can generate and save this editable draft. I have not created it yet.";
+    case "create_template_document":
+      return "I can create this editable template document. I have not created it yet.";
+    case "create_internal_note":
+    case "create_draft_review_note":
+      return "I can save this lawyer-only note. I have not saved anything yet.";
+    case "generate_case_roadmap":
+      return "I can add AI roadmap entries to the case timeline. I have not saved anything yet.";
+    default:
+      return "I can apply this workspace action. I have not saved anything yet.";
+  }
+}
+
+function buildMutationProposalMarkdown(toolName: AgentToolName, args: Record<string, unknown>) {
+  if (toolName === "create_case") {
+    return buildCasePreviewMarkdown(args);
+  }
+
+  const visibleEntries = Object.entries(args)
+    .filter(([, value]) => {
+      if (typeof value === "undefined" || value === null || value === "") return false;
+      if (Array.isArray(value) && !value.length) return false;
+      return true;
+    })
+    .slice(0, 12);
+
+  const detailLines = visibleEntries.length
+    ? visibleEntries.map(([key, value]) => `- **${key}:** ${formatPreviewValue(value)}`)
+    : ["- No structured fields were provided yet."];
+
+  return [
+    "## Action Preview",
+    getMutationProposalIntro(toolName),
+    "### Proposed Action",
+    `- **Action:** ${toolName}`,
+    `- **Title:** ${getMutationProposalTitle(toolName, args)}`,
+    "### Details",
+    detailLines.join("\n"),
+    "## Confirm",
+    "Do you want me to save/apply this to your workspace/database?"
+  ].join("\n\n");
+}
+
 function hasMinimumCasePreviewData(args: Record<string, unknown>) {
   const hasCategory = Boolean(stringValue(args.category));
   const hasNarrative = Boolean(
@@ -397,7 +569,23 @@ async function extractCreateCaseArgsFromThread({
       { maxOutputTokens: 1400, temperature: 0.1 }
     );
 
-    const candidate = findJsonObject(result.text) || result.text;
+    let candidate = findJsonObject(result.text);
+    
+    // If findJsonObject fails, try stripping markdown directly and finding braces
+    if (!candidate) {
+      const stripped = stripMarkdownCodeFence(result.text);
+      const firstBrace = stripped.indexOf("{");
+      const lastBrace = stripped.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        candidate = stripped.slice(firstBrace, lastBrace + 1);
+      }
+    }
+
+    if (!candidate) {
+      console.error("[AGENT_CASE_EXTRACTION_ERROR] No valid JSON found in response");
+      return null;
+    }
+
     const parsed = JSON.parse(candidate);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return null;
@@ -431,6 +619,37 @@ async function buildCreateCasePreviewResponse({
     confidence: 0.91,
     sources: ["Case intake preview"],
     toolName: "create_case"
+  };
+}
+
+async function buildMutationProposalResponse({
+  toolName,
+  args,
+  language
+}: {
+  toolName: AgentToolName;
+  args: Record<string, unknown>;
+  language: AppLanguage;
+}): Promise<AgentRunnerResult> {
+  if (toolName === "create_case") {
+    return buildCreateCasePreviewResponse({ args, language });
+  }
+
+  const previewMarkdown = buildMutationProposalMarkdown(toolName, args);
+  const localizedPreview = await localizeSimpleText(previewMarkdown, language);
+
+  return {
+    text: appendAssistantAgentProposalMeta(localizedPreview, {
+      tool: toolName,
+      status: "pending_confirmation",
+      arguments: args,
+      title: getMutationProposalTitle(toolName, args),
+      message: getMutationProposalIntro(toolName),
+      createdAt: new Date().toISOString()
+    }),
+    confidence: 0.9,
+    sources: [`Tool proposal: ${toolName}`],
+    toolName
   };
 }
 
@@ -482,7 +701,24 @@ async function localizeToolResult(result: AgentToolResult, language: AppLanguage
       { maxOutputTokens: 1200, temperature: 0.1 }
     );
 
-    const parsed = JSON.parse(findJsonObject(localized.text) || localized.text);
+    let jsonCandidate = findJsonObject(localized.text);
+    
+    // If findJsonObject fails, try stripping markdown directly and finding braces
+    if (!jsonCandidate) {
+      const stripped = stripMarkdownCodeFence(localized.text);
+      const firstBrace = stripped.indexOf("{");
+      const lastBrace = stripped.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonCandidate = stripped.slice(firstBrace, lastBrace + 1);
+      }
+    }
+
+    if (!jsonCandidate) {
+      // If still no JSON found, return original result
+      return result;
+    }
+
+    const parsed = JSON.parse(jsonCandidate);
     return {
       ...result,
       message: typeof parsed.message === "string" ? parsed.message : result.message,
@@ -602,32 +838,58 @@ export async function runAgentTurn({
   }));
   const agentContext = await buildAgentContext(currentUser, caseId, documentId);
   const recentThreadContext = formatRecentThreadMessages(recentMessages);
-  const pendingCasePreview = findLatestPendingCasePreview(recentMessages);
+  const pendingMutationProposal = findLatestPendingMutationProposal(recentMessages);
 
-  if (pendingCasePreview && isCasePreviewRejection(question)) {
+  if (pendingMutationProposal && isActionRejection(question)) {
+    const localizedMessage = await localizeSimpleText(
+      "No action was saved. I will keep this as a discussion only.",
+      language
+    );
+
     return {
-      text: await localizeSimpleText("No case was saved. I will keep this as a discussion only.", language),
+      text: appendAssistantActionMeta(localizedMessage, {
+        tool: pendingMutationProposal.tool,
+        title: "Action cancelled",
+        message: localizedMessage,
+        status: "info"
+      }),
       confidence: 0.9,
-      sources: ["Pending case preview"]
+      sources: ["Pending assistant proposal"]
     };
   }
 
-  if (pendingCasePreview && isCasePreviewConfirmation(question)) {
-    const createCaseTool = getAgentTool("create_case");
+  if (pendingMutationProposal && isActionConfirmation(question)) {
+    const proposalTool = getAgentTool(pendingMutationProposal.tool);
 
-    if (!createCaseTool || !createCaseTool.allowedRoles.includes(currentUser.role)) {
+    if (!proposalTool || !proposalTool.allowedRoles.includes(currentUser.role) || !isMutationTool(proposalTool.name)) {
       return {
         text: await localizeSimpleText(
-          "This action is available for clients. As a lawyer, I can prepare a case brief or internal strategy for an assigned matter.",
+          "I cannot apply that action from this account. I can still help you prepare the information manually.",
           language
         ),
         confidence: 0.86,
-        sources: ["Pending case preview"]
+        sources: ["Pending assistant proposal"]
       };
     }
 
-    const parsedPreview = createCaseTool.schema.safeParse(pendingCasePreview.arguments || {});
-    if (!parsedPreview.success || !hasMinimumCasePreviewData(parsedPreview.data as Record<string, unknown>)) {
+    const parsedProposal = proposalTool.schema.safeParse(
+      withContextDefaults(pendingMutationProposal.arguments || {}, { caseId, documentId })
+    );
+    if (!parsedProposal.success) {
+      return {
+        text: await localizeSimpleText(
+          "The saved action preview is missing essential details. Please tell me the request again and I will prepare a fresh preview before saving anything.",
+          language
+        ),
+        confidence: 0.78,
+        sources: ["Pending assistant proposal"]
+      };
+    }
+
+    if (
+      proposalTool.name === "create_case" &&
+      !hasMinimumCasePreviewData(parsedProposal.data as Record<string, unknown>)
+    ) {
       return {
         text: await localizeSimpleText(
           "The saved case preview is missing essential details. Please tell me the key facts again and I will prepare a fresh preview before saving it.",
@@ -639,7 +901,7 @@ export async function runAgentTurn({
     }
 
     try {
-      const rawResult = await createCaseTool.execute(
+      const rawResult = await proposalTool.execute(
         {
           currentUser,
           question,
@@ -648,32 +910,35 @@ export async function runAgentTurn({
           documentId,
           prisma
         },
-        parsedPreview.data
+        parsedProposal.data
       );
       const localizedResult = await localizeToolResult(rawResult, language);
-      const actionMeta = toActionMeta(createCaseTool.name, localizedResult);
+      const actionMeta = toActionMeta(proposalTool.name, localizedResult);
 
       return {
         text: appendAssistantActionMeta(localizedResult.message, actionMeta),
         confidence: localizedResult.ok ? 0.94 : 0.85,
-        sources: Array.from(new Set([`Tool: ${createCaseTool.name}`, ...(localizedResult.sources || [])])).slice(0, 8),
-        toolName: createCaseTool.name
+        sources: Array.from(new Set([`Tool: ${proposalTool.name}`, ...(localizedResult.sources || [])])).slice(0, 8),
+        toolName: proposalTool.name
       };
     } catch (error) {
-      console.error("[AGENT_CASE_CONFIRMATION_ERROR]", error);
+      console.error("[AGENT_ACTION_CONFIRMATION_ERROR]", {
+        tool: pendingMutationProposal.tool,
+        error
+      });
 
       return {
-        text: await localizeSimpleText("I could not create the case right now. Please try again.", language),
+        text: await localizeSimpleText("I could not complete that action right now. Please try again.", language),
         confidence: 0.7,
-        sources: ["Tool: create_case"],
-        toolName: "create_case"
+        sources: [`Tool: ${proposalTool.name}`],
+        toolName: proposalTool.name
       };
     }
   }
 
   const shouldPrepareCasePreview =
     isExplicitCreateCaseRequest(question) ||
-    (!pendingCasePreview && isCasePreviewConfirmation(question) && Boolean(recentThreadContext));
+    (!pendingMutationProposal && isCasePreviewConfirmation(question) && Boolean(recentThreadContext));
 
   if (shouldPrepareCasePreview) {
     const createCaseTool = getAgentTool("create_case");
@@ -825,7 +1090,9 @@ export async function runAgentTurn({
     };
   }
 
-  const parsedArgs = tool.schema.safeParse(directive.arguments || {});
+  const parsedArgs = tool.schema.safeParse(
+    withContextDefaults(directive.arguments || {}, { caseId, documentId })
+  );
   if (!parsedArgs.success) {
     return {
       text: await localizeSimpleText(
@@ -836,10 +1103,10 @@ export async function runAgentTurn({
     };
   }
 
-  if (tool.name === "create_case") {
-    const previewArgs = parsedArgs.data as Record<string, unknown>;
+  if (isMutationTool(tool.name)) {
+    const proposalArgs = parsedArgs.data as Record<string, unknown>;
 
-    if (!hasMinimumCasePreviewData(previewArgs)) {
+    if (tool.name === "create_case" && !hasMinimumCasePreviewData(proposalArgs)) {
       return {
         text: await localizeSimpleText(
           "I can create the case, but I need the core facts first. Please tell me what happened, who was involved, any key dates, and what evidence you have.",
@@ -851,7 +1118,11 @@ export async function runAgentTurn({
       };
     }
 
-    return buildCreateCasePreviewResponse({ args: previewArgs, language });
+    return buildMutationProposalResponse({
+      toolName: tool.name,
+      args: proposalArgs,
+      language
+    });
   }
 
   try {

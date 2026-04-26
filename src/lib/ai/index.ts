@@ -85,7 +85,8 @@ export async function runAiTask(prompt: string, context?: string, options?: AiTa
 export async function runVisionAiTask(
   prompt: string,
   images: Array<{ mimeType: string; data: string }>,
-  context?: string
+  context?: string,
+  options?: AiTaskOptions
 ) {
   const provider = normalizeProvider(process.env.AI_PROVIDER);
   if (!prompt.trim()) {
@@ -97,8 +98,8 @@ export async function runVisionAiTask(
   }
 
   try {
-    if (provider === "openai") return rejectPromptEcho(await generateOpenAIVisionInsight(prompt, images, context), prompt);
-    if (provider === "gemini") return rejectPromptEcho(await generateGeminiVisionInsight(prompt, images, context), prompt);
+    if (provider === "openai") return rejectPromptEcho(await generateOpenAIVisionInsight(prompt, images, context, options), prompt);
+    if (provider === "gemini") return rejectPromptEcho(await generateGeminiVisionInsight(prompt, images, context, options), prompt);
     return await generateMockVisionInsight(prompt, images, context);
   } catch (error) {
     console.error(`Vision AI provider "${provider}" failed.`, error);
