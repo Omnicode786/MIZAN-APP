@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bot,
@@ -88,6 +89,7 @@ export function ClientAiAssistant({
   cases: CaseOption[];
   initialThreads: AssistantThread[];
 }) {
+  const router = useRouter();
   const language = useLanguage();
   const [mode, setMode] = useState<Mode>("general");
   const [selectedCaseId, setSelectedCaseId] = useState(cases[0]?.id || "");
@@ -183,6 +185,12 @@ export function ClientAiAssistant({
       ]);
       setActiveThreadId(updatedThread.id);
       setQuestion("");
+
+      const latestAiMessage = [...updatedThread.messages].reverse().find((message) => message.role === "AI");
+      const latestAction = latestAiMessage ? extractAssistantActionMeta(latestAiMessage.content) : null;
+      if (latestAction?.status === "success") {
+        router.refresh();
+      }
     } catch {
       setError("The AI assistant could not answer right now. Please try again.");
     } finally {

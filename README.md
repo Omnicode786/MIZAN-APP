@@ -284,14 +284,14 @@ sequenceDiagram
     participant User
     participant UI as Case Workspace UI
     participant API as /api/documents/upload
-    participant Storage as public/uploads
+    participant Storage as Cloudinary or local fallback
     participant Extract as document-pipeline/extract
     participant AI as AI provider layer
     participant DB as Prisma/PostgreSQL
 
     User->>UI: Upload document
     UI->>API: POST multipart form
-    API->>Storage: Save original file
+    API->>Storage: Save original file and metadata
     API->>Extract: Extract text from PDF/image/doc
     API->>AI: Summarize and classify content
     API->>API: Build clause heatmap
@@ -504,38 +504,55 @@ This behavior is implemented in `src/lib/legal-ai.ts`, which also prevents promp
 
 ## Agentic AI Workflows
 
-MIZAN's client assistant can now operate as an **agentic legal workflow assistant**, not only a question-answering chat.
+MIZAN's client assistant operates as an **agentic legal workflow assistant**, not only a question-answering chat.
 
-When the user explicitly asks for an action, the assistant can decide whether to:
+When the user asks for help, the assistant decides whether to:
 
 - answer normally
 - ask a follow-up for missing structured information
-- execute a safe backend workflow action through the app
+- produce a safe approval-first workflow proposal
+- execute a server-side workflow action only after the user confirms
 
 ### What agent mode can do
 
-- **Case creation**: Create a new case from a natural-language story with automatic title, category, and priority assignment
-- **Case field updates**: Safely update case title, description, stage, status, and priority
-- **Timeline management**: Add timeline events and deadlines to active cases
-- **Draft generation**: Generate case drafts and editable template-style documents through the existing draft system
-- **Case analysis**: Summarize a case, create evidence-gap lists, build roadmaps, prepare lawyer handoff briefs
+- **Case creation**: Convert a client story into a normalized case preview with title, category, priority, facts, evidence, timeline, deadlines, roadmap, and lawyer handoff summary
+- **Approval-first writes**: Case creation, case updates, deadlines, timeline events, drafts, templates, roadmap entries, and internal notes are previewed first and saved only after the user approves
+- **Timeline and deadline management**: Add dated events and deadlines to accessible cases through confirmed agent actions
+- **Draft and template generation**: Generate editable legal notices, refund requests, complaint letters, handoff briefs, and template-style drafts through the existing draft/version system
+- **Evidence intake agent**: Classify uploaded evidence, extract grounded parties/dates/amounts, identify contradictions, map possible timeline facts, and suggest what to upload next
+- **Case roadmap agent**: Generate or persist roadmap steps for a selected case after approval
+- **Case health score**: Produce a practical readiness report covering evidence strength, timeline completeness, missing party details, draft readiness, and lawyer handoff readiness
+- **Lawyer handoff agent**: Prepare a structured lawyer brief from the case record without exposing other users' data
+- **Hearing and meeting prep**: Generate questions, documents to carry, weak points, and likely counterarguments from the current case record
 - **Case search**: Search the user's accessible cases, documents, and evidence
 - **Strategy materials**: Prepare lawyer-side strategy materials on assigned matters only
-- **Structured data extraction**: Extract key facts, dates, amounts, and parties from case descriptions
+- **Structured extraction**: Extract key facts, dates, amounts, parties, evidence, and draft suggestions from messy legal narratives
 
-### How case intake works
+### Confirmation-first workflow
 
 ```mermaid
-flowchart LR
-    User["Client message"] --> Agent["Agent decision layer"]
-    Agent -->|"Needs clarification"| FollowUp["Ask follow-up question"]
-    Agent -->|"Normal question"| Answer["Return grounded legal answer"]
-    Agent -->|"Explicit action request"| Tool["Safe tool execution"]
-    Tool --> Auth["Current user + role check"]
-    Auth --> Access["Case/document access validation"]
-    Access --> DB["Prisma-backed workflow write"]
-    DB --> Log["Activity log where relevant"]
-    Log --> Reply["Formatted assistant response + action card"]
+sequenceDiagram
+    participant User
+    participant UI as Assistant UI
+    participant API as /api/ai/chat
+    participant Agent as agent-runner.ts
+    participant Tools as agent-tools.ts
+    participant DB as Prisma/PostgreSQL
+
+    User->>UI: "Create a case / add deadline / make a draft"
+    UI->>API: Send message with thread, language, case/document context
+    API->>Agent: Last 12 same-thread messages + current request
+    Agent->>Agent: Decide answer, follow-up, analysis tool, or mutation proposal
+    Agent-->>UI: Preview with hidden pending-action metadata
+    UI-->>User: Show formatted preview + Approve / Cancel card
+    User->>UI: "Yes", "yes please", "approve", "go ahead", etc.
+    UI->>API: Confirmation in the same thread
+    API->>Agent: Recover latest pending proposal
+    Agent->>Tools: Validate role, case access, schema, and current user
+    Tools->>DB: Write only after approval
+    Tools->>DB: Activity log where relevant
+    Agent-->>UI: Success/error response + action card
+    UI->>API: Refresh workspace data
 ```
 
 ### Safety model
@@ -545,6 +562,9 @@ flowchart LR
 - client actions are scoped to the client's own matters
 - lawyer actions are scoped to assigned matters
 - destructive delete tools are intentionally not implemented
+- write actions always require a confirmation turn before database mutation
+- failed or denied actions close the pending proposal so the assistant does not loop forever asking for "yes"
+- pending proposals are recovered from recent same-thread messages only, not global memory
 - internal IDs, provider errors, prompts, and stack traces are not exposed to the user
 - the AI remains assistive and lawyer-reviewable; it does not replace professional legal judgment
 - all AI responses are logged and can be audited
@@ -555,6 +575,9 @@ flowchart LR
 - tool definitions and handlers live in `src/lib/ai/agent-tools.ts`
 - the structured decision prompt lives in `src/lib/ai/prompts/case-intake-agent.ts`
 - `/api/ai/chat` now supports normal chat and agent mode without changing the public route shape
+- `/api/ai/chat` includes the latest 12 messages from the same assistant thread so confirmations and short follow-ups remain context-aware
+- pending write proposals are stored inside assistant messages using hidden metadata from `src/lib/assistant-message-meta.ts`
+- the client assistant renders approval cards through `src/components/workspace/client-ai-assistant.tsx`
 - successful actions can return a UI action card, such as an "Open case" button after AI intake creates a new matter
 
 ### Example
@@ -567,10 +590,11 @@ The assistant can:
 
 1. recognize that this is an explicit case-creation request
 2. extract title, category, priority, facts, evidence, dates, and suggested next steps
-3. create the case in the database under the current client's profile
-4. add roadmap and timeline entries where supported
-5. add deadlines where enough structured dates are available
-6. return a formatted response plus a direct case link in the chat
+3. show a clean case preview and ask for confirmation
+4. wait for a confirmation like "yes", "yes please", "approve", or the UI Approve button
+5. create the case in the database under the current client's profile only after approval
+6. add roadmap, timeline entries, evidence records, and deadlines where supported
+7. return a formatted success response plus a direct case link in the chat
 
 ### AI Features Overview
 
@@ -630,7 +654,7 @@ flowchart TB
     subgraph Data
         Prisma[Prisma ORM]
         Postgres[(PostgreSQL)]
-        Files[public/uploads, redactions, exports]
+        Files[Cloudinary uploads, local exports/redactions]
     end
 
     subgraph AI
@@ -654,7 +678,7 @@ flowchart TB
 
 - **Next.js App Router** powers public pages, protected workspaces, and API routes in one codebase.
 - **Prisma + PostgreSQL** persist all legal workflow entities.
-- **Local file storage** is used for uploads, redactions, and PDF exports.
+- **Cloudinary-backed upload storage** is used when configured, with local filesystem fallback for development and generated exports/redactions.
 - **AI is server-side only** and wrapped behind safe route handlers and provider adapters.
 - **Permissions are role-aware** and enforced in both route handlers and query filters.
 
@@ -1026,7 +1050,8 @@ erDiagram
 | `src/lib/document-pipeline` | Document processing, OCR, and text extraction |
 | `src/lib/pakistan-law` | Pakistan legal context and retrieval |
 | `prisma` | Database schema, migrations, and seeding |
-| `public/uploads` | Uploaded documents (development only) |
+| Cloudinary `mizan/uploads` | Uploaded documents and images when Cloudinary is configured |
+| `public/uploads` | Uploaded documents fallback for development only |
 | `public/exports` | Generated PDF exports (development only) |
 | `public/redactions` | Redacted document outputs (development only) |
 
@@ -1054,6 +1079,9 @@ JWT_SECRET="your-secret-key-here-at-least-32-characters"
 AI_PROVIDER="gemini"  # or "openai" or "mock"
 GEMINI_API_KEY="your-gemini-key"
 GEMINI_MODEL="gemini-1.5-flash"
+CLOUDINARY_URL="cloudinary://your-api-key:your-api-secret@your-cloud-name"
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_UPLOAD_FOLDER="mizan/uploads"
 ```
 
 ### 3. Run Prisma migrations
@@ -1184,6 +1212,9 @@ The current `.env.example` defines all required and optional configuration:
 | `GEMINI_MODEL` | If using Gemini | `gemini-1.5-flash` | Gemini model name (e.g., `gemini-1.5-flash`, `gemini-2.5-flash`) |
 | `OPENAI_API_KEY` | If using OpenAI | - | OpenAI API key from OpenAI dashboard |
 | `OPENAI_MODEL` | If using OpenAI | `gpt-4-mini` | OpenAI model name (e.g., `gpt-4`, `gpt-4-mini`, `gpt-3.5-turbo`) |
+| `CLOUDINARY_URL` | Recommended for uploads | - | Cloudinary connection URL, e.g. `cloudinary://api-key:api-secret@cloud-name` |
+| `CLOUDINARY_CLOUD_NAME` | If using Cloudinary | - | Cloudinary cloud name; can also be derived from `CLOUDINARY_URL` |
+| `CLOUDINARY_UPLOAD_FOLDER` | Optional | `mizan/uploads` | Cloudinary folder for uploaded legal documents and images |
 | `NEXT_PUBLIC_APP_URL` | Optional | `http://localhost:3000` | Public app URL for external links and callbacks |
 
 ### Sample `.env` Configuration
@@ -1206,6 +1237,11 @@ GEMINI_MODEL="gemini-1.5-flash"
 # OpenAI Configuration (if using OpenAI instead of Gemini)
 # OPENAI_API_KEY="your-openai-api-key-here"
 # OPENAI_MODEL="gpt-4-mini"
+
+# Cloudinary storage
+CLOUDINARY_URL="cloudinary://your-api-key:your-api-secret@your-cloud-name"
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_UPLOAD_FOLDER="mizan/uploads"
 
 # Application
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
@@ -1270,17 +1306,20 @@ The seed also creates:
 
 ## Generated Files and Storage
 
-### File Storage (Development)
+### File Storage
 
-MIZAN currently uses local filesystem storage under `public/`:
+MIZAN supports Cloudinary-backed upload storage for user documents and images. When Cloudinary is configured, uploaded files are stored remotely and the `Document` record keeps the secure URL, public id, resource type, and extraction diagnostics in `metadata`.
+
+Local filesystem storage under `public/` is still used as a development fallback and for generated artifacts such as exports/redactions:
 
 | Directory | Purpose | Content Type | Notes |
 | --- | --- | --- | --- |
-| `public/uploads` | Original uploaded files | PDF, DOCX, PNG, JPG | Development only; move to S3 for production |
+| Cloudinary `mizan/uploads` | Original uploaded files | PDF, DOCX, PNG, JPG, other supported documents | Primary upload storage when configured |
+| `public/uploads` | Original uploaded files | PDF, DOCX, PNG, JPG | Development fallback only |
 | `public/redactions` | Masked text outputs | PDF, TXT | Temporary redacted copies for sharing |
 | `public/exports` | PDF case bundles | PDF | Complete case export with documents |
 
-**Production recommendation:** Migrate to durable object storage like AWS S3, Google Cloud Storage, or Cloudflare R2 for:
+**Production recommendation:** keep uploaded originals in durable object storage such as Cloudinary, S3, Google Cloud Storage, or Cloudflare R2 for:
 - Scalability and reliability
 - Automatic backups
 - CDN support for faster downloads
@@ -1601,7 +1640,8 @@ rm -rf node_modules/.next
 
 - Check file size limits
 - Check supported file types (PDF, DOCX, images)
-- Check `public/uploads` directory permissions
+- Check Cloudinary variables: `CLOUDINARY_URL`, `CLOUDINARY_CLOUD_NAME`, and `CLOUDINARY_UPLOAD_FOLDER`
+- If Cloudinary is not configured, check `public/uploads` directory permissions for local fallback
 - Check browser console for client errors
 
 ### AI chat not working
@@ -1610,6 +1650,8 @@ rm -rf node_modules/.next
 - Check API keys are valid
 - Check rate limits haven't been exceeded
 - Try with mock provider for testing
+- For agent actions, confirm in the same thread with the Approve button or a clear reply such as `yes`, `yes please`, `approve`, or `go ahead`
+- Check server logs for `[AGENT_ACTION_CONFIRMATION_ERROR]` if a proposal shows but the database action does not complete
 
 ## Reporting Issues
 

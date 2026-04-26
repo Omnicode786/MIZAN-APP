@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       const latestMessages = await prisma.assistantMessage.findMany({
         where: { threadId },
         orderBy: { createdAt: "desc" },
-        take: 5,
+        take: 12,
         select: {
           role: true,
           content: true

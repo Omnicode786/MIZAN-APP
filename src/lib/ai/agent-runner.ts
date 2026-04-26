@@ -150,26 +150,36 @@ function formatRecentThreadMessages(messages?: RecentAgentMessage[]) {
     .slice(0, 5000);
 }
 
+function normalizeActionReply(question: string) {
+  return question
+    .toLowerCase()
+    .replace(/[.,!?;:'"`()[\]{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function isActionConfirmation(question: string) {
-  const normalized = question.toLowerCase().replace(/\s+/g, " ").trim();
+  const normalized = normalizeActionReply(question);
   if (!normalized || isActionRejection(question)) return false;
 
   return [
-    /^(yes|yeah|yep|ok|okay|confirm|confirmed|proceed)$/i,
-    /\b(yes|confirm|confirmed|proceed|go ahead)\b[\s\S]{0,64}\b(create|add|save|publish|apply|database|workspace|case|deadline|draft|template|timeline|note|roadmap|it)\b/i,
+    /^(yes|yeah|yep|ok|okay|confirm|confirmed|proceed|approved|approve|sure|done|do it|yes please|ok please|okay please|go ahead|haan|han|ji|jee|theek hai|kar do|kardo|save it|add it|create it|apply it)$/i,
+    /\b(yes|yeah|yep|ok|okay|sure|confirm|confirmed|approve|approved|proceed|go ahead|haan|han|ji|jee|theek hai)\b[\s\S]{0,80}\b(create|add|save|publish|apply|database|workspace|case|deadline|draft|template|timeline|note|roadmap|it|this|please)\b/i,
     /\b(create|add|save|publish|apply)\b[\s\S]{0,64}\b(it|this|this case|the case|case|deadline|draft|template|timeline|note|roadmap|database|workspace)\b/i,
-    /\b(add|save|apply)\b[\s\S]{0,32}\b(database|workspace|changes|action)\b/i
+    /\b(add|save|apply)\b[\s\S]{0,32}\b(database|workspace|changes|action)\b/i,
+    /\b(kar do|kardo|save kar do|add kar do|create kar do)\b/i
   ].some((pattern) => pattern.test(normalized));
 }
 
 function isActionRejection(question: string) {
-  const normalized = question.toLowerCase().replace(/\s+/g, " ").trim();
+  const normalized = normalizeActionReply(question);
 
   return [
-    /^(no|nope|cancel|stop|reject)$/i,
+    /^(no|nope|cancel|stop|reject|rejected|not now|no thanks|nah|nahi|naheen)$/i,
     /\b(cancel|reject|stop)\b[\s\S]{0,32}\b(case|it|creation|intake|action|save|draft|deadline|timeline)?\b/i,
     /\b(do not|don't|dont)\b[\s\S]{0,24}\b(create|add|save|publish|apply)\b/i,
-    /\bnot now\b/i
+    /\bnot now\b/i,
+    /\b(nahi|naheen|mat)\b[\s\S]{0,24}\b(karo|karna|save|add|create)\b/i
   ].some((pattern) => pattern.test(normalized));
 }
 
@@ -801,6 +811,21 @@ function toActionMeta(toolName: AgentToolName, result: AgentToolResult): Assista
   };
 }
 
+function toMutationConclusionMeta(toolName: AgentToolName, result: AgentToolResult): AssistantActionMeta {
+  const existing = toActionMeta(toolName, result);
+  if (existing) {
+    return existing;
+  }
+
+  return {
+    tool: toolName,
+    title: result.ok ? "Agent action completed" : "Agent action not completed",
+    message: result.message || (result.ok ? "The action was completed." : "The action could not be completed."),
+    status: result.status || (result.ok ? "success" : "error"),
+    action: result.action
+  };
+}
+
 async function fallbackAnswer(options: {
   question: string;
   caseId?: string;
@@ -862,11 +887,18 @@ export async function runAgentTurn({
     const proposalTool = getAgentTool(pendingMutationProposal.tool);
 
     if (!proposalTool || !proposalTool.allowedRoles.includes(currentUser.role) || !isMutationTool(proposalTool.name)) {
+      const deniedMessage = await localizeSimpleText(
+        "I cannot apply that action from this account. I can still help you prepare the information manually.",
+        language
+      );
+
       return {
-        text: await localizeSimpleText(
-          "I cannot apply that action from this account. I can still help you prepare the information manually.",
-          language
-        ),
+        text: appendAssistantActionMeta(deniedMessage, {
+          tool: pendingMutationProposal.tool,
+          title: "Action not allowed",
+          message: deniedMessage,
+          status: "error"
+        }),
         confidence: 0.86,
         sources: ["Pending assistant proposal"]
       };
@@ -876,11 +908,18 @@ export async function runAgentTurn({
       withContextDefaults(pendingMutationProposal.arguments || {}, { caseId, documentId })
     );
     if (!parsedProposal.success) {
+      const validationMessage = await localizeSimpleText(
+        "The saved action preview is missing essential details. Please tell me the request again and I will prepare a fresh preview before saving anything.",
+        language
+      );
+
       return {
-        text: await localizeSimpleText(
-          "The saved action preview is missing essential details. Please tell me the request again and I will prepare a fresh preview before saving anything.",
-          language
-        ),
+        text: appendAssistantActionMeta(validationMessage, {
+          tool: proposalTool.name,
+          title: "Action needs a fresh preview",
+          message: validationMessage,
+          status: "error"
+        }),
         confidence: 0.78,
         sources: ["Pending assistant proposal"]
       };
@@ -890,11 +929,18 @@ export async function runAgentTurn({
       proposalTool.name === "create_case" &&
       !hasMinimumCasePreviewData(parsedProposal.data as Record<string, unknown>)
     ) {
+      const validationMessage = await localizeSimpleText(
+        "The saved case preview is missing essential details. Please tell me the key facts again and I will prepare a fresh preview before saving it.",
+        language
+      );
+
       return {
-        text: await localizeSimpleText(
-          "The saved case preview is missing essential details. Please tell me the key facts again and I will prepare a fresh preview before saving it.",
-          language
-        ),
+        text: appendAssistantActionMeta(validationMessage, {
+          tool: proposalTool.name,
+          title: "Case preview needs details",
+          message: validationMessage,
+          status: "error"
+        }),
         confidence: 0.78,
         sources: ["Pending case preview"]
       };
@@ -913,7 +959,7 @@ export async function runAgentTurn({
         parsedProposal.data
       );
       const localizedResult = await localizeToolResult(rawResult, language);
-      const actionMeta = toActionMeta(proposalTool.name, localizedResult);
+      const actionMeta = toMutationConclusionMeta(proposalTool.name, localizedResult);
 
       return {
         text: appendAssistantActionMeta(localizedResult.message, actionMeta),
@@ -927,8 +973,18 @@ export async function runAgentTurn({
         error
       });
 
+      const failureMessage = await localizeSimpleText(
+        "I could not complete that action right now. Please try again.",
+        language
+      );
+
       return {
-        text: await localizeSimpleText("I could not complete that action right now. Please try again.", language),
+        text: appendAssistantActionMeta(failureMessage, {
+          tool: proposalTool.name,
+          title: "Agent action failed",
+          message: failureMessage,
+          status: "error"
+        }),
         confidence: 0.7,
         sources: [`Tool: ${proposalTool.name}`],
         toolName: proposalTool.name
