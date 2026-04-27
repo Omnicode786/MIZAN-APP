@@ -13,8 +13,35 @@ export default async function LawyerReviewPage() {
   const lawyerProfileId = user?.lawyerProfile?.id;
   const assignments = await prisma.caseAssignment.findMany({
     where: lawyerProfileId ? { lawyerProfileId } : { id: "__NO_ACCESS__" },
-    include: { case: { include: { client: { include: { user: true } } } }, lawyer: { include: { user: true } } },
-    orderBy: { updatedAt: "desc" }
+    select: {
+      id: true,
+      caseId: true,
+      lawyerProfileId: true,
+      status: true,
+      feeProposal: true,
+      probability: true,
+      proposalNotes: true,
+      updatedAt: true,
+      case: {
+        select: {
+          id: true,
+          title: true,
+          client: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 50
   });
 
   return (

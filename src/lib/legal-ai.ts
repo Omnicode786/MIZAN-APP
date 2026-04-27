@@ -137,15 +137,86 @@ function needsLegalAnalysisFormat(question: string, hasCaseOrDocumentContext: bo
 export async function buildCaseContext(caseId: string) {
   const legalCase = await prisma.case.findUnique({
     where: { id: caseId },
-    include: {
-      client: { include: { user: true } },
-      assignments: { include: { lawyer: { include: { user: true } } } },
-      documents: { orderBy: { createdAt: "desc" } },
-      evidenceItems: { orderBy: { createdAt: "desc" } },
-      timelineEvents: { orderBy: { eventDate: "asc" } },
-      deadlines: { orderBy: { dueDate: "asc" } },
-      drafts: { orderBy: { updatedAt: "desc" }, take: 3 },
-      riskScores: true
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      status: true,
+      stage: true,
+      description: true,
+      client: {
+        select: {
+          user: {
+            select: {
+              name: true
+            }
+          }
+        }
+      },
+      documents: {
+        select: {
+          id: true,
+          fileName: true,
+          probableCategory: true,
+          aiSummary: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: "desc" },
+        take: 8
+      },
+      evidenceItems: {
+        select: {
+          id: true,
+          label: true,
+          summary: true,
+          evidenceStrength: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: "desc" },
+        take: 12
+      },
+      timelineEvents: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          eventDate: true,
+          sourceLabel: true
+        },
+        orderBy: { eventDate: "asc" },
+        take: 20
+      },
+      deadlines: {
+        select: {
+          id: true,
+          title: true,
+          dueDate: true,
+          notes: true,
+          status: true,
+          importance: true
+        },
+        orderBy: { dueDate: "asc" },
+        take: 15
+      },
+      drafts: {
+        select: {
+          id: true,
+          title: true,
+          currentContent: true,
+          type: true,
+          verificationStatus: true
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 3
+      },
+      riskScores: {
+        select: {
+          dimension: true,
+          score: true,
+          label: true,
+          rationale: true
+        }
+      }
     }
   });
 
@@ -161,7 +232,7 @@ export async function buildCaseContext(caseId: string) {
     `Documents:`,
     ...legalCase.documents.map(
       (doc) =>
-        `- ${doc.fileName}: ${compact(doc.aiSummary || doc.extractedText, "No summary available.").slice(0, 1200)}`
+        `- ${doc.fileName}: ${compact(doc.aiSummary, "No summary available.").slice(0, 1200)}`
     ),
     `Evidence:`,
     ...legalCase.evidenceItems.map((item) => `- ${item.label}: ${compact(item.summary)}`),
@@ -186,7 +257,21 @@ async function buildMizanLawyerDirectoryContext() {
   try {
     const lawyers = await prisma.lawyerProfile.findMany({
       where: { isPublic: true },
-      include: { user: true },
+      select: {
+        id: true,
+        firmName: true,
+        city: true,
+        specialties: true,
+        yearsExperience: true,
+        rating: true,
+        fixedFeeFrom: true,
+        verifiedBadge: true,
+        user: {
+          select: {
+            name: true
+          }
+        }
+      },
       orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }],
       take: 12
     });

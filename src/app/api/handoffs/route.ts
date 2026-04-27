@@ -5,8 +5,9 @@ import {
   buildLawyerHandoffMarkdown,
   writeMarkdownPacket
 } from "@/lib/case-packets";
+import { getCasePacketDetail } from "@/lib/data-access";
 import { recordExportMetric, withApiObservability } from "@/lib/observability";
-import { getAccessibleCase, logActivity } from "@/lib/permissions";
+import { logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -17,7 +18,8 @@ export async function POST(request: Request) {
   return withApiObservability(request, { route: "/api/handoffs", feature: "exports.handoff" }, async () => {
     try {
       const body = schema.parse(await request.json());
-      const { user, legalCase } = await getAccessibleCase(body.caseId);
+      const user = await requireUser();
+      const legalCase = await getCasePacketDetail(body.caseId, false, user);
       if (!legalCase) {
         throw new Error("Not found");
       }

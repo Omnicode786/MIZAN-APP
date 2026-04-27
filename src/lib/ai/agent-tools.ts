@@ -16,6 +16,7 @@ import {
   type AppUser
 } from "@/lib/permissions";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
+import { getCasePacketDetail } from "@/lib/data-access";
 
 export type AgentToolName =
   | "create_case"
@@ -1727,18 +1728,7 @@ const toolDefinitions: AgentToolDefinition[] = [
       const resolved = await resolveCaseReference(currentUser, args);
       if ("error" in resolved) return { ok: false, message: resolved.error, status: "info" };
 
-      const legalCase = await prisma.case.findFirst({
-        where: buildAccessibleCaseWhereForUser(currentUser, resolved.legalCase.id),
-        include: {
-          client: { include: { user: true } },
-          assignments: { include: { lawyer: { include: { user: true } } } },
-          documents: { orderBy: { createdAt: "desc" } },
-          evidenceItems: { orderBy: { createdAt: "desc" } },
-          timelineEvents: { orderBy: { eventDate: "asc" } },
-          deadlines: { orderBy: { dueDate: "asc" } },
-          drafts: { orderBy: { updatedAt: "desc" } }
-        }
-      });
+      const legalCase = await getCasePacketDetail(resolved.legalCase.id, false, currentUser);
       if (!legalCase) return { ok: false, message: "I could not find that case right now.", status: "error" };
 
       const markdown = buildLawyerHandoffMarkdown(legalCase);
@@ -1803,19 +1793,7 @@ const toolDefinitions: AgentToolDefinition[] = [
       if ("error" in resolved) return { ok: false, message: resolved.error, status: "info" };
 
       const includePrivateNotes = currentUser.role === "LAWYER" ? Boolean(args.includePrivateNotes) : false;
-      const legalCase = await prisma.case.findFirst({
-        where: buildAccessibleCaseWhereForUser(currentUser, resolved.legalCase.id),
-        include: {
-          client: { include: { user: true } },
-          documents: { orderBy: { createdAt: "desc" } },
-          timelineEvents: { orderBy: { eventDate: "asc" } },
-          deadlines: { orderBy: { dueDate: "asc" } },
-          drafts: { orderBy: { updatedAt: "desc" } },
-          internalNotes: includePrivateNotes
-            ? { include: { author: true }, orderBy: { createdAt: "desc" } }
-            : false
-        }
-      });
+      const legalCase = await getCasePacketDetail(resolved.legalCase.id, includePrivateNotes, currentUser);
       if (!legalCase) return { ok: false, message: "I could not find that case right now.", status: "error" };
 
       const markdown = buildCourtReadyBundleMarkdown(legalCase, includePrivateNotes);
@@ -1881,9 +1859,43 @@ const toolDefinitions: AgentToolDefinition[] = [
 
       const legalCase = await prisma.case.findFirst({
         where: buildAccessibleCaseWhereForUser(currentUser, resolved.legalCase.id),
-        include: {
-          client: { include: { user: true } },
-          assignments: { include: { lawyer: { include: { user: true } } } }
+        select: {
+          id: true,
+          title: true,
+          clientProfileId: true,
+          client: {
+            select: {
+              userId: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          },
+          assignments: {
+            select: {
+              id: true,
+              lawyerProfileId: true,
+              status: true,
+              lawyer: {
+                select: {
+                  id: true,
+                  userId: true,
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true
+                    }
+                  }
+                }
+              }
+            },
+            take: 50
+          }
         }
       });
       if (!legalCase) return { ok: false, message: "I could not find that case right now.", status: "error" };
@@ -2118,7 +2130,18 @@ const toolDefinitions: AgentToolDefinition[] = [
 
       const publicLawyers = await prisma.lawyerProfile.findMany({
         where: { isPublic: true },
-        include: { user: true },
+        select: {
+          id: true,
+          specialties: true,
+          city: true,
+          verifiedBadge: true,
+          rating: true,
+          user: {
+            select: {
+              name: true
+            }
+          }
+        },
         orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }],
         take: 10
       });

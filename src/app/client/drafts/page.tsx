@@ -13,8 +13,28 @@ export default async function ClientDraftsPage() {
   const clientProfileId = user?.clientProfile?.id;
   const drafts = await prisma.draft.findMany({
     where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
-    include: { case: true, versions: true },
-    orderBy: { updatedAt: "desc" }
+    select: {
+      id: true,
+      caseId: true,
+      title: true,
+      type: true,
+      currentContent: true,
+      verificationStatus: true,
+      updatedAt: true,
+      case: {
+        select: {
+          id: true,
+          title: true
+        }
+      },
+      _count: {
+        select: {
+          versions: true
+        }
+      }
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 50
   });
 
   return (
@@ -38,7 +58,7 @@ export default async function ClientDraftsPage() {
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{draft.currentContent.slice(0, 280)}{draft.currentContent.length > 280 ? '...' : ''}</p>
               <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-foreground">
-                <span>{draft.versions.length} versions</span>
+                <span>{draft._count.versions} versions</span>
                 <Button asChild variant="outline"><Link href={`/client/cases/${draft.caseId}`}>Open case</Link></Button>
               </div>
             </CardContent>

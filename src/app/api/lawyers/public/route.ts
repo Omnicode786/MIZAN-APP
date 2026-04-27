@@ -22,8 +22,27 @@ export async function GET(request: NextRequest) {
               ]
             : undefined
         },
-        include: { user: true },
-        orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }]
+        select: {
+          id: true,
+          firmName: true,
+          bio: true,
+          specialties: true,
+          yearsExperience: true,
+          hourlyRate: true,
+          fixedFeeFrom: true,
+          isPublic: true,
+          verifiedBadge: true,
+          rating: true,
+          city: true,
+          user: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }],
+        take: 60
       });
 
       return NextResponse.json({ lawyers });

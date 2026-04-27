@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,
@@ -90,14 +90,26 @@ export function CaseWorkspaceLive({
   const [draftType, setDraftType] = useState("LEGAL_NOTICE");
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [lazySections, setLazySections] = useState({
+    documents: asArray(initialCase.documents),
+    evidenceItems: asArray(initialCase.evidenceItems),
+    timelineEvents: asArray(initialCase.timelineEvents),
+    activityLogs: asArray(initialCase.activityLogs)
+  });
+  const [sectionTotals, setSectionTotals] = useState({
+    documents: initialCase._count?.documents ?? asArray(initialCase.documents).length,
+    evidenceItems: initialCase._count?.evidenceItems ?? asArray(initialCase.evidenceItems).length,
+    timelineEvents: initialCase._count?.timelineEvents ?? asArray(initialCase.timelineEvents).length,
+    activityLogs: initialCase._count?.activityLogs ?? asArray(initialCase.activityLogs).length
+  });
 
-  const documents = asArray(initialCase.documents);
+  const documents = lazySections.documents;
   const deadlines = asArray(initialCase.deadlines);
   const drafts = asArray(initialCase.drafts);
   const comments = asArray(initialCase.comments);
   const internalNotes = asArray(initialCase.internalNotes);
-  const activityLogs = asArray(initialCase.activityLogs);
-  const timelineEvents = asArray(initialCase.timelineEvents);
+  const activityLogs = lazySections.activityLogs;
+  const timelineEvents = lazySections.timelineEvents;
   const assignments = asArray(initialCase.assignments);
   const agentActionReviews = asArray(initialCase.agentActionReviews);
   const exportBundles = asArray(initialCase.exportBundles);
@@ -107,6 +119,45 @@ export function CaseWorkspaceLive({
     () => assignments.filter((item: any) => item.status === "PENDING"),
     [assignments]
   );
+
+  const loadCaseSections = useCallback(async (signal?: AbortSignal) => {
+    const [documentsRes, timelineRes, evidenceRes, activityRes] = await Promise.all([
+      fetch(`/api/cases/${initialCase.id}/documents?limit=20`, { signal, cache: "no-store" }),
+      fetch(`/api/cases/${initialCase.id}/timeline?limit=50`, { signal, cache: "no-store" }),
+      fetch(`/api/cases/${initialCase.id}/evidence?limit=50`, { signal, cache: "no-store" }),
+      fetch(`/api/cases/${initialCase.id}/activity?limit=30`, { signal, cache: "no-store" })
+    ]);
+
+    const [documentsData, timelineData, evidenceData, activityData] = await Promise.all([
+      documentsRes.ok ? documentsRes.json() : Promise.resolve(null),
+      timelineRes.ok ? timelineRes.json() : Promise.resolve(null),
+      evidenceRes.ok ? evidenceRes.json() : Promise.resolve(null),
+      activityRes.ok ? activityRes.json() : Promise.resolve(null)
+    ]);
+
+    setLazySections({
+      documents: asArray(documentsData?.documents),
+      timelineEvents: asArray(timelineData?.timelineEvents),
+      evidenceItems: asArray(evidenceData?.evidenceItems),
+      activityLogs: asArray(activityData?.activityLogs)
+    });
+    setSectionTotals({
+      documents: Number(documentsData?.total ?? documentsData?.documents?.length ?? 0),
+      timelineEvents: Number(timelineData?.total ?? timelineData?.timelineEvents?.length ?? 0),
+      evidenceItems: Number(evidenceData?.total ?? evidenceData?.evidenceItems?.length ?? 0),
+      activityLogs: Number(activityData?.total ?? activityData?.activityLogs?.length ?? 0)
+    });
+  }, [initialCase.id]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadCaseSections(controller.signal).catch((error) => {
+      if (error instanceof Error && error.name === "AbortError") return;
+      setNotice({ type: "error", text: "Some workspace sections could not be loaded." });
+    });
+
+    return () => controller.abort();
+  }, [loadCaseSections]);
 
   async function refresh() {
     router.refresh();
@@ -176,6 +227,7 @@ export function CaseWorkspaceLive({
       const res = await fetch("/api/documents/upload", { method: "POST", body: form });
       await requireOk(res, "Unable to upload document.");
       showSuccess("Document uploaded and queued for analysis.");
+      await loadCaseSections();
       refresh();
     } catch (error) {
       showError(error, "Unable to upload document.");
@@ -191,6 +243,7 @@ export function CaseWorkspaceLive({
       const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
       await requireOk(res, "Unable to delete document.");
       showSuccess("Document deleted.");
+      await loadCaseSections();
       refresh();
     } catch (error) {
       showError(error, "Unable to delete document.");
@@ -215,6 +268,7 @@ export function CaseWorkspaceLive({
       setComment("");
       setPrivateNote("");
       showSuccess(visibility === "PRIVATE" ? "Internal note saved." : "Comment added.");
+      await loadCaseSections();
       refresh();
     } catch (error) {
       showError(error, "Unable to save message.");
@@ -234,6 +288,7 @@ export function CaseWorkspaceLive({
       });
       await requireOk(res, "Unable to delete comment.");
       showSuccess("Comment deleted.");
+      await loadCaseSections();
       refresh();
     } catch (error) {
       showError(error, "Unable to delete comment.");
@@ -262,6 +317,7 @@ export function CaseWorkspaceLive({
       setDeadlineTitle("");
       setDeadlineDate("");
       showSuccess("Deadline added.");
+      await loadCaseSections();
       refresh();
     } catch (error) {
       showError(error, "Unable to create deadline.");
@@ -281,6 +337,7 @@ export function CaseWorkspaceLive({
       });
       await requireOk(res, "Unable to update deadline.");
       showSuccess("Deadline updated.");
+      await loadCaseSections();
       refresh();
     } catch (error) {
       showError(error, "Unable to update deadline.");
@@ -300,6 +357,7 @@ export function CaseWorkspaceLive({
       });
       await requireOk(res, "Unable to delete deadline.");
       showSuccess("Deadline deleted.");
+      await loadCaseSections();
       refresh();
     } catch (error) {
       showError(error, "Unable to delete deadline.");
@@ -582,10 +640,10 @@ export function CaseWorkspaceLive({
               </div>
 
               <div className="grid w-full min-w-0 grid-cols-2 gap-3 md:grid-cols-4 xl:max-w-[520px]">
-                <MetricCard label="Documents" value={documents.length} />
+                <MetricCard label="Documents" value={sectionTotals.documents} />
                 <MetricCard label="Deadlines" value={deadlines.length} />
                 <MetricCard label="Drafts" value={drafts.length} />
-                <MetricCard label="Activity" value={activityLogs.length} />
+                <MetricCard label="Activity" value={sectionTotals.activityLogs} />
               </div>
             </div>
           </div>

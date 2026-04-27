@@ -31,6 +31,50 @@ function parseOptionalDate(value?: string) {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
+const consultationSelect = {
+  id: true,
+  caseId: true,
+  clientProfileId: true,
+  lawyerProfileId: true,
+  assignmentId: true,
+  requestedById: true,
+  status: true,
+  scheduledAt: true,
+  durationMinutes: true,
+  feeAmount: true,
+  paymentStatus: true,
+  paymentReference: true,
+  meetingMode: true,
+  meetingLink: true,
+  notes: true,
+  createdAt: true,
+  updatedAt: true,
+  case: { select: { id: true, title: true } },
+  lawyer: {
+    select: {
+      id: true,
+      firmName: true,
+      userId: true,
+      user: { select: { id: true, name: true, email: true } }
+    }
+  },
+  client: {
+    select: {
+      id: true,
+      userId: true,
+      user: { select: { id: true, name: true, email: true } }
+    }
+  },
+  assignment: {
+    select: {
+      id: true,
+      status: true,
+      feeProposal: true,
+      probability: true
+    }
+  }
+};
+
 export async function GET(request: Request) {
   try {
     const user = await requireUser();
@@ -52,12 +96,7 @@ export async function GET(request: Request) {
 
     const consultations = await prisma.consultationBooking.findMany({
       where,
-      include: {
-        case: { select: { id: true, title: true } },
-        lawyer: { include: { user: true } },
-        client: { include: { user: true } },
-        assignment: true
-      },
+      select: consultationSelect,
       orderBy: { updatedAt: "desc" },
       take: 50
     });
@@ -75,9 +114,31 @@ export async function POST(request: Request) {
 
     const legalCase = await prisma.case.findFirst({
       where: buildAccessibleCaseWhereForUser(user, body.caseId),
-      include: {
-        client: { include: { user: true } },
-        assignments: { include: { lawyer: { include: { user: true } } } }
+      select: {
+        id: true,
+        title: true,
+        clientProfileId: true,
+        client: {
+          select: {
+            userId: true,
+            user: { select: { id: true, name: true, email: true } }
+          }
+        },
+        assignments: {
+          select: {
+            id: true,
+            lawyerProfileId: true,
+            status: true,
+            lawyer: {
+              select: {
+                id: true,
+                userId: true,
+                user: { select: { id: true, name: true, email: true } }
+              }
+            }
+          },
+          take: 50
+        }
       }
     });
     if (!legalCase) return notFound();
@@ -94,7 +155,11 @@ export async function POST(request: Request) {
       if (!assignment && body.lawyerProfileId) {
         const lawyer = await prisma.lawyerProfile.findFirst({
           where: { id: body.lawyerProfileId, isPublic: true },
-          include: { user: true }
+          select: {
+            id: true,
+            userId: true,
+            user: { select: { id: true, name: true, email: true } }
+          }
         });
         if (!lawyer) return notFound();
 
@@ -111,7 +176,18 @@ export async function POST(request: Request) {
             status: "PENDING"
           },
           update: { status: "PENDING" },
-          include: { lawyer: { include: { user: true } } }
+          select: {
+            id: true,
+            lawyerProfileId: true,
+            status: true,
+            lawyer: {
+              select: {
+                id: true,
+                userId: true,
+                user: { select: { id: true, name: true, email: true } }
+              }
+            }
+          }
         });
       }
 
@@ -131,11 +207,7 @@ export async function POST(request: Request) {
           meetingMode: body.meetingMode || "ONLINE",
           notes: body.notes
         },
-        include: {
-          lawyer: { include: { user: true } },
-          client: { include: { user: true } },
-          case: true
-        }
+        select: consultationSelect
       });
 
       await logActivity(legalCase.id, user.id, "CONSULTATION_REQUESTED", "Requested a paid consultation.");
@@ -170,11 +242,7 @@ export async function POST(request: Request) {
         meetingLink: body.meetingLink,
         notes: body.notes
       },
-      include: {
-        lawyer: { include: { user: true } },
-        client: { include: { user: true } },
-        case: true
-      }
+      select: consultationSelect
     });
 
     await logActivity(legalCase.id, user.id, "CONSULTATION_PROPOSED", "Proposed a paid consultation.");

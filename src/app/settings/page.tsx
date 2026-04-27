@@ -51,7 +51,8 @@ export default async function SearchPage() {
     },
     orderBy: {
       updatedAt: "desc"
-    }
+    },
+    take: 40
   });
 
   return (

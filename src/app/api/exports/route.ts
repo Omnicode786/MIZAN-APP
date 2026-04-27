@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { handleApiError, notFound, unauthorized } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+import { getCasePacketDetail } from "@/lib/data-access";
 import { recordExportMetric, withApiObservability } from "@/lib/observability";
-import { getAccessibleCase, logActivity } from "@/lib/permissions";
+import { logActivity } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { createCaseBundlePdf } from "@/lib/pdf/export";
 import {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
 
     const body = schema.parse(await request.json());
 
-    const { legalCase } = await getAccessibleCase(body.caseId);
+    const legalCase = await getCasePacketDetail(body.caseId, user.role === "LAWYER" && body.includePrivateNotes, user);
     if (!legalCase) return notFound();
 
     if (body.bundleType === "court_ready_bundle") {

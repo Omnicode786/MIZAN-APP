@@ -12,7 +12,17 @@ export default async function ClientDeadlinesPage() {
   const clientProfileId = user?.clientProfile?.id;
   const deadlines = await prisma.deadline.findMany({
     where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
-    orderBy: { dueDate: "asc" }
+    select: {
+      id: true,
+      caseId: true,
+      title: true,
+      dueDate: true,
+      notes: true,
+      status: true,
+      importance: true
+    },
+    orderBy: { dueDate: "asc" },
+    take: 100
   });
 
   return (

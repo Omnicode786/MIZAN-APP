@@ -33,21 +33,63 @@ export async function GET() {
                 }
               }
             },
-            include: {
-              assignments: { include: { lawyer: { include: { user: true } } } },
-              deadlines: true,
-              documents: true
+            select: {
+              id: true,
+              title: true,
+              category: true,
+              status: true,
+              priority: true,
+              stage: true,
+              description: true,
+              caseHealthScore: true,
+              evidenceCompleteness: true,
+              evidenceStrength: true,
+              deadlineRisk: true,
+              draftReadiness: true,
+              escalationReadiness: true,
+              updatedAt: true,
+              createdAt: true,
+              _count: {
+                select: {
+                  documents: true,
+                  deadlines: true,
+                  drafts: true,
+                  activityLogs: true
+                }
+              }
             },
-            orderBy: { updatedAt: "desc" }
+            orderBy: { updatedAt: "desc" },
+            take: 40
           })
         : await prisma.case.findMany({
             where: { clientProfileId },
-            include: {
-              assignments: { include: { lawyer: { include: { user: true } } } },
-              deadlines: true,
-              documents: true
+            select: {
+              id: true,
+              title: true,
+              category: true,
+              status: true,
+              priority: true,
+              stage: true,
+              description: true,
+              caseHealthScore: true,
+              evidenceCompleteness: true,
+              evidenceStrength: true,
+              deadlineRisk: true,
+              draftReadiness: true,
+              escalationReadiness: true,
+              updatedAt: true,
+              createdAt: true,
+              _count: {
+                select: {
+                  documents: true,
+                  deadlines: true,
+                  drafts: true,
+                  activityLogs: true
+                }
+              }
             },
-            orderBy: { updatedAt: "desc" }
+            orderBy: { updatedAt: "desc" },
+            take: 40
           });
 
     return NextResponse.json({ cases });
