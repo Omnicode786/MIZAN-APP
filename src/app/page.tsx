@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
+import { ThemePresetToggle } from "@/components/theme-preset-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { useLanguage } from "@/hooks/use-language";
@@ -328,6 +329,7 @@ export default function LandingPage() {
 
             <div className="col-span-6 flex items-center justify-end gap-3 lg:col-span-4">
               <LanguageToggle compact />
+              <ThemePresetToggle compact className="hidden max-w-[145px] xl:inline-flex" />
               <UiModeToggle compact className="h-8 rounded-xl px-2.5" />
               <ThemeToggle className="h-8 w-8 rounded-xl" />
               <Button asChild variant="ghost" className="hidden h-8 rounded-xl px-3 text-[14px] sm:inline-flex">

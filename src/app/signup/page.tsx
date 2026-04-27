@@ -13,6 +13,7 @@ import {
 import { LanguageToggle } from "@/components/language-toggle";
 import { SignupForm } from "@/components/auth/signup-form";
 import { Logo } from "@/components/logo";
+import { ThemePresetToggle } from "@/components/theme-preset-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { useLanguage } from "@/hooks/use-language";
@@ -70,6 +71,7 @@ export default function SignupPage() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <LanguageToggle compact />
+            <ThemePresetToggle compact className="hidden max-w-[145px] xl:inline-flex" />
             <UiModeToggle compact className="rounded-full px-3" />
             <ThemeToggle className="rounded-full" />
 
