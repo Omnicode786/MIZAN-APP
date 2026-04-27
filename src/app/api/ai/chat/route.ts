@@ -6,6 +6,7 @@ import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/li
 import { runAgentTurn } from "@/lib/ai/agent-runner";
 import { createAgentActionReviewFromAssistantMessage } from "@/lib/agent-action-reviews";
 import { normalizeLanguage } from "@/lib/language";
+import { withApiObservability } from "@/lib/observability";
 import { getAccessibleCase } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -23,7 +24,8 @@ const AGENT_INTENT_PATTERN =
   /\b(create|open|start|make|file|save|add|update|change|generate|prepare|build|summarize|explain|find|list|analyze|classify|review|check|score|rate|request|book|schedule|propose)\b[\s\S]{0,90}\b(case|matter|database|workspace|deadline|timeline|event|draft|notice|template|roadmap|handoff|packet|bundle|court|annexure|consultation|meeting|hearing|evidence|document|gap|checklist|health|lawyer|note|it|this)\b/i;
 
 export async function POST(request: Request) {
-  try {
+  return withApiObservability(request, { route: "/api/ai/chat", feature: "ai.chat" }, async () => {
+    try {
     const user = await getCurrentUserWithProfile();
     if (!user) return unauthorized();
 
@@ -170,7 +172,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ thread, message });
-  } catch (error) {
-    return handleApiError(error, "AI_CHAT_ROUTE", "Unable to process this request right now.");
-  }
+    } catch (error) {
+      return handleApiError(error, "AI_CHAT_ROUTE", "Unable to process this request right now.");
+    }
+  });
 }

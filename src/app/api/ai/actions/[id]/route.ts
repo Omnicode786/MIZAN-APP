@@ -7,6 +7,7 @@ import {
 } from "@/lib/agent-action-reviews";
 import { stripAssistantActionMeta } from "@/lib/assistant-message-meta";
 import { normalizeLanguage } from "@/lib/language";
+import { recordQueueMetric, withApiObservability } from "@/lib/observability";
 import { logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -17,12 +18,13 @@ const schema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const user = await requireUser();
-    const body = schema.parse(await request.json());
+  return withApiObservability(request, { route: "/api/ai/actions/[id]", feature: "ai.actions" }, async () => {
+    try {
+      const user = await requireUser();
+      const body = schema.parse(await request.json());
 
-    if (body.decision === "REJECT") {
-      const review = await rejectAgentActionReview({ user, id: params.id });
+      if (body.decision === "REJECT") {
+        const review = await rejectAgentActionReview({ user, id: params.id });
 
       if (review.assistantThreadId) {
         await prisma.assistantMessage.createMany({
@@ -47,18 +49,19 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         await logActivity(review.caseId, user.id, "AI_ACTION_REJECTED", `Rejected AI action: ${review.title}.`);
       }
 
-      return NextResponse.json({ review });
-    }
+        recordQueueMetric(review.tool, "REJECTED", { userId: user.id, reviewId: review.id });
+        return NextResponse.json({ review });
+      }
 
-    if (body.decision !== "APPROVE") return validationError("Invalid decision.");
+      if (body.decision !== "APPROVE") return validationError("Invalid decision.");
 
-    const { review, result } = await approveAgentActionReview({
-      user,
-      id: params.id,
-      language: normalizeLanguage(body.language),
-      question: "Approve this queued AI action.",
-      argumentsOverride: body.arguments
-    });
+      const { review, result } = await approveAgentActionReview({
+        user,
+        id: params.id,
+        language: normalizeLanguage(body.language),
+        question: "Approve this queued AI action.",
+        argumentsOverride: body.arguments
+      });
 
     if (review.assistantThreadId) {
       await prisma.assistantMessage.createMany({
@@ -93,14 +96,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       );
     }
 
-    return NextResponse.json({
-      review,
-      result: {
-        ...result,
-        displayText: stripAssistantActionMeta(result.text)
-      }
-    });
-  } catch (error) {
-    return handleApiError(error, "AI_ACTION_REVIEW_ROUTE", "This assistant action could not be completed.");
-  }
+      recordQueueMetric(review.tool, review.status, { userId: user.id, reviewId: review.id });
+      return NextResponse.json({
+        review,
+        result: {
+          ...result,
+          displayText: stripAssistantActionMeta(result.text)
+        }
+      });
+    } catch (error) {
+      return handleApiError(error, "AI_ACTION_REVIEW_ROUTE", "This assistant action could not be completed.");
+    }
+  });
 }

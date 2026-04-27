@@ -7,6 +7,7 @@ import {
 } from "@/lib/assistant-message-meta";
 import { executeAgentMutationProposal, type AgentRunnerResult } from "@/lib/ai/agent-runner";
 import { normalizeLanguage, type AppLanguage } from "@/lib/language";
+import { recordQueueMetric } from "@/lib/observability";
 import { buildAccessibleCaseWhereForUser, type AppUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -49,7 +50,7 @@ export async function createAgentActionReviewFromAssistantMessage(input: {
   const proposal = proposalFromContent(input.content);
   if (!proposal) return null;
 
-  return prisma.agentActionReview.create({
+  const review = await prisma.agentActionReview.create({
     data: {
       createdById: input.userId,
       caseId: input.caseId,
@@ -63,6 +64,15 @@ export async function createAgentActionReviewFromAssistantMessage(input: {
       arguments: proposal.arguments as Prisma.InputJsonValue
     }
   });
+
+  recordQueueMetric(proposal.tool, "PENDING", {
+    userId: input.userId,
+    reviewId: review.id,
+    caseId: input.caseId,
+    documentId: input.documentId
+  });
+
+  return review;
 }
 
 export async function getAgentActionReviewsForUser(input: {
@@ -159,6 +169,12 @@ export async function approveAgentActionReview(input: {
     throw new Error("This action has already been reviewed.");
   }
 
+  recordQueueMetric(review.tool, "PROCESSING", {
+    userId: input.user.id,
+    reviewId: review.id,
+    caseId: review.caseId
+  });
+
   const proposal: AssistantAgentProposalMeta = {
     tool: review.tool,
     status: "pending_confirmation",
@@ -190,6 +206,11 @@ export async function approveAgentActionReview(input: {
         resultMessage: "I could not complete that action. Please try again or create it manually."
       }
     });
+    recordQueueMetric(review.tool, "FAILED", {
+      userId: input.user.id,
+      reviewId: review.id,
+      caseId: review.caseId
+    });
     throw error;
   }
 
@@ -205,6 +226,12 @@ export async function approveAgentActionReview(input: {
       resultMessage: action?.message || result.text,
       resultAction: (action as Prisma.InputJsonValue | null) || undefined
     }
+  });
+
+  recordQueueMetric(review.tool, failed ? "FAILED" : "COMPLETED", {
+    userId: input.user.id,
+    reviewId: review.id,
+    caseId: review.caseId
   });
 
   return { review: updated, result };
