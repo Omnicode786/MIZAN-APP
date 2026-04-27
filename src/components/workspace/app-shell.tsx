@@ -20,7 +20,7 @@ export function AppShell({
     <div className="relative flex min-h-screen bg-background transition-colors duration-300">
       <Sidebar nav={nav} heading={heading} currentPath={currentPath} />
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <Topbar user={user} />
+        <Topbar user={user} nav={nav} currentPath={currentPath} />
         <main className="flex-1">
           <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
             {children}
