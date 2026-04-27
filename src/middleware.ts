@@ -6,7 +6,7 @@ import {
   type SessionPayload
 } from "@/lib/session";
 
-const PROTECTED_PREFIXES = ["/client", "/lawyer", "/settings", "/search", "/notifications", "/redaction"];
+const PROTECTED_PREFIXES = ["/client", "/lawyer", "/settings", "/search", "/notifications", "/redaction", "/ops"];
 const AUTH_PAGES = ["/login", "/signup"];
 
 function createRequestId() {
@@ -149,6 +149,7 @@ export const config = {
     "/search/:path*",
     "/notifications/:path*",
     "/redaction/:path*",
+    "/ops/:path*",
     "/login",
     "/signup"
   ]
