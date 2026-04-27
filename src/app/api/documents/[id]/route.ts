@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { handleApiError, notFound } from "@/lib/api-response";
 import { buildCloudinaryDownloadUrl, deleteFromCloudinary, getCloudinaryStorageMeta } from "@/lib/cloudinary-storage";
 import { readUploadedFileBytes } from "@/lib/document-pipeline/extract";
+import { recordStorageMetric, trackError, withApiObservability } from "@/lib/observability";
 import { getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -12,8 +13,9 @@ function contentDisposition(fileName: string, download: boolean) {
 }
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  try {
-    await requireUser();
+  return withApiObservability(request, { route: "/api/documents/[id]", feature: "documents.download" }, async () => {
+    try {
+      await requireUser();
     const document = await prisma.document.findUnique({ where: { id: params.id } });
     if (!document) return notFound();
 
@@ -49,8 +51,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
       const response = await fetch(fallbackUrl);
       if (!response.ok) {
-        console.error("Cloudinary signed download fallback failed.", {
+        recordStorageMetric("cloudinary.download", false, {
           status: response.status,
+          documentId: document.id,
           body: await response.text()
         });
         throw error;
@@ -59,17 +62,26 @@ export async function GET(request: Request, { params }: { params: { id: string }
       bytes = Buffer.from(await response.arrayBuffer());
     }
 
-    return new NextResponse(new Uint8Array(bytes), {
-      headers: {
-        "Content-Disposition": contentDisposition(document.fileName, download),
-        "Content-Length": String(bytes.byteLength),
-        "Content-Type": document.mimeType || "application/octet-stream",
-        "Cache-Control": "private, max-age=60"
-      }
+    recordStorageMetric("document.download", true, {
+      documentId: document.id,
+      caseId: document.caseId,
+      bytes: bytes.byteLength,
+      storageProvider: cloudinaryMeta?.publicId ? "cloudinary" : "local"
     });
-  } catch (error) {
-    return handleApiError(error, "DOCUMENT_GET_ROUTE", "Unable to load document.");
-  }
+
+      return new NextResponse(new Uint8Array(bytes), {
+        headers: {
+          "Content-Disposition": contentDisposition(document.fileName, download),
+          "Content-Length": String(bytes.byteLength),
+          "Content-Type": document.mimeType || "application/octet-stream",
+          "Cache-Control": "private, max-age=60"
+        }
+      });
+    } catch (error) {
+      recordStorageMetric("document.download", false, { documentId: params.id });
+      return handleApiError(error, "DOCUMENT_GET_ROUTE", "Unable to load document.");
+    }
+  });
 }
 
 function inferFormat(fileName: string) {
@@ -77,9 +89,10 @@ function inferFormat(fileName: string) {
   return extension || undefined;
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
-  try {
-    const user = await requireUser();
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  return withApiObservability(request, { route: "/api/documents/[id]", feature: "documents.delete" }, async () => {
+    try {
+      const user = await requireUser();
     const document = await prisma.document.findUnique({ where: { id: params.id } });
     if (!document) return notFound();
     const { legalCase } = await getAccessibleCase(document.caseId);
@@ -90,14 +103,17 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       try {
         await deleteFromCloudinary(cloudinaryMeta.publicId, cloudinaryMeta.resourceType);
       } catch (error) {
-        console.error("Unable to delete Cloudinary document asset.", error);
+        trackError("cloudinary.delete_document", error, { documentId: document.id });
       }
     }
 
     await prisma.document.delete({ where: { id: params.id } });
     await logActivity(document.caseId, user.id, "DOCUMENT_DELETED", `Deleted ${document.fileName}.`);
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    return handleApiError(error, "DOCUMENT_DELETE_ROUTE", "Unable to delete document.");
-  }
+      recordStorageMetric("document.delete", true, { userId: user.id, documentId: document.id, caseId: document.caseId });
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      recordStorageMetric("document.delete", false, { documentId: params.id });
+      return handleApiError(error, "DOCUMENT_DELETE_ROUTE", "Unable to delete document.");
+    }
+  });
 }

@@ -5,6 +5,7 @@ import {
   buildLawyerHandoffMarkdown,
   writeMarkdownPacket
 } from "@/lib/case-packets";
+import { recordExportMetric, withApiObservability } from "@/lib/observability";
 import { getAccessibleCase, logActivity } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -13,12 +14,13 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  try {
-    const body = schema.parse(await request.json());
-    const { user, legalCase } = await getAccessibleCase(body.caseId);
-    if (!legalCase) {
-      throw new Error("Not found");
-    }
+  return withApiObservability(request, { route: "/api/handoffs", feature: "exports.handoff" }, async () => {
+    try {
+      const body = schema.parse(await request.json());
+      const { user, legalCase } = await getAccessibleCase(body.caseId);
+      if (!legalCase) {
+        throw new Error("Not found");
+      }
 
     const markdown = buildLawyerHandoffMarkdown(legalCase);
     const packet = await writeMarkdownPacket({
@@ -53,8 +55,15 @@ export async function POST(request: Request) {
       "Created a lawyer handoff packet from the workspace."
     );
 
-    return NextResponse.json({ bundle, file: packet.publicPath, markdown });
-  } catch (error) {
-    return handleApiError(error, "HANDOFF_PACKET_ROUTE", "Unable to create lawyer handoff packet.");
-  }
+      recordExportMetric("lawyer_handoff_packet", true, {
+        userId: user.id,
+        caseId: legalCase.id,
+        bundleId: bundle.id
+      });
+      return NextResponse.json({ bundle, file: packet.publicPath, markdown });
+    } catch (error) {
+      recordExportMetric("lawyer_handoff_packet", false);
+      return handleApiError(error, "HANDOFF_PACKET_ROUTE", "Unable to create lawyer handoff packet.");
+    }
+  });
 }

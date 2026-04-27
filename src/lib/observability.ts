@@ -244,7 +244,7 @@ export function recordAiUsage(input: {
     inputTokens,
     outputTokens,
     estimatedCostUsd: Number(estimatedCostUsd.toFixed(8)),
-    durationMs,
+    durationMs: input.durationMs,
     success: input.success
   });
 }
