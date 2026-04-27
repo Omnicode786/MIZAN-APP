@@ -1,3 +1,5 @@
+import { trackError } from "@/lib/observability";
+
 type GeminiResult = {
   text: string;
   confidence: number;
@@ -75,7 +77,7 @@ async function callGemini(parts: any[], options: AiTaskOptions = {}): Promise<Ge
 
   if (!response.ok) {
     const bodyText = await response.text();
-    console.error("[GEMINI_PROVIDER_ERROR]", {
+    trackError("ai.gemini_provider", new Error(`Gemini request failed with ${response.status}.`), {
       status: response.status,
       model,
       body: bodyText
