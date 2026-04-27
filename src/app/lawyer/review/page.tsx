@@ -23,6 +23,11 @@ export default async function LawyerReviewPage() {
         eyebrow="Review Workspace"
         title="Proposal and review queue"
         description="These are the files where clients have already reached you. Open the case to review documents and send or update your proposal."
+        action={
+          <Button asChild variant="outline">
+            <Link href="/lawyer/ai-workflows">Review AI workflows</Link>
+          </Button>
+        }
       />
       <div className="grid gap-4">
         {assignments.map((assignment) => (
