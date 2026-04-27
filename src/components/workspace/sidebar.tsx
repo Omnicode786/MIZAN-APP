@@ -78,11 +78,19 @@ export function Sidebar({
       await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "same-origin",
-        cache: "no-store"
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-store"
+        }
       });
     } finally {
-      router.replace("/login");
+      try {
+        window.sessionStorage.clear();
+      } catch {
+        // Browser storage may be unavailable in private contexts.
+      }
       router.refresh();
+      window.location.replace("/login");
     }
   }
 

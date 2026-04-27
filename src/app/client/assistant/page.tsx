@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/workspace/app-shell";
 import { ClientAiAssistant } from "@/components/workspace/client-ai-assistant";
 import { SectionHeader } from "@/components/workspace/section-header";
@@ -87,7 +89,11 @@ export default async function ClientAssistantPage() {
         eyebrow="AI Legal Assistant"
         title="Ask general questions or attach a case"
         description="Switch between general legal questions and case-aware conversations from your client workspace."
-        action={<div />}
+        action={
+          <Button asChild variant="outline">
+            <Link href="/client/ai-workflows">Review AI workflows</Link>
+          </Button>
+        }
       />
       <ClientAiAssistant cases={caseOptions} initialThreads={safeThreads} />
     </AppShell>

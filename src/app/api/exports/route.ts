@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { handleApiError, notFound, unauthorized } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+import { recordExportMetric, withApiObservability } from "@/lib/observability";
 import { getAccessibleCase, logActivity } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { createCaseBundlePdf } from "@/lib/pdf/export";
@@ -18,9 +19,10 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  try {
-    const user = await getCurrentUserWithProfile();
-    if (!user) return unauthorized();
+  return withApiObservability(request, { route: "/api/exports", feature: "exports" }, async () => {
+    try {
+      const user = await getCurrentUserWithProfile();
+      if (!user) return unauthorized();
 
     const body = schema.parse(await request.json());
 
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
 
       await logActivity(legalCase.id, user.id, "COURT_BUNDLE_CREATED", "Created a court-ready bundle.");
 
+      recordExportMetric("court_ready_bundle", true, { userId: user.id, caseId: legalCase.id, bundleId: bundle.id });
       return NextResponse.json({ bundle, file: packet.publicPath, markdown });
     }
 
@@ -87,8 +90,11 @@ export async function POST(request: Request) {
 
     await logActivity(legalCase.id, user.id, "CASE_BUNDLE_CREATED", "Created a PDF case bundle.");
 
-    return NextResponse.json({ bundle, file: pdf.publicPath });
-  } catch (error) {
-    return handleApiError(error, "EXPORT_ROUTE", "Unable to export this case.");
-  }
+      recordExportMetric("case_bundle_pdf", true, { userId: user.id, caseId: legalCase.id, bundleId: bundle.id });
+      return NextResponse.json({ bundle, file: pdf.publicPath });
+    } catch (error) {
+      recordExportMetric("case_export", false);
+      return handleApiError(error, "EXPORT_ROUTE", "Unable to export this case.");
+    }
+  });
 }

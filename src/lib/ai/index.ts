@@ -1,11 +1,16 @@
 import { generateGeminiInsight, generateGeminiVisionInsight } from "@/lib/ai/providers/gemini";
 import { generateMockInsight, generateMockVisionInsight } from "@/lib/ai/providers/mock";
 import { generateOpenAIInsight, generateOpenAIVisionInsight } from "@/lib/ai/providers/openai";
+import { recordAiUsage, trackError } from "@/lib/observability";
 
 type AiProvider = "gemini" | "openai" | "mock";
 type AiTaskOptions = {
   maxOutputTokens?: number;
   temperature?: number;
+  feature?: string;
+  userId?: string;
+  caseId?: string;
+  documentId?: string;
 };
 
 export class AiProviderError extends Error {
@@ -33,6 +38,12 @@ function canUseMockProvider() {
     .toLowerCase();
 
   return process.env.NODE_ENV === "test" || enabled === "true";
+}
+
+function providerModel(provider: AiProvider) {
+  if (provider === "openai") return (process.env.OPENAI_MODEL || "gpt-4.1-mini").trim().replace(/^["']|["']$/g, "");
+  if (provider === "gemini") return (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim().replace(/^["']|["']$/g, "");
+  return "mock";
 }
 
 function withoutExtraWhitespace(value: string) {
@@ -64,20 +75,51 @@ function rejectPromptEcho<T extends { text: string }>(result: T, prompt: string)
 
 export async function runAiTask(prompt: string, context?: string, options?: AiTaskOptions) {
   const provider = normalizeProvider(process.env.AI_PROVIDER);
+  const model = providerModel(provider);
+  const startedAt = Date.now();
   if (!prompt.trim()) {
     throw new AiProviderError(provider, new Error("AI prompt is empty."));
   }
 
   try {
+    let result;
     if (provider === "openai") {
-      return rejectPromptEcho(await generateOpenAIInsight(prompt, context, options), prompt);
+      result = rejectPromptEcho(await generateOpenAIInsight(prompt, context, options), prompt);
+    } else if (provider === "gemini") {
+      result = rejectPromptEcho(await generateGeminiInsight(prompt, context, options), prompt);
+    } else {
+      result = await generateMockInsight(prompt, context);
     }
-    if (provider === "gemini") {
-      return rejectPromptEcho(await generateGeminiInsight(prompt, context, options), prompt);
-    }
-    return await generateMockInsight(prompt, context);
+
+    recordAiUsage({
+      provider,
+      model,
+      feature: options?.feature,
+      userId: options?.userId,
+      caseId: options?.caseId,
+      documentId: options?.documentId,
+      prompt,
+      context,
+      output: result.text,
+      durationMs: Date.now() - startedAt,
+      success: true
+    });
+
+    return result;
   } catch (error) {
-    console.error(`AI provider "${provider}" failed.`, error);
+    recordAiUsage({
+      provider,
+      model,
+      feature: options?.feature,
+      userId: options?.userId,
+      caseId: options?.caseId,
+      documentId: options?.documentId,
+      prompt,
+      context,
+      durationMs: Date.now() - startedAt,
+      success: false
+    });
+    trackError("ai.provider", error, { provider, model });
     throw new AiProviderError(provider, error);
   }
 }
@@ -89,6 +131,8 @@ export async function runVisionAiTask(
   options?: AiTaskOptions
 ) {
   const provider = normalizeProvider(process.env.AI_PROVIDER);
+  const model = providerModel(provider);
+  const startedAt = Date.now();
   if (!prompt.trim()) {
     throw new AiProviderError(provider, new Error("AI prompt is empty."));
   }
@@ -98,11 +142,40 @@ export async function runVisionAiTask(
   }
 
   try {
-    if (provider === "openai") return rejectPromptEcho(await generateOpenAIVisionInsight(prompt, images, context, options), prompt);
-    if (provider === "gemini") return rejectPromptEcho(await generateGeminiVisionInsight(prompt, images, context, options), prompt);
-    return await generateMockVisionInsight(prompt, images, context);
+    let result;
+    if (provider === "openai") result = rejectPromptEcho(await generateOpenAIVisionInsight(prompt, images, context, options), prompt);
+    else if (provider === "gemini") result = rejectPromptEcho(await generateGeminiVisionInsight(prompt, images, context, options), prompt);
+    else result = await generateMockVisionInsight(prompt, images, context);
+
+    recordAiUsage({
+      provider,
+      model,
+      feature: options?.feature || "vision",
+      userId: options?.userId,
+      caseId: options?.caseId,
+      documentId: options?.documentId,
+      prompt,
+      context,
+      output: result.text,
+      durationMs: Date.now() - startedAt,
+      success: true
+    });
+
+    return result;
   } catch (error) {
-    console.error(`Vision AI provider "${provider}" failed.`, error);
+    recordAiUsage({
+      provider,
+      model,
+      feature: options?.feature || "vision",
+      userId: options?.userId,
+      caseId: options?.caseId,
+      documentId: options?.documentId,
+      prompt,
+      context,
+      durationMs: Date.now() - startedAt,
+      success: false
+    });
+    trackError("ai.vision_provider", error, { provider, model });
     throw new AiProviderError(provider, error);
   }
 }

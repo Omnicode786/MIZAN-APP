@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { handleApiError, unauthorized } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+import { logEvent, withApiObservability } from "@/lib/observability";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -140,8 +141,9 @@ function scoreResult(text: string, query: string, matchedFields: string[]) {
 }
 
 export async function POST(request: Request) {
-  try {
-    const user = await getCurrentUserWithProfile();
+  return withApiObservability(request, { route: "/api/search", feature: "search" }, async () => {
+    try {
+      const user = await getCurrentUserWithProfile();
 
     if (!user) {
       return unauthorized();
@@ -331,16 +333,26 @@ export async function POST(request: Request) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    return NextResponse.json({
-      query,
-      count: results.length,
-      results,
-      totals: {
-        documents: documentResults.length,
-        evidence: evidenceResults.length
-      }
-    });
-  } catch (error) {
-    return handleApiError(error, "SEARCH_ROUTE", "Search failed.");
-  }
+      logEvent("info", "search.completed", {
+        userId: user.id,
+        caseId: body.caseId || "all",
+        scope: body.scope,
+        resultCount: results.length,
+        documentCount: documentResults.length,
+        evidenceCount: evidenceResults.length
+      });
+
+      return NextResponse.json({
+        query,
+        count: results.length,
+        results,
+        totals: {
+          documents: documentResults.length,
+          evidence: evidenceResults.length
+        }
+      });
+    } catch (error) {
+      return handleApiError(error, "SEARCH_ROUTE", "Search failed.");
+    }
+  });
 }

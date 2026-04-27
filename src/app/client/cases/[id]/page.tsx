@@ -15,7 +15,7 @@ export default async function ClientCaseDetailPage({ params }: { params: { id: s
     <AppShell nav={CLIENT_NAV} heading="Client Workspace" currentPath="/client/cases" user={user}>
       <SectionHeader
         eyebrow="Case Workspace"
-        title={detail.title}
+        title=""
         description="Live case workspace with document intelligence, grounded assistance, deadlines, drafts, and lawyer collaboration."
         action={<div />}
       />

@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { recordStorageMetric, trackError } from "@/lib/observability";
 
 type CloudinaryConfig = {
   cloudName: string;
@@ -62,7 +63,7 @@ function getCloudinaryConfig(): CloudinaryConfig | null {
         cloudName: parsed.hostname
       };
     } catch (error) {
-      console.error("Invalid CLOUDINARY_URL.", error);
+      trackError("cloudinary.config", error);
     }
   }
 
@@ -205,6 +206,7 @@ export async function uploadToCloudinary(file: File) {
     form.append(key, String(value));
   });
 
+  const startedAt = Date.now();
   const response = await fetch(`https://api.cloudinary.com/v1_1/${config.cloudName}/${resourceType}/upload`, {
     method: "POST",
     body: form
@@ -220,12 +222,21 @@ export async function uploadToCloudinary(file: File) {
   }
 
   if (!response.ok || !("secure_url" in parsed)) {
-    console.error("Cloudinary upload failed.", {
+    recordStorageMetric("cloudinary.upload", false, {
       status: response.status,
+      resourceType,
+      bytes: file.size,
+      durationMs: Date.now() - startedAt,
       body
     });
     throw new Error("Cloud upload failed.");
   }
+
+  recordStorageMetric("cloudinary.upload", true, {
+    resourceType,
+    bytes: file.size,
+    durationMs: Date.now() - startedAt
+  });
 
   return parsed as CloudinaryUploadResponse;
 }
@@ -250,15 +261,24 @@ export async function deleteFromCloudinary(publicId: string, resourceType = "raw
   form.append("invalidate", "true");
   form.append("signature", signParams(params, config.apiSecret));
 
+  const startedAt = Date.now();
   const response = await fetch(`https://api.cloudinary.com/v1_1/${config.cloudName}/${resourceType}/destroy`, {
     method: "POST",
     body: form
   });
 
   if (!response.ok) {
-    console.error("Cloudinary delete failed.", {
+    recordStorageMetric("cloudinary.delete", false, {
       status: response.status,
+      resourceType,
+      durationMs: Date.now() - startedAt,
       body: await response.text()
     });
+    return;
   }
+
+  recordStorageMetric("cloudinary.delete", true, {
+    resourceType,
+    durationMs: Date.now() - startedAt
+  });
 }

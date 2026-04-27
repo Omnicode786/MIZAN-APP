@@ -9,6 +9,10 @@ import {
 const PROTECTED_PREFIXES = ["/client", "/lawyer", "/settings", "/search", "/notifications", "/redaction"];
 const AUTH_PAGES = ["/login", "/signup"];
 
+function createRequestId() {
+  return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function dashboardForRole(role: SessionPayload["role"]) {
   if (role === "LAWYER") return "/lawyer/dashboard";
   if (role === "ADMIN") return "/lawyer/dashboard";
@@ -19,7 +23,10 @@ function clearSession(response: NextResponse) {
   response.cookies.set(SESSION_COOKIE_NAME, "", getExpiredSessionCookieOptions());
 }
 
-function addSecurityHeaders(response: NextResponse, isProtected: boolean) {
+function addSecurityHeaders(response: NextResponse, isProtected: boolean, requestId?: string) {
+  if (requestId) {
+    response.headers.set("x-request-id", requestId);
+  }
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
@@ -34,6 +41,16 @@ function addSecurityHeaders(response: NextResponse, isProtected: boolean) {
   }
 
   return response;
+}
+
+function nextResponseWithRequestId(request: NextRequest, requestId: string) {
+  const headers = new Headers(request.headers);
+  headers.set("x-request-id", requestId);
+  return NextResponse.next({
+    request: {
+      headers
+    }
+  });
 }
 
 function isProtectedPath(pathname: string) {
@@ -90,36 +107,37 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isProtected = isProtectedPath(pathname);
   const isApi = isApiPath(pathname);
+  const requestId = request.headers.get("x-request-id") || createRequestId();
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = token ? await verifySessionToken(token) : null;
 
   if (isApi && isStateChangingRequest(request.method) && !hasTrustedOrigin(request)) {
-    return addSecurityHeaders(NextResponse.json({ error: "Forbidden." }, { status: 403 }), true);
+    return addSecurityHeaders(NextResponse.json({ error: "Forbidden." }, { status: 403 }), true, requestId);
   }
 
   if (isProtected && !session) {
-    return addSecurityHeaders(redirectToLogin(request), true);
+    return addSecurityHeaders(redirectToLogin(request), true, requestId);
   }
 
   if (token && !session) {
-    const response = NextResponse.next();
+    const response = nextResponseWithRequestId(request, requestId);
     clearSession(response);
-    return addSecurityHeaders(response, isProtected || isApi);
+    return addSecurityHeaders(response, isProtected || isApi, requestId);
   }
 
   if (session && isAuthPage(pathname)) {
-    return addSecurityHeaders(redirectToDashboard(request, session), false);
+    return addSecurityHeaders(redirectToDashboard(request, session), false, requestId);
   }
 
   if (session && pathname.startsWith("/client") && session.role !== "CLIENT") {
-    return addSecurityHeaders(redirectToDashboard(request, session), true);
+    return addSecurityHeaders(redirectToDashboard(request, session), true, requestId);
   }
 
   if (session && pathname.startsWith("/lawyer") && session.role !== "LAWYER" && session.role !== "ADMIN") {
-    return addSecurityHeaders(redirectToDashboard(request, session), true);
+    return addSecurityHeaders(redirectToDashboard(request, session), true, requestId);
   }
 
-  return addSecurityHeaders(NextResponse.next(), isProtected || isApi);
+  return addSecurityHeaders(nextResponseWithRequestId(request, requestId), isProtected || isApi, requestId);
 }
 
 export const config = {

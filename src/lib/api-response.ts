@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { getObservabilityContext, trackError } from "@/lib/observability";
 
 export function apiError(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status });
+  const response = NextResponse.json({ error: message }, { status });
+  const requestId = getObservabilityContext().requestId;
+  if (requestId) response.headers.set("x-request-id", requestId);
+  response.headers.set("cache-control", "no-store");
+  return response;
 }
 
 export function unauthorized() {
@@ -26,7 +31,7 @@ export function handleApiError(
   scope: string,
   fallback = "Something went wrong. Please try again."
 ) {
-  console.error(`[${scope}]`, error);
+  trackError(scope, error);
 
   if (error instanceof ZodError) {
     return validationError("Invalid request.");

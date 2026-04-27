@@ -19,7 +19,9 @@ export async function createSession(payload: SessionPayload) {
 }
 
 export function destroySession() {
-  cookies().set(SESSION_COOKIE_NAME, "", getExpiredSessionCookieOptions());
+  const cookieStore = cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, "", getExpiredSessionCookieOptions());
+  cookieStore.delete(SESSION_COOKIE_NAME);
 }
 
 export async function getSession(): Promise<SessionPayload | null> {

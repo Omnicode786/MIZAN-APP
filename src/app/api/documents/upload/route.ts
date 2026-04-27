@@ -11,28 +11,52 @@ import {
   unreadableDocumentSummary
 } from "@/lib/legal-ai";
 import { normalizeLanguage } from "@/lib/language";
+import { recordStorageMetric, withApiObservability } from "@/lib/observability";
 import { getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
 
+const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024);
+const ALLOWED_UPLOAD_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "message/rfc822",
+  "text/plain",
+  "text/markdown",
+  "image/png",
+  "image/jpeg",
+  "image/webp"
+];
+
 export async function POST(request: Request) {
-  try {
-    const user = await requireUser();
+  return withApiObservability(request, { route: "/api/documents/upload", feature: "documents.upload" }, async () => {
+    try {
+      const user = await requireUser();
     const formData = await request.formData();
     const caseId = String(formData.get("caseId") || "");
     const file = formData.get("file");
     const language = normalizeLanguage(formData.get("language"));
 
-    if (!caseId || !(file instanceof File)) {
-      return validationError("A case and file are required.");
-    }
+      if (!caseId || !(file instanceof File)) {
+        return validationError("A case and file are required.");
+      }
 
     const { legalCase } = await getAccessibleCase(caseId);
     if (!legalCase) return notFound();
 
-    const mimeType = inferDocumentMimeType(file.name, file.type || "application/octet-stream");
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const stored = await saveUploadedFile(file, fileBuffer);
+      const mimeType = inferDocumentMimeType(file.name, file.type || "application/octet-stream");
+      if (file.size > MAX_UPLOAD_BYTES) {
+        recordStorageMetric("document.upload.rejected", false, { reason: "file_too_large", bytes: file.size, mimeType });
+        return validationError("File is too large for upload.");
+      }
+      if (!ALLOWED_UPLOAD_TYPES.includes(mimeType) && !mimeType.startsWith("image/")) {
+        recordStorageMetric("document.upload.rejected", false, { reason: "unsupported_type", bytes: file.size, mimeType });
+        return validationError("Unsupported file type.");
+      }
+
+      const fileBuffer = Buffer.from(await file.arrayBuffer());
+      const stored = await saveUploadedFile(file, fileBuffer);
 
     let extractedText = "";
     let extraction = {
@@ -211,10 +235,19 @@ export async function POST(request: Request) {
     });
 
     await logActivity(caseId, user.id, "DOCUMENT_UPLOADED", `Uploaded ${file.name}.`);
-    return NextResponse.json({ document, analysis: { summary: aiSummary, timeline, deadlines, heatmap } });
-  } catch (error) {
-    return handleApiError(error, "DOCUMENT_UPLOAD_ROUTE", "Unable to upload document.");
-  }
+      recordStorageMetric("document.upload.completed", true, {
+        userId: user.id,
+        caseId,
+        documentId: document.id,
+        bytes: file.size,
+        mimeType
+      });
+      return NextResponse.json({ document, analysis: { summary: aiSummary, timeline, deadlines, heatmap } });
+    } catch (error) {
+      recordStorageMetric("document.upload.completed", false);
+      return handleApiError(error, "DOCUMENT_UPLOAD_ROUTE", "Unable to upload document.");
+    }
+  });
 }
 
 function inferDocumentType(mimeType: string) {

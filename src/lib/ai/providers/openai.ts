@@ -1,3 +1,5 @@
+import { trackError } from "@/lib/observability";
+
 type OpenAIResult = {
   text: string;
   confidence: number;
@@ -59,7 +61,7 @@ async function callOpenAI(body: any): Promise<OpenAIResult> {
 
   if (!response.ok) {
     const bodyText = await response.text();
-    console.error("[OPENAI_PROVIDER_ERROR]", {
+    trackError("ai.openai_provider", new Error(`OpenAI request failed with ${response.status}.`), {
       status: response.status,
       model,
       body: bodyText
