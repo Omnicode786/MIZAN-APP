@@ -1,10 +1,17 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { isCloudinaryConfigured, uploadToCloudinary } from "@/lib/cloudinary-storage";
+import { recordStorageMetric } from "@/lib/observability";
 
 export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
   if (isCloudinaryConfigured()) {
+    const startedAt = Date.now();
     const uploaded = await uploadToCloudinary(file);
+    recordStorageMetric("document.save.cloudinary", true, {
+      bytes: file.size,
+      mimeType: file.type,
+      durationMs: Date.now() - startedAt
+    });
 
     return {
       fileName: file.name,
@@ -36,6 +43,10 @@ export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
   const safeName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
   const absolutePath = path.join(uploadDir, safeName);
   await fs.writeFile(absolutePath, buffer);
+  recordStorageMetric("document.save.local", true, {
+    bytes: file.size,
+    mimeType: file.type
+  });
 
   return {
     fileName: file.name,
