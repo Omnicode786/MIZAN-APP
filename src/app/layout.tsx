@@ -1,7 +1,12 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { LanguageRuntime } from "@/components/language-runtime";
-import { ThemeProvider, THEME_STORAGE_KEY, UI_MODE_STORAGE_KEY } from "@/components/theme-provider";
+import {
+  ThemeProvider,
+  THEME_PRESET_STORAGE_KEY,
+  THEME_STORAGE_KEY,
+  UI_MODE_STORAGE_KEY
+} from "@/components/theme-provider";
 import { APP_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -26,12 +31,28 @@ export default function RootLayout({
         var root = document.documentElement;
         var stored = localStorage.getItem("${THEME_STORAGE_KEY}");
         var storedUiMode = localStorage.getItem("${UI_MODE_STORAGE_KEY}");
+        var storedThemePreset = localStorage.getItem("${THEME_PRESET_STORAGE_KEY}");
         var system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         var theme = stored === "light" || stored === "dark" ? stored : system;
         var uiMode = storedUiMode === "classic" ? "classic" : "glass";
+        var allowedThemePresets = {
+          "original": true,
+          "amber-minimal": true,
+          "bold-tech": true,
+          "bubblegum": true,
+          "caffeine": true,
+          "catppuccin": true,
+          "claymorphism": true,
+          "cosmic-night": true,
+          "cyberpunk": true,
+          "t3-chat": true,
+          "vintage-paper": true
+        };
+        var themePreset = allowedThemePresets[storedThemePreset] ? storedThemePreset : "original";
         root.classList.toggle("dark", theme === "dark");
         root.dataset.theme = theme;
         root.dataset.uiMode = uiMode;
+        root.dataset.themePreset = themePreset;
         root.style.colorScheme = theme;
       } catch (error) {}
     })();

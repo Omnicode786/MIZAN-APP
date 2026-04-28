@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { forbidden, handleApiError, notFound } from "@/lib/api-response";
-import { getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
+import { buildAccessibleCaseWhereForUser, getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
@@ -14,7 +14,71 @@ const patchSchema = z.object({
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
-    const { legalCase } = await getAccessibleCase(params.id);
+    const user = await requireUser();
+    const legalCase = await prisma.case.findFirst({
+      where: buildAccessibleCaseWhereForUser(user, params.id),
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        status: true,
+        priority: true,
+        stage: true,
+        description: true,
+        caseHealthScore: true,
+        evidenceCompleteness: true,
+        evidenceStrength: true,
+        deadlineRisk: true,
+        draftReadiness: true,
+        escalationReadiness: true,
+        creatorId: true,
+        clientProfileId: true,
+        createdAt: true,
+        updatedAt: true,
+        client: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        },
+        assignments: {
+          select: {
+            id: true,
+            lawyerProfileId: true,
+            status: true,
+            feeProposal: true,
+            probability: true,
+            proposalNotes: true,
+            lawyer: {
+              select: {
+                id: true,
+                firmName: true,
+                user: { select: { id: true, name: true, email: true } }
+              }
+            }
+          },
+          orderBy: { updatedAt: "desc" },
+          take: 20
+        },
+        _count: {
+          select: {
+            documents: true,
+            evidenceItems: true,
+            timelineEvents: true,
+            deadlines: true,
+            drafts: true,
+            comments: true,
+            activityLogs: true
+          }
+        }
+      }
+    });
     if (!legalCase) return notFound();
 
     return NextResponse.json({ case: legalCase });
@@ -38,6 +102,22 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         status: body.status,
         priority: body.priority,
         description: body.description === undefined ? undefined : body.description || null
+      },
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        status: true,
+        priority: true,
+        stage: true,
+        description: true,
+        caseHealthScore: true,
+        evidenceCompleteness: true,
+        evidenceStrength: true,
+        deadlineRisk: true,
+        draftReadiness: true,
+        escalationReadiness: true,
+        updatedAt: true
       }
     });
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bell, LogOut, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemePresetToggle } from "@/components/theme-preset-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { Avatar } from "@/components/ui/avatar";
@@ -96,6 +97,9 @@ export function Topbar({
         </div>
 
         <div className="topbar-actions ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="hidden min-[1180px]:block">
+            <ThemePresetToggle />
+          </div>
           <div className="hidden min-[420px]:block">
             <UiModeToggle />
           </div>
@@ -146,6 +150,7 @@ export function Topbar({
                 <UiModeToggle />
                 <ThemeToggle />
               </div>
+              <ThemePresetToggle className="w-full max-w-none" />
               <LanguageToggle compact />
               <nav className="grid gap-2 pt-1">
                 {nav.map((item) => {

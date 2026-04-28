@@ -9,8 +9,26 @@ export default async function LawyersPage() {
     getCurrentUserWithProfile().catch(() => null),
     prisma.lawyerProfile.findMany({
       where: { isPublic: true },
-      include: { user: true },
-      orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }]
+      select: {
+        id: true,
+        firmName: true,
+        bio: true,
+        specialties: true,
+        yearsExperience: true,
+        hourlyRate: true,
+        fixedFeeFrom: true,
+        verifiedBadge: true,
+        rating: true,
+        city: true,
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
+      orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }],
+      take: 60
     })
   ]);
 

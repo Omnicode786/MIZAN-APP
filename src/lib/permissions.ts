@@ -103,27 +103,98 @@ export async function getAccessibleCase(caseId: string) {
             id: caseId,
             clientProfileId: user.clientProfile?.id
           },
-    include: {
-      client: { include: { user: true } },
-      assignments: { include: { lawyer: { include: { user: true } } } },
-      documents: { orderBy: { createdAt: "desc" } },
-      evidenceItems: { orderBy: { createdAt: "desc" } },
-      timelineEvents: { orderBy: { eventDate: "asc" } },
-      deadlines: { orderBy: { dueDate: "asc" } },
-      drafts: { include: { versions: { orderBy: { versionNumber: "desc" } } }, orderBy: { updatedAt: "desc" } },
-      comments: { include: { author: true }, orderBy: { createdAt: "desc" } },
-      internalNotes: includeInternalNotes
-        ? { include: { author: true }, orderBy: { createdAt: "desc" } }
-        : false,
-      riskScores: true,
-      activityLogs: { include: { actor: true }, orderBy: { createdAt: "desc" } },
-      assistantThreads: {
-        orderBy: { updatedAt: "desc" },
-        include: { messages: { orderBy: { createdAt: "asc" } } }
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      status: true,
+      priority: true,
+      stage: true,
+      description: true,
+      caseHealthScore: true,
+      evidenceCompleteness: true,
+      evidenceStrength: true,
+      deadlineRisk: true,
+      contractFairness: true,
+      draftReadiness: true,
+      escalationReadiness: true,
+      creatorId: true,
+      clientProfileId: true,
+      lawyerRequestedAt: true,
+      sharedWithLawyerAt: true,
+      createdAt: true,
+      updatedAt: true,
+      client: {
+        select: {
+          id: true,
+          phone: true,
+          region: true,
+          simpleLanguageMode: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true
+            }
+          }
+        }
       },
-      debateSessions: {
-        orderBy: { createdAt: "desc" },
-        include: { turns: { orderBy: [{ roundNumber: "asc" }, { createdAt: "asc" }] } }
+      assignments: {
+        select: {
+          id: true,
+          caseId: true,
+          lawyerProfileId: true,
+          status: true,
+          feeProposal: true,
+          probability: true,
+          proposalNotes: true,
+          createdAt: true,
+          updatedAt: true,
+          lawyer: {
+            select: {
+              id: true,
+              userId: true,
+              firmName: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 20
+      },
+      internalNotes: includeInternalNotes
+        ? {
+            select: {
+              id: true,
+              authorId: true,
+              body: true,
+              createdAt: true
+            },
+            orderBy: { createdAt: "desc" },
+            take: 5
+          }
+        : false,
+      _count: {
+        select: {
+          documents: true,
+          evidenceItems: true,
+          timelineEvents: true,
+          deadlines: true,
+          drafts: true,
+          comments: true,
+          internalNotes: true,
+          activityLogs: true,
+          assistantThreads: true,
+          debateSessions: true
+        }
       }
     }
   });

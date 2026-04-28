@@ -15,8 +15,27 @@ export default async function ClientCollaborationPage() {
     where: clientProfileId
       ? { case: { clientProfileId }, visibility: "SHARED" }
       : { id: "__NO_ACCESS__" },
-    include: { author: true, case: true },
-    orderBy: { createdAt: "desc" }
+    select: {
+      id: true,
+      body: true,
+      visibility: true,
+      createdAt: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          role: true
+        }
+      },
+      case: {
+        select: {
+          id: true,
+          title: true
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50
   });
 
   return (

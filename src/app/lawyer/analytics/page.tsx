@@ -8,12 +8,16 @@ import { prisma } from "@/lib/prisma";
 export default async function LawyerAnalyticsPage() {
   const user = await getCurrentUserWithProfile();
   const lawyerProfileId = user?.lawyerProfile?.id;
-  const assignments = await prisma.caseAssignment.findMany({
-    where: lawyerProfileId ? { lawyerProfileId } : { id: "__NO_ACCESS__" }
-  });
-  const accepted = assignments.filter((item) => item.status === 'ACCEPTED').length;
-  const pending = assignments.filter((item) => item.status === 'PENDING').length;
-  const avgProbability = assignments.length ? Math.round((assignments.reduce((sum, item) => sum + (item.probability || 0), 0) / assignments.length) * 100) : 0;
+  const where = lawyerProfileId ? { lawyerProfileId } : { id: "__NO_ACCESS__" };
+  const [accepted, pending, probabilityAggregate] = await Promise.all([
+    prisma.caseAssignment.count({ where: { ...where, status: "ACCEPTED" } }),
+    prisma.caseAssignment.count({ where: { ...where, status: "PENDING" } }),
+    prisma.caseAssignment.aggregate({
+      where,
+      _avg: { probability: true }
+    })
+  ]);
+  const avgProbability = Math.round((probabilityAggregate._avg.probability || 0) * 100);
 
   return (
     <AppShell nav={LAWYER_NAV} heading="Lawyer Workspace" currentPath="/lawyer/analytics" user={user!}>

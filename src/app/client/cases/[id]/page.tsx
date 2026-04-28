@@ -8,8 +8,10 @@ import { getCurrentUserWithProfile } from "@/lib/auth";
 
 export default async function ClientCaseDetailPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUserWithProfile();
-  const detail = await getCaseDetail(params.id);
-  if (!user || !detail) notFound();
+  if (!user) notFound();
+
+  const detail = await getCaseDetail(params.id, user);
+  if (!detail) notFound();
 
   return (
     <AppShell nav={CLIENT_NAV} heading="Client Workspace" currentPath="/client/cases" user={user}>

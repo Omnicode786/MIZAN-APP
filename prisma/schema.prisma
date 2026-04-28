@@ -181,6 +181,9 @@ model LawyerProfile {
   user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignments     CaseAssignment[]
   consultations   ConsultationBooking[]
+
+  @@index([isPublic, verifiedBadge, rating])
+  @@index([city])
 }
 
 model Case {
@@ -222,6 +225,10 @@ model Case {
   activityLogs         ActivityLog[]
   assistantThreads     AssistantThread[]
   debateSessions       DebateSession[]
+
+  @@index([clientProfileId, updatedAt])
+  @@index([creatorId, createdAt])
+  @@index([status, updatedAt])
 }
 
 model CaseAssignment {
@@ -239,6 +246,8 @@ model CaseAssignment {
   consultations   ConsultationBooking[]
 
   @@unique([caseId, lawyerProfileId])
+  @@index([lawyerProfileId, status, updatedAt])
+  @@index([caseId, status])
 }
 
 model Document {
@@ -269,6 +278,10 @@ model Document {
   redactionJobs      RedactionJob[]
   agentActionReviews AgentActionReview[]
   assistantThreads   AssistantThread[]
+
+  @@index([caseId, createdAt])
+  @@index([uploadedById, createdAt])
+  @@index([fileType, createdAt])
 }
 
 model EvidenceItem {
@@ -285,6 +298,9 @@ model EvidenceItem {
   updatedAt         DateTime  @updatedAt
   case              Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
   document          Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([caseId, createdAt])
+  @@index([documentId])
 }
 
 model TimelineEvent {
@@ -301,6 +317,10 @@ model TimelineEvent {
   updatedAt        DateTime  @updatedAt
   case             Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
   sourceDocument   Document? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([caseId, eventDate])
+  @@index([caseId, createdAt])
+  @@index([sourceDocumentId])
 }
 
 model Deadline {
@@ -317,6 +337,10 @@ model Deadline {
   updatedAt        DateTime       @updatedAt
   case             Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
   sourceDocument   Document?      @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([caseId, dueDate])
+  @@index([caseId, status, dueDate])
+  @@index([sourceDocumentId])
 }
 
 model Draft {
@@ -334,6 +358,9 @@ model Draft {
   createdBy          User               @relation("DraftCreator", fields: [createdById], references: [id], onDelete: Cascade)
   verifiedBy         User?              @relation("DraftVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
   versions           DraftVersion[]
+
+  @@index([caseId, updatedAt])
+  @@index([createdById, createdAt])
 }
 
 model DraftVersion {
@@ -348,6 +375,8 @@ model DraftVersion {
   createdBy     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@unique([draftId, versionNumber])
+  @@index([draftId, createdAt])
+  @@index([createdById, createdAt])
 }
 
 model Comment {
@@ -363,6 +392,10 @@ model Comment {
   case       Case              @relation(fields: [caseId], references: [id], onDelete: Cascade)
   author     User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
   document   Document?         @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([caseId, createdAt])
+  @@index([authorId, createdAt])
+  @@index([documentId])
 }
 
 model InternalNote {
@@ -374,6 +407,9 @@ model InternalNote {
   updatedAt DateTime @updatedAt
   case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, createdAt])
+  @@index([authorId, createdAt])
 }
 
 model Notification {
@@ -386,6 +422,8 @@ model Notification {
   readAt    DateTime?
   createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
 }
 
 model ExportBundle {
@@ -401,6 +439,9 @@ model ExportBundle {
   createdAt           DateTime @default(now())
   case                Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
   createdBy           User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([caseId, createdAt])
+  @@index([createdById, createdAt])
 }
 
 model AgentActionReview {
@@ -473,6 +514,11 @@ model RedactionJob {
   case        Case            @relation(fields: [caseId], references: [id], onDelete: Cascade)
   document    Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdBy   User            @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([caseId, createdAt])
+  @@index([documentId])
+  @@index([createdById, createdAt])
+  @@index([status, updatedAt])
 }
 
 model RiskScore {
@@ -499,6 +545,9 @@ model ActivityLog {
   createdAt DateTime @default(now())
   case      Case?    @relation(fields: [caseId], references: [id], onDelete: SetNull)
   actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([caseId, createdAt])
+  @@index([actorId, createdAt])
 }
 
 model AssistantThread {
@@ -515,6 +564,10 @@ model AssistantThread {
   document           Document?           @relation(fields: [documentId], references: [id], onDelete: Cascade)
   messages           AssistantMessage[]
   agentActionReviews AgentActionReview[]
+
+  @@index([createdById, updatedAt])
+  @@index([caseId, updatedAt])
+  @@index([documentId, updatedAt])
 }
 
 model AssistantMessage {
@@ -527,6 +580,8 @@ model AssistantMessage {
   createdAt          DateTime            @default(now())
   thread             AssistantThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
   agentActionReviews AgentActionReview[]
+
+  @@index([threadId, createdAt])
 }
 
 model DebateSession {
@@ -545,6 +600,10 @@ model DebateSession {
   case               Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
   lawyer             User         @relation("DebateLawyer", fields: [lawyerId], references: [id], onDelete: Cascade)
   turns              DebateTurn[]
+
+  @@index([caseId, createdAt])
+  @@index([lawyerId, createdAt])
+  @@index([status, endsAt])
 }
 
 model DebateTurn {
@@ -555,4 +614,6 @@ model DebateTurn {
   roundNumber Int
   createdAt   DateTime      @default(now())
   session     DebateSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, roundNumber, createdAt])
 }

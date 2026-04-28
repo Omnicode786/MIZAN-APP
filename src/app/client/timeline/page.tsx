@@ -12,7 +12,19 @@ export default async function ClientTimelinePage() {
   const clientProfileId = user?.clientProfile?.id;
   const items = await prisma.timelineEvent.findMany({
     where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
-    orderBy: { eventDate: 'asc' }
+    select: {
+      id: true,
+      caseId: true,
+      title: true,
+      description: true,
+      eventDate: true,
+      confidence: true,
+      sourceLabel: true,
+      createdAt: true,
+      updatedAt: true
+    },
+    orderBy: { eventDate: "asc" },
+    take: 100
   });
 
   return (

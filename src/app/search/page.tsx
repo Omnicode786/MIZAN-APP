@@ -33,7 +33,8 @@ export default async function SearchPage() {
         }
       }
     },
-    orderBy: { updatedAt: 'desc' }
+    orderBy: { updatedAt: 'desc' },
+    take: 40
   });
 
   return (

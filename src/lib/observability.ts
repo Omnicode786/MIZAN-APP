@@ -1,5 +1,4 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { NextResponse } from "next/server";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -290,10 +289,4 @@ export function getObservabilitySnapshot() {
     storage: state.storage,
     exports: state.exports
   };
-}
-
-export function jsonWithNoStore(body: unknown, init?: ResponseInit) {
-  const response = NextResponse.json(body, init);
-  response.headers.set("cache-control", "no-store");
-  return response;
 }

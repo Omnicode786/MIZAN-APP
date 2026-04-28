@@ -14,8 +14,19 @@ export default async function LawyerInternalNotesPage() {
     where: lawyerProfileId
       ? { case: { assignments: { some: { lawyerProfileId } } } }
       : { id: "__NO_ACCESS__" },
-    include: { case: true },
-    orderBy: { createdAt: 'desc' }
+    select: {
+      id: true,
+      body: true,
+      createdAt: true,
+      case: {
+        select: {
+          id: true,
+          title: true
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50
   });
 
   return (

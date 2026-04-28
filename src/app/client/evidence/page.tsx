@@ -15,8 +15,25 @@ export default async function ClientEvidencePage() {
   const clientProfileId = user?.clientProfile?.id;
   const documents = await prisma.document.findMany({
     where: clientProfileId ? { case: { clientProfileId } } : { id: "__NO_ACCESS__" },
-    include: { case: true },
-    orderBy: { createdAt: "desc" }
+    select: {
+      id: true,
+      caseId: true,
+      fileName: true,
+      fileType: true,
+      mimeType: true,
+      aiSummary: true,
+      probableCategory: true,
+      confidence: true,
+      createdAt: true,
+      case: {
+        select: {
+          id: true,
+          title: true
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100
   });
 
   return (

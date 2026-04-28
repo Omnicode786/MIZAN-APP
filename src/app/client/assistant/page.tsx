@@ -49,8 +49,20 @@ export default async function ClientAssistantPage() {
       ]
     },
     orderBy: { updatedAt: "desc" },
+    take: 10,
     include: {
-      messages: { orderBy: { createdAt: "asc" } }
+      messages: {
+        orderBy: { createdAt: "desc" },
+        take: 12,
+        select: {
+          id: true,
+          role: true,
+          content: true,
+          confidence: true,
+          sources: true,
+          createdAt: true
+        }
+      }
     }
   });
 
@@ -60,7 +72,7 @@ export default async function ClientAssistantPage() {
     caseId: thread.caseId,
     documentId: thread.documentId,
     scope: thread.scope,
-    messages: thread.messages.map((message) => ({
+    messages: [...thread.messages].reverse().map((message) => ({
       id: message.id,
       role: message.role,
       content: message.content,

@@ -15,8 +15,28 @@ export default async function LawyerDraftsPage() {
     where: lawyerProfileId
       ? { case: { assignments: { some: { lawyerProfileId } } } }
       : { id: "__NO_ACCESS__" },
-    include: { case: true, versions: true },
-    orderBy: { updatedAt: "desc" }
+    select: {
+      id: true,
+      caseId: true,
+      title: true,
+      type: true,
+      currentContent: true,
+      verificationStatus: true,
+      updatedAt: true,
+      case: {
+        select: {
+          id: true,
+          title: true
+        }
+      },
+      _count: {
+        select: {
+          versions: true
+        }
+      }
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 50
   });
 
   return (

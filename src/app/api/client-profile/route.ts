@@ -44,7 +44,22 @@ export async function PATCH(request: Request) {
         region: body.region,
         simpleLanguageMode: body.simpleLanguageMode
       },
-      include: { user: true }
+      select: {
+        id: true,
+        userId: true,
+        phone: true,
+        region: true,
+        simpleLanguageMode: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
 
     return NextResponse.json({ profile });

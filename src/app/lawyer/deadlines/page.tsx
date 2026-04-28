@@ -12,7 +12,17 @@ export default async function LawyerDeadlinesPage() {
     where: lawyerProfileId
       ? { case: { assignments: { some: { lawyerProfileId } } } }
       : { id: "__NO_ACCESS__" },
-    orderBy: { dueDate: "asc" }
+    select: {
+      id: true,
+      caseId: true,
+      title: true,
+      dueDate: true,
+      notes: true,
+      status: true,
+      importance: true
+    },
+    orderBy: { dueDate: "asc" },
+    take: 100
   });
 
   return (

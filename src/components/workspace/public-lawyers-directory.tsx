@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
+import { ThemePresetToggle } from "@/components/theme-preset-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { Badge } from "@/components/ui/badge";
@@ -134,6 +135,7 @@ export function PublicLawyersDirectory({
 
             <div className="col-span-6 flex items-center justify-end gap-2 lg:col-span-4">
               <LanguageToggle compact />
+              <ThemePresetToggle compact className="hidden sm:inline-flex" />
               <UiModeToggle compact className="h-8 rounded-xl px-2.5" />
               <ThemeToggle className="h-8 w-8 rounded-xl" />
 

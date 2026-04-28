@@ -151,29 +151,74 @@ export default async function LawyerDebatePage({
           }
         },
         orderBy: { updatedAt: "desc" },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          status: true,
+          priority: true,
+          description: true,
+          updatedAt: true,
           client: {
-            include: {
-              user: true
+            select: {
+              user: {
+                select: {
+                  name: true
+                }
+              }
             }
           },
           documents: {
+            select: {
+              id: true,
+              fileName: true,
+              createdAt: true
+            },
             orderBy: { createdAt: "desc" },
             take: 5
           },
           timelineEvents: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              eventDate: true
+            },
             orderBy: { eventDate: "asc" },
             take: 10
           },
           debateSessions: {
-            orderBy: { createdAt: "desc" },
-            include: {
+            select: {
+              id: true,
+              caseId: true,
+              lawyerId: true,
+              title: true,
+              status: true,
+              startedAt: true,
+              endsAt: true,
+              outcomeProbability: true,
+              outcomeLabel: true,
+              evaluation: true,
+              createdAt: true,
+              updatedAt: true,
               turns: {
-                orderBy: { roundNumber: "asc" }
+                select: {
+                  id: true,
+                  sessionId: true,
+                  speaker: true,
+                  content: true,
+                  roundNumber: true,
+                  createdAt: true
+                },
+                orderBy: { roundNumber: "asc" },
+                take: 50
               }
-            }
+            },
+            orderBy: { createdAt: "desc" },
+            take: 5
           }
-        }
+        },
+        take: 20
       })
     : [];
 

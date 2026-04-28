@@ -54,7 +54,29 @@ export async function PATCH(request: Request) {
         isPublic: body.isPublic,
         city: body.city
       },
-      include: { user: true }
+      select: {
+        id: true,
+        userId: true,
+        firmName: true,
+        bio: true,
+        specialties: true,
+        yearsExperience: true,
+        hourlyRate: true,
+        fixedFeeFrom: true,
+        rating: true,
+        verifiedBadge: true,
+        city: true,
+        isPublic: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
 
     return NextResponse.json({ profile });

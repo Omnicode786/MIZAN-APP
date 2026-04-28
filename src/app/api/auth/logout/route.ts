@@ -11,6 +11,9 @@ export async function POST(request: Request) {
       const response = NextResponse.json({ ok: true });
       response.cookies.set(SESSION_COOKIE_NAME, "", getExpiredSessionCookieOptions());
       response.headers.set("cache-control", "no-store, max-age=0");
+      response.headers.set("pragma", "no-cache");
+      response.headers.set("expires", "0");
+      response.headers.set("clear-site-data", "\"cookies\"");
       logEvent("info", "auth.logout");
       return response;
     } catch (error) {
