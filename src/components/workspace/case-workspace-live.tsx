@@ -121,31 +121,27 @@ export function CaseWorkspaceLive({
   );
 
   const loadCaseSections = useCallback(async (signal?: AbortSignal) => {
-    const [documentsRes, timelineRes, evidenceRes, activityRes] = await Promise.all([
-      fetch(`/api/cases/${initialCase.id}/documents?limit=20`, { signal, cache: "no-store" }),
-      fetch(`/api/cases/${initialCase.id}/timeline?limit=50`, { signal, cache: "no-store" }),
-      fetch(`/api/cases/${initialCase.id}/evidence?limit=50`, { signal, cache: "no-store" }),
-      fetch(`/api/cases/${initialCase.id}/activity?limit=30`, { signal, cache: "no-store" })
-    ]);
+    const response = await fetch(
+      `/api/cases/${initialCase.id}/sections?documentsLimit=20&timelineLimit=50&evidenceLimit=50&activityLimit=30`,
+      { signal, cache: "no-store" }
+    );
+    if (!response.ok) {
+      throw new Error("Unable to load case sections.");
+    }
 
-    const [documentsData, timelineData, evidenceData, activityData] = await Promise.all([
-      documentsRes.ok ? documentsRes.json() : Promise.resolve(null),
-      timelineRes.ok ? timelineRes.json() : Promise.resolve(null),
-      evidenceRes.ok ? evidenceRes.json() : Promise.resolve(null),
-      activityRes.ok ? activityRes.json() : Promise.resolve(null)
-    ]);
+    const data = await response.json();
 
     setLazySections({
-      documents: asArray(documentsData?.documents),
-      timelineEvents: asArray(timelineData?.timelineEvents),
-      evidenceItems: asArray(evidenceData?.evidenceItems),
-      activityLogs: asArray(activityData?.activityLogs)
+      documents: asArray(data?.documents),
+      timelineEvents: asArray(data?.timelineEvents),
+      evidenceItems: asArray(data?.evidenceItems),
+      activityLogs: asArray(data?.activityLogs)
     });
     setSectionTotals({
-      documents: Number(documentsData?.total ?? documentsData?.documents?.length ?? 0),
-      timelineEvents: Number(timelineData?.total ?? timelineData?.timelineEvents?.length ?? 0),
-      evidenceItems: Number(evidenceData?.total ?? evidenceData?.evidenceItems?.length ?? 0),
-      activityLogs: Number(activityData?.total ?? activityData?.activityLogs?.length ?? 0)
+      documents: Number(data?.totals?.documents ?? data?.documents?.length ?? 0),
+      timelineEvents: Number(data?.totals?.timelineEvents ?? data?.timelineEvents?.length ?? 0),
+      evidenceItems: Number(data?.totals?.evidenceItems ?? data?.evidenceItems?.length ?? 0),
+      activityLogs: Number(data?.totals?.activityLogs ?? data?.activityLogs?.length ?? 0)
     });
   }, [initialCase.id]);
 
@@ -191,7 +187,6 @@ export function CaseWorkspaceLive({
       });
       await requireOk(res, "Unable to save case changes.");
       showSuccess("Case changes saved.");
-      refresh();
     } catch (error) {
       showError(error, "Unable to save case changes.");
     } finally {

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithProfile, getSession } from "@/lib/auth";
 import { buildAccessibleCaseWhereForUser } from "@/lib/permissions";
+import { Prisma } from "@prisma/client";
 
 export async function getWorkspaceUser(preferredRole: "CLIENT" | "LAWYER") {
   const session = await getSession();
@@ -185,7 +186,7 @@ export async function getCaseDetail(
           updatedAt: true
         },
         orderBy: { dueDate: "asc" },
-        take: 50
+        take: 25
       },
       drafts: {
         select: {
@@ -208,11 +209,11 @@ export async function getCaseDetail(
               createdAt: true
             },
             orderBy: { versionNumber: "desc" },
-            take: 4
+            take: 2
           }
         },
         orderBy: { updatedAt: "desc" },
-        take: 10
+        take: 6
       },
       comments: {
         select: {
@@ -234,7 +235,7 @@ export async function getCaseDetail(
           }
         },
         orderBy: { createdAt: "desc" },
-        take: 30
+        take: 15
       },
       internalNotes: includeInternalNotes
         ? {
@@ -254,7 +255,7 @@ export async function getCaseDetail(
               }
             },
             orderBy: { createdAt: "desc" },
-            take: 30
+            take: 15
           }
         : false,
       agentActionReviews: {
@@ -275,7 +276,7 @@ export async function getCaseDetail(
           updatedAt: true
         },
         orderBy: { createdAt: "desc" },
-        take: 30
+        take: 12
       },
       exportBundles: {
         select: {
@@ -334,7 +335,7 @@ export async function getCaseDetail(
           }
         },
         orderBy: { updatedAt: "desc" },
-        take: 20
+        take: 10
       },
       riskScores: {
         select: {
@@ -346,7 +347,9 @@ export async function getCaseDetail(
           rationale: true,
           confidence: true,
           lastCalculatedAt: true
-        }
+        },
+        orderBy: { lastCalculatedAt: "desc" },
+        take: 20
       },
       assistantThreads: {
         select: {
@@ -356,19 +359,7 @@ export async function getCaseDetail(
           caseId: true,
           documentId: true,
           createdAt: true,
-          updatedAt: true,
-          messages: {
-            select: {
-              id: true,
-              role: true,
-              content: true,
-              confidence: true,
-              sources: true,
-              createdAt: true
-            },
-            orderBy: { createdAt: "desc" },
-            take: 12
-          }
+          updatedAt: true
         },
         orderBy: { updatedAt: "desc" },
         take: 5
@@ -397,7 +388,7 @@ export async function getCaseDetail(
               createdAt: true
             },
             orderBy: [{ roundNumber: "asc" }, { createdAt: "asc" }],
-            take: 40
+            take: 20
           }
         },
         orderBy: { createdAt: "desc" },
@@ -422,6 +413,52 @@ export async function getCaseDetail(
 
   if (!detail) return null;
 
+  const assistantThreadIds = detail.assistantThreads.map((thread) => thread.id);
+  const assistantMessageRows = assistantThreadIds.length
+    ? await prisma.$queryRaw<
+        Array<{
+          id: string;
+          threadId: string;
+          role: string;
+          content: string;
+          confidence: number | null;
+          sources: unknown;
+          createdAt: Date;
+        }>
+      >(Prisma.sql`
+        SELECT
+          ranked."id",
+          ranked."threadId",
+          ranked."role"::text AS "role",
+          ranked."content",
+          ranked."confidence",
+          ranked."sources",
+          ranked."createdAt"
+        FROM (
+          SELECT
+            "id",
+            "threadId",
+            "role",
+            "content",
+            "confidence",
+            "sources",
+            "createdAt",
+            ROW_NUMBER() OVER (PARTITION BY "threadId" ORDER BY "createdAt" DESC) AS rn
+          FROM "AssistantMessage"
+          WHERE "threadId" IN (${Prisma.join(assistantThreadIds)})
+        ) ranked
+        WHERE ranked.rn <= 6
+        ORDER BY ranked."threadId" ASC, ranked."createdAt" DESC
+      `)
+    : [];
+
+  const assistantMessagesByThreadId = new Map<string, typeof assistantMessageRows>();
+  for (const message of assistantMessageRows) {
+    const bucket = assistantMessagesByThreadId.get(message.threadId) || [];
+    bucket.push(message);
+    assistantMessagesByThreadId.set(message.threadId, bucket);
+  }
+
   return {
     ...detail,
     documents: [],
@@ -432,7 +469,7 @@ export async function getCaseDetail(
     assistantThreads: sanitizeAssistantThreads(
       detail.assistantThreads.map((thread) => ({
         ...thread,
-        messages: [...thread.messages].reverse()
+        messages: [...(assistantMessagesByThreadId.get(thread.id) || [])].reverse()
       }))
     )
   };

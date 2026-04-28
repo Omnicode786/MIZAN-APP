@@ -21,6 +21,7 @@ import { t } from "@/lib/translations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GlassSurface } from "@/components/ui/glass-surface";
 
 const roleCards = [
   {
@@ -54,7 +55,22 @@ export default function SignupPage() {
       </div>
 
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8">
-        <header className="sticky top-5 z-40 flex items-center justify-between gap-4 rounded-full border border-border/70 bg-card/80 px-5 py-3 shadow-sm backdrop-blur-xl">
+        <GlassSurface
+          className="nav-surface sticky top-5 z-40 rounded-full border border-border/70 bg-card/80 shadow-sm backdrop-blur-xl"
+          height="auto"
+          borderRadius={999}
+          borderWidth={0.07}
+          brightness={50}
+          opacity={0.93}
+          blur={11}
+          displace={0.28}
+          backgroundOpacity={0.12}
+          saturation={1.14}
+          distortionScale={-160}
+          mixBlendMode="screen"
+          borderGlow
+          innerClassName="flex items-center justify-between gap-4 px-5 py-3"
+        >
           <Logo />
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
@@ -86,7 +102,7 @@ export default function SignupPage() {
               </Link>
             </Button>
           </div>
-        </header>
+        </GlassSurface>
 
         <main className="grid flex-1 gap-10 py-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
           <section className="space-y-8">

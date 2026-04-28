@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { forbidden, handleApiError, notFound } from "@/lib/api-response";
-import { buildAccessibleCaseWhereForUser, getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
+import { buildAccessibleCaseWhereForUser, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
@@ -90,7 +90,10 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     const user = await requireUser();
-    const { legalCase } = await getAccessibleCase(params.id);
+    const legalCase = await prisma.case.findFirst({
+      where: buildAccessibleCaseWhereForUser(user, params.id),
+      select: { id: true }
+    });
     if (!legalCase) return notFound();
 
     const body = patchSchema.parse(await request.json());
@@ -131,9 +134,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
     const user = await requireUser();
-    const { legalCase } = await getAccessibleCase(params.id);
-    if (!legalCase) return notFound();
     if (user.role !== "CLIENT") return forbidden();
+    const legalCase = await prisma.case.findFirst({
+      where: buildAccessibleCaseWhereForUser(user, params.id),
+      select: { id: true }
+    });
+    if (!legalCase) return notFound();
 
     await prisma.case.delete({ where: { id: params.id } });
     await logActivity(null, user.id, "CASE_DELETED", `Deleted case ${params.id}`);

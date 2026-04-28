@@ -25,6 +25,7 @@ import {
   Gauge,
   Landmark,
   LockKeyhole,
+  Menu,
   MessageSquareText,
   Network,
   Route,
@@ -33,7 +34,8 @@ import {
   ShieldCheck,
   Sparkles,
   Upload,
-  UsersRound
+  UsersRound,
+  X
 } from "lucide-react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
@@ -45,6 +47,7 @@ import { t } from "@/lib/translations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GlassSurface } from "@/components/ui/glass-surface";
 
 const productPillars = [
   {
@@ -216,6 +219,7 @@ const heroTrustSignals = [
 
 export default function LandingPage() {
   const [headlineIndex, setHeadlineIndex] = useState(0);
+  const [landingNavOpen, setLandingNavOpen] = useState(false);
   const language = useLanguage();
   const shouldReduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLElement | null>(null);
@@ -305,14 +309,43 @@ export default function LandingPage() {
         </motion.div>
       </div>
 
-      <div className="mx-auto max-w-[1440px] px-6 py-4 xl:px-8">
-        <header className={`${surfaceClass} nav-surface sticky top-4 z-40 bg-card/92 backdrop-blur`}>
-          <div className="grid h-14 grid-cols-12 items-center gap-x-6 px-6">
-            <div className="col-span-6 flex items-center lg:col-span-3">
+      <div className="mx-auto max-w-[1440px] px-3 py-3 sm:px-5 sm:py-4 xl:px-8">
+        <GlassSurface
+          className={`${surfaceClass} nav-surface sticky top-3 z-40 bg-card/92 backdrop-blur sm:top-4`}
+          height="auto"
+          borderRadius={18}
+          borderWidth={0.1}
+          brightness={50}
+          opacity={0.93}
+          blur={11}
+          displace={0.35}
+          backgroundOpacity={0.12}
+          saturation={1.18}
+          distortionScale={-180}
+          mixBlendMode="screen"
+          borderGlow
+          innerClassName="block p-0"
+        >
+          <div className="flex min-h-16 items-center gap-2 px-3 py-2 sm:px-4 lg:grid lg:grid-cols-[minmax(150px,0.95fr)_minmax(360px,1.35fr)_minmax(360px,1fr)] lg:gap-x-4 lg:px-5 xl:grid-cols-[minmax(170px,1fr)_minmax(420px,1.35fr)_minmax(390px,1fr)] xl:gap-x-6 xl:px-6">
+            <div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
               <Logo />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="ml-auto h-9 w-9 rounded-xl lg:hidden"
+                onClick={() => setLandingNavOpen((open) => !open)}
+                aria-label={landingNavOpen ? "Close navigation" : "Open navigation"}
+                aria-expanded={landingNavOpen}
+              >
+                {landingNavOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </Button>
             </div>
 
-            <nav className="col-span-5 hidden h-full items-center justify-center gap-6 text-[14px] font-medium text-muted-foreground lg:flex">
+            <nav className="hidden h-full items-center justify-center gap-4 text-[14px] font-semibold text-muted-foreground xl:gap-6 lg:flex">
+              <Link href="/home-2" className="inline-flex h-full items-center transition-colors duration-200 hover:text-foreground">
+                Home 2
+              </Link>
               <a href="#workflow" className="inline-flex h-full items-center transition-colors duration-200 hover:text-foreground">
                 Workflow
               </a>
@@ -327,23 +360,64 @@ export default function LandingPage() {
               </a>
             </nav>
 
-            <div className="col-span-6 flex items-center justify-end gap-3 lg:col-span-4">
-              <LanguageToggle compact />
-              <ThemePresetToggle compact className="hidden max-w-[145px] xl:inline-flex" />
-              <UiModeToggle compact className="h-8 rounded-xl px-2.5" />
+            <div className="landing-topbar-actions flex min-w-0 flex-1 items-center justify-end gap-1.5 py-0.5 sm:gap-2 lg:flex-none">
+              <UiModeToggle compact className="hidden h-9 rounded-xl px-2.5 xl:inline-flex [&_span]:hidden" />
               <ThemeToggle className="h-8 w-8 rounded-xl" />
-              <Button asChild variant="ghost" className="hidden h-8 rounded-xl px-3 text-[14px] sm:inline-flex">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="hidden h-8 w-8 rounded-xl lg:inline-flex"
+                onClick={() => setLandingNavOpen((open) => !open)}
+                aria-label={landingNavOpen ? "Close preferences" : "Open preferences"}
+                aria-expanded={landingNavOpen}
+              >
+                {landingNavOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </Button>
+              <Button asChild variant="ghost" className="hidden h-9 rounded-xl px-3 text-[14px] font-semibold sm:inline-flex">
                 <Link href="/login">{t(language, "login")}</Link>
               </Button>
-              <Button asChild className="h-8 rounded-xl px-5 text-[14px]">
+              <Button asChild className="h-9 rounded-xl px-3 text-[14px] font-semibold sm:px-5">
                 <Link href="/signup">
-                  {t(language, "getStarted")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only sm:max-w-none">{t(language, "getStarted")}</span>
+                  <ArrowRight className="h-4 w-4 shrink-0 sm:ml-2" />
                 </Link>
               </Button>
             </div>
           </div>
-        </header>
+          {landingNavOpen ? (
+            <div className="border-t border-border/60 px-3 pb-3 pt-2">
+              <nav className="grid gap-2 text-sm font-semibold text-muted-foreground lg:hidden">
+                {[
+                  ["/home-2", "Home 2"],
+                  ["#workflow", "Workflow"],
+                  ["#agent", "Case Agent"],
+                  ["#lawyers", t(language, "lawyers")],
+                  ["#journey", "Platform"]
+                ].map(([href, label]) => (
+                  <a
+                    key={href}
+                    href={href}
+                    onClick={() => setLandingNavOpen(false)}
+                    className="glass-chip rounded-2xl px-4 py-3 transition hover:text-foreground"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </nav>
+              <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:ml-auto lg:max-w-2xl lg:grid-cols-4">
+                <div className="landing-mobile-language glass-chip flex min-h-11 items-center justify-center rounded-2xl px-2">
+                  <LanguageToggle compact />
+                </div>
+                <ThemePresetToggle compact className="h-11 w-full max-w-none rounded-2xl" />
+                <UiModeToggle compact className="h-11 rounded-2xl" />
+                <Button asChild variant="outline" className="h-11 rounded-2xl font-semibold">
+                  <Link href="/login">{t(language, "login")}</Link>
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </GlassSurface>
 
         <main>
           <section ref={heroRef} className="relative pb-0 pt-8">

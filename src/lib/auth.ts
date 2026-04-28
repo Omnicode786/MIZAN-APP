@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import {
@@ -24,22 +25,75 @@ export function destroySession() {
   cookieStore.delete(SESSION_COOKIE_NAME);
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+export const getSession = cache(async function getSession(): Promise<SessionPayload | null> {
   const token = cookies().get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
 
   return verifySessionToken(token);
-}
+});
 
-export async function getCurrentUserWithProfile() {
+export const getCurrentUserWithProfile = cache(async function getCurrentUserWithProfile() {
   const session = await getSession();
   if (!session) return null;
 
-  return prisma.user.findUnique({
+  const userQuery = prisma.user.findUnique({
     where: { id: session.sub },
-    include: {
-      clientProfile: true,
-      lawyerProfile: true
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      avatarUrl: true
     }
   });
-}
+
+  const clientProfileQuery =
+    session.role === "CLIENT"
+      ? prisma.clientProfile.findUnique({
+          where: { userId: session.sub },
+          select: {
+            id: true,
+            userId: true,
+            phone: true,
+            region: true,
+            simpleLanguageMode: true
+          }
+        })
+      : Promise.resolve(null);
+
+  const lawyerProfileQuery =
+    session.role === "LAWYER"
+      ? prisma.lawyerProfile.findUnique({
+          where: { userId: session.sub },
+          select: {
+            id: true,
+            userId: true,
+            publicSlug: true,
+            firmName: true,
+            bio: true,
+            specialties: true,
+            yearsExperience: true,
+            hourlyRate: true,
+            fixedFeeFrom: true,
+            isPublic: true,
+            verifiedBadge: true,
+            rating: true,
+            city: true
+          }
+        })
+      : Promise.resolve(null);
+
+  const [user, clientProfile, lawyerProfile] = await Promise.all([
+    userQuery,
+    clientProfileQuery,
+    lawyerProfileQuery
+  ]);
+
+  if (!user) return null;
+
+  return {
+    ...user,
+    clientProfile,
+    lawyerProfile
+  };
+});

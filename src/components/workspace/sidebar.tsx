@@ -97,8 +97,8 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "app-sidebar sticky top-0 hidden h-screen shrink-0 transition-all duration-300 lg:flex",
-        collapsed ? "w-[92px] p-3" : "w-[304px] p-4"
+        "app-sidebar sticky top-0 hidden h-dvh max-h-dvh shrink-0 overflow-hidden transition-all duration-300 lg:flex",
+        collapsed ? "w-[88px] p-2.5 xl:w-[92px] xl:p-3" : "w-[280px] p-3 xl:w-[304px] xl:p-4"
       )}
     >
       <GlassSurface
@@ -119,7 +119,7 @@ export function Sidebar({
         blueOffset={21}
         mixBlendMode="screen"
         saturation={1.3}
-        innerClassName={cn("flex h-full min-w-0 flex-col", collapsed ? "p-3" : "p-4")}
+        innerClassName={cn("flex h-full min-h-0 min-w-0 flex-col", collapsed ? "p-3" : "p-4")}
       >
         <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between gap-3")}>
           {!collapsed ? (
@@ -138,7 +138,7 @@ export function Sidebar({
           )}
         </div>
 
-        <div className={cn("mt-8 flex flex-1 flex-col", collapsed && "mt-6")}>
+        <div className={cn("mt-6 flex min-h-0 flex-1 flex-col xl:mt-8", collapsed && "mt-5 xl:mt-6")}>
           {!collapsed ? (
             <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               {heading}
@@ -147,19 +147,19 @@ export function Sidebar({
             <div className="mb-3 h-3" />
           )}
 
-          <nav className="glass-subtle space-y-2 rounded-[1.75rem] p-2 transition-colors duration-300">
+          <nav className="glass-subtle premium-scroll min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain rounded-[1.5rem] p-2 transition-colors duration-300 xl:space-y-2 xl:rounded-[1.75rem]">
             <button
               type="button"
               title={loggingOut ? "Logging out" : "Logout"}
               onClick={logout}
               disabled={loggingOut}
               className={cn(
-                "flex w-full rounded-2xl text-sm text-muted-foreground transition hover:bg-white/30 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-white/10",
-                collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3.5"
+                "flex min-h-11 w-full rounded-2xl text-sm font-medium text-muted-foreground transition hover:bg-white/30 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-white/10",
+                collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-3.5 py-3 xl:px-4 xl:py-3.5"
               )}
             >
               <LogOut className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{loggingOut ? "Logging out..." : t(language, "logout")}</span>}
+              {!collapsed && <span className="min-w-0 truncate">{loggingOut ? "Logging out..." : t(language, "logout")}</span>}
             </button>
 
             {nav.map((item) => {
@@ -173,15 +173,15 @@ export function Sidebar({
                   href={item.href}
                   title={collapsed ? label : undefined}
                   className={cn(
-                    "flex rounded-2xl text-sm transition-all duration-200",
-                    collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-4 py-3.5",
+                    "flex min-h-11 rounded-2xl text-sm font-medium transition-all duration-200",
+                    collapsed ? "justify-center px-0 py-3" : "items-center gap-3 px-3.5 py-3 xl:px-4 xl:py-3.5",
                     active
                       ? "bg-primary/95 text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.16)_inset,0_14px_28px_hsl(var(--primary)/0.24)]"
                       : "text-muted-foreground hover:-translate-y-0.5 hover:bg-white/30 hover:text-foreground dark:hover:bg-white/10"
                   )}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span className="truncate">{label}</span>}
+                  {!collapsed && <span className="min-w-0 truncate">{label}</span>}
                 </Link>
               );
             })}

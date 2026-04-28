@@ -8,6 +8,7 @@ import { getCurrentUserWithProfile } from "@/lib/auth";
 import { CLIENT_NAV } from "@/lib/constants";
 import { sanitizeAssistantThreads } from "@/lib/data-access";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -50,23 +51,69 @@ export default async function ClientAssistantPage() {
     },
     orderBy: { updatedAt: "desc" },
     take: 10,
-    include: {
-      messages: {
-        orderBy: { createdAt: "desc" },
-        take: 12,
-        select: {
-          id: true,
-          role: true,
-          content: true,
-          confidence: true,
-          sources: true,
-          createdAt: true
-        }
-      }
+    select: {
+      id: true,
+      title: true,
+      caseId: true,
+      documentId: true,
+      scope: true,
+      createdAt: true,
+      updatedAt: true
     }
   });
 
-  const safeThreads = sanitizeAssistantThreads(threads).map((thread) => ({
+  const threadIds = threads.map((thread) => thread.id);
+  const messageRows = threadIds.length
+    ? await prisma.$queryRaw<
+        Array<{
+          id: string;
+          threadId: string;
+          role: string;
+          content: string;
+          confidence: number | null;
+          sources: unknown;
+          createdAt: Date;
+        }>
+      >(Prisma.sql`
+        SELECT
+          ranked."id",
+          ranked."threadId",
+          ranked."role"::text AS "role",
+          ranked."content",
+          ranked."confidence",
+          ranked."sources",
+          ranked."createdAt"
+        FROM (
+          SELECT
+            "id",
+            "threadId",
+            "role",
+            "content",
+            "confidence",
+            "sources",
+            "createdAt",
+            ROW_NUMBER() OVER (PARTITION BY "threadId" ORDER BY "createdAt" DESC) AS rn
+          FROM "AssistantMessage"
+          WHERE "threadId" IN (${Prisma.join(threadIds)})
+        ) ranked
+        WHERE ranked.rn <= 6
+        ORDER BY ranked."threadId" ASC, ranked."createdAt" DESC
+      `)
+    : [];
+
+  const messagesByThreadId = new Map<string, typeof messageRows>();
+  for (const message of messageRows) {
+    const bucket = messagesByThreadId.get(message.threadId) || [];
+    bucket.push(message);
+    messagesByThreadId.set(message.threadId, bucket);
+  }
+
+  const threadsWithMessages = threads.map((thread) => ({
+    ...thread,
+    messages: messagesByThreadId.get(thread.id) || []
+  }));
+
+  const safeThreads = sanitizeAssistantThreads(threadsWithMessages).map((thread) => ({
     id: thread.id,
     title: thread.title,
     caseId: thread.caseId,

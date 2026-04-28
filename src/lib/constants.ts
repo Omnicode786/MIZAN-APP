@@ -18,7 +18,9 @@ export const CLIENT_NAV: NavItem[] = [
   { href: "/client/drafts", label: "Drafting Studio", translationKey: "draftingStudio" },
   { href: "/client/deadlines", label: "Deadlines", translationKey: "deadlineTracker" },
   { href: "/client/evidence", label: "Evidence Vault", translationKey: "evidenceSearch" },
-  { href: "/client/collaboration", label: "Collaboration", translationKey: "sharedCollaboration" }
+  { href: "/search", label: "Search Investigation", translationKey: "search" },
+  { href: "/client/collaboration", label: "Collaboration", translationKey: "sharedCollaboration" },
+  { href: "/settings", label: "Settings", translationKey: "settings" }
 ];
 
 export const LAWYER_NAV: NavItem[] = [
@@ -30,7 +32,9 @@ export const LAWYER_NAV: NavItem[] = [
   { href: "/lawyer/deadlines", label: "Deadline Cockpit", translationKey: "deadlineTracker" },
   { href: "/lawyer/analytics", label: "Analytics", translationKey: "dashboard" },
   { href: "/lawyer/debate", label: "Debate Mode", translationKey: "debateMode" },
-  { href: "/lawyer/profile", label: "Public Profile", translationKey: "profile" }
+  { href: "/search", label: "Search Investigation", translationKey: "search" },
+  { href: "/lawyer/profile", label: "Public Profile", translationKey: "profile" },
+  { href: "/settings", label: "Settings", translationKey: "settings" }
 ];
 
 export const SHARED_NAV: NavItem[] = [
