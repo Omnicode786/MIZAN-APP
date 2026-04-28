@@ -22,7 +22,7 @@ import {
 import { AiTranslationActions } from "@/components/ai-translation-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { GlassSurface } from "@/components/ui/glass-surface";
+import { FrostedSurface as GlassSurface } from "@/components/ui/frosted-surface";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/hooks/use-language";
 import {

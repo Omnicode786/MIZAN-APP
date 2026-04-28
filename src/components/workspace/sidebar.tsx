@@ -26,7 +26,7 @@ import {
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { GlassSurface } from "@/components/ui/glass-surface";
+import { FrostedSurface as GlassSurface } from "@/components/ui/frosted-surface";
 import { useLanguage } from "@/hooks/use-language";
 import { t, type TranslationKey } from "@/lib/translations";
 
@@ -102,23 +102,11 @@ export function Sidebar({
       )}
     >
       <GlassSurface
-        className="nav-surface h-full w-full"
+        className="workspace-sidebar-surface h-full w-full"
+        width="100%"
         height="100%"
         borderRadius={34}
-        borderWidth={0.13}
         borderGlow
-        refractive
-        backgroundOpacity={0.04}
-        brightness={48}
-        opacity={0.5}
-        blur={12}
-        displace={0.42}
-        distortionScale={-184}
-        redOffset={0}
-        greenOffset={10}
-        blueOffset={21}
-        mixBlendMode="screen"
-        saturation={1.3}
         innerClassName={cn("flex h-full min-h-0 min-w-0 flex-col", collapsed ? "p-3" : "p-4")}
       >
         <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between gap-3")}>
@@ -147,7 +135,7 @@ export function Sidebar({
             <div className="mb-3 h-3" />
           )}
 
-          <nav className="glass-subtle premium-scroll min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain rounded-[1.5rem] p-2 transition-colors duration-300 xl:space-y-2 xl:rounded-[1.75rem]">
+          <nav className="glass-subtle premium-scroll min-h-0 flex-1 space-y-1.5 overflow-x-hidden overflow-y-auto overscroll-contain rounded-[1.5rem] p-2 transition-colors duration-300 xl:space-y-2 xl:rounded-[1.75rem]">
             <button
               type="button"
               title={loggingOut ? "Logging out" : "Logout"}

@@ -21,7 +21,7 @@ import { RiskReadinessDashboard } from "@/components/workspace/risk-readiness-da
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { GlassSurface } from "@/components/ui/glass-surface";
+import { FrostedSurface as GlassSurface } from "@/components/ui/frosted-surface";
 import { CLIENT_NAV } from "@/lib/constants";
 import { getDashboardSnapshot } from "@/lib/data-access";
 import { getCurrentUserWithProfile } from "@/lib/auth";

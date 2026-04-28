@@ -118,6 +118,7 @@ export function PublicLawyersDirectory({
       <div className="mx-auto max-w-[1440px] px-6 py-4 xl:px-8">
         <GlassSurface
           className="nav-surface sticky top-4 z-40 rounded-xl border border-border/70 bg-card/92 shadow-[0_1px_3px_rgba(0,0,0,0.06)] backdrop-blur"
+          width="100%"
           height="auto"
           borderRadius={18}
           borderWidth={0.09}
@@ -129,10 +130,8 @@ export function PublicLawyersDirectory({
           saturation={1.16}
           distortionScale={-170}
           mixBlendMode="screen"
-          borderGlow
-          innerClassName="block p-0"
         >
-          <div className="grid min-h-14 grid-cols-12 items-center gap-x-4 px-4 py-2 lg:px-6">
+          <div className="grid min-h-14 w-full grid-cols-12 items-center gap-x-4 px-4 py-2 lg:px-6">
             <div className="col-span-6 flex items-center lg:col-span-3">
               <Logo />
             </div>

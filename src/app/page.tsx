@@ -312,6 +312,7 @@ export default function LandingPage() {
       <div className="mx-auto max-w-[1440px] px-3 py-3 sm:px-5 sm:py-4 xl:px-8">
         <GlassSurface
           className={`${surfaceClass} nav-surface sticky top-3 z-40 bg-card/92 backdrop-blur sm:top-4`}
+          width="100%"
           height="auto"
           borderRadius={18}
           borderWidth={0.1}
@@ -323,10 +324,8 @@ export default function LandingPage() {
           saturation={1.18}
           distortionScale={-180}
           mixBlendMode="screen"
-          borderGlow
-          innerClassName="block p-0"
         >
-          <div className="flex min-h-16 items-center gap-2 px-3 py-2 sm:px-4 lg:grid lg:grid-cols-[minmax(150px,0.95fr)_minmax(360px,1.35fr)_minmax(360px,1fr)] lg:gap-x-4 lg:px-5 xl:grid-cols-[minmax(170px,1fr)_minmax(420px,1.35fr)_minmax(390px,1fr)] xl:gap-x-6 xl:px-6">
+          <div className="flex min-h-16 w-full items-center gap-2 px-3 py-2 sm:px-4 lg:grid lg:grid-cols-[minmax(150px,0.95fr)_minmax(360px,1.35fr)_minmax(360px,1fr)] lg:gap-x-4 lg:px-5 xl:grid-cols-[minmax(170px,1fr)_minmax(420px,1.35fr)_minmax(390px,1fr)] xl:gap-x-6 xl:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
               <Logo />
               <Button

@@ -21,7 +21,7 @@ import { AiTranslationActions } from "@/components/ai-translation-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { GlassSurface } from "@/components/ui/glass-surface";
+import { FrostedSurface as GlassSurface } from "@/components/ui/frosted-surface";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ActivityFeed } from "@/components/workspace/activity-feed";

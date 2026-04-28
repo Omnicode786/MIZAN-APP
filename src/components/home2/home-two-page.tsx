@@ -427,6 +427,7 @@ export function HomeTwoPage() {
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5">
         <GlassSurface
           className="home2-navbar-surface mx-auto w-full max-w-7xl rounded-[1.4rem] border border-white/65 bg-white/82 shadow-[0_20px_70px_rgba(16,24,40,0.12)] backdrop-blur-2xl"
+          width="100%"
           height="auto"
           borderRadius={22}
           borderWidth={0.1}
@@ -438,33 +439,33 @@ export function HomeTwoPage() {
           saturation={1.18}
           distortionScale={-170}
           mixBlendMode="screen"
-          borderGlow
-          innerClassName="flex min-h-16 items-center gap-3 px-3 sm:px-5"
         >
-          <Link href="/" className="rounded-full bg-black px-5 py-2 text-sm font-black uppercase tracking-[0.18em] text-white">
-            Mizan
-          </Link>
-          <nav className="ml-auto hidden min-w-0 items-center gap-1 lg:flex">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-full px-4 py-2 text-sm font-black text-black/58 transition hover:bg-black hover:text-white",
-                  item.href === "/home-2" && "bg-black text-white"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-2 lg:ml-2">
-            <Button asChild variant="ghost" className="hidden h-10 rounded-full px-4 text-sm font-black sm:inline-flex">
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button asChild className="h-10 rounded-full bg-black px-5 text-sm font-black text-white hover:bg-black/86">
-              <Link href="/signup">Start</Link>
-            </Button>
+          <div className="flex min-h-16 w-full items-center gap-3 px-3 sm:px-5">
+            <Link href="/" className="rounded-full bg-black px-5 py-2 text-sm font-black uppercase tracking-[0.18em] text-white">
+              Mizan
+            </Link>
+            <nav className="ml-auto hidden min-w-0 items-center gap-1 lg:flex">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "rounded-full px-4 py-2 text-sm font-black text-black/58 transition hover:bg-black hover:text-white",
+                    item.href === "/home-2" && "bg-black text-white"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="ml-auto flex items-center gap-2 lg:ml-2">
+              <Button asChild variant="ghost" className="hidden h-10 rounded-full px-4 text-sm font-black sm:inline-flex">
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild className="h-10 rounded-full bg-black px-5 text-sm font-black text-white hover:bg-black/86">
+                <Link href="/signup">Start</Link>
+              </Button>
+            </div>
           </div>
         </GlassSurface>
       </header>

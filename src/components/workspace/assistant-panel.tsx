@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AiTranslationActions } from "@/components/ai-translation-actions";
-import { GlassSurface } from "@/components/ui/glass-surface";
+import { FrostedSurface as GlassSurface } from "@/components/ui/frosted-surface";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/hooks/use-language";

@@ -55,6 +55,7 @@ export default function LoginPage() {
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-5 py-6 md:px-6 md:py-8">
         <GlassSurface
           className="nav-surface rounded-full border border-border/70 bg-card/80 shadow-sm backdrop-blur-xl"
+          width="100%"
           height="auto"
           borderRadius={999}
           borderWidth={0.07}
@@ -66,35 +67,35 @@ export default function LoginPage() {
           saturation={1.14}
           distortionScale={-160}
           mixBlendMode="screen"
-          borderGlow
-          innerClassName="flex items-center justify-between gap-4 px-5 py-3"
         >
-          <Logo />
+          <div className="flex w-full items-center justify-between gap-4 px-5 py-3">
+            <Logo />
 
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <Link href="/" className="transition hover:text-foreground">
-              Platform
-            </Link>
-            <Link href="/lawyers" className="transition hover:text-foreground">
-              {t(language, "lawyers")}
-            </Link>
-            <Link href="/signup" className="transition hover:text-foreground">
-              {t(language, "signup")}
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <LanguageToggle compact />
-            <ThemePresetToggle compact className="hidden max-w-[145px] xl:inline-flex" />
-            <UiModeToggle compact className="rounded-full px-3" />
-            <ThemeToggle className="rounded-full" />
-
-            <Button asChild className="hidden sm:inline-flex">
-              <Link href="/signup">
-                {t(language, "signup")}
-                <ArrowRight className="ml-2 h-4 w-4" />
+            <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
+              <Link href="/" className="transition hover:text-foreground">
+                Platform
               </Link>
-            </Button>
+              <Link href="/lawyers" className="transition hover:text-foreground">
+                {t(language, "lawyers")}
+              </Link>
+              <Link href="/signup" className="transition hover:text-foreground">
+                {t(language, "signup")}
+              </Link>
+            </nav>
+
+            <div className="flex items-center gap-2">
+              <LanguageToggle compact />
+              <ThemePresetToggle compact className="hidden max-w-[145px] xl:inline-flex" />
+              <UiModeToggle compact className="rounded-full px-3" />
+              <ThemeToggle className="rounded-full" />
+
+              <Button asChild className="hidden sm:inline-flex">
+                <Link href="/signup">
+                  {t(language, "signup")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </GlassSurface>
 
