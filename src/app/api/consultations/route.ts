@@ -88,7 +88,9 @@ export async function GET(request: Request) {
         ? {
             lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
             assignment: {
-              status: "ACCEPTED" as const
+              is: {
+                status: "ACCEPTED"
+              }
             },
             caseId: query.caseId
           }
