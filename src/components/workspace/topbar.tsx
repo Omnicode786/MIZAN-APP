@@ -107,19 +107,21 @@ export function Topbar({
 
   const liquidGlassTopbarProps = isMobileGlassViewport
     ? {
-        borderWidth: 0.26,
-        backgroundOpacity: 0.12,
-        brightness: 42,
-        opacity: 0.97,
-        blur: 15,
-        displace: 4.8,
-        distortionScale: -250,
-        redOffset: -12,
-        greenOffset: 22,
-        blueOffset: 42,
-        saturation: 1.62
+        borderRadius: 22,
+        borderWidth: 0.1,
+        backgroundOpacity: 0.18,
+        brightness: 52,
+        opacity: 0.9,
+        blur: 12,
+        displace: 0.32,
+        distortionScale: -170,
+        redOffset: 0,
+        greenOffset: 10,
+        blueOffset: 20,
+        saturation: 1.18
       }
     : {
+        borderRadius: 30,
         borderWidth: 0.1,
         backgroundOpacity: 0.08,
         brightness: 49,
@@ -316,7 +318,7 @@ export function Topbar({
           className="nav-surface glass-border-glow workspace-glass-topbar mx-auto w-full max-w-[1600px] border border-white/45"
           width="100%"
           height="auto"
-          borderRadius={30}
+          borderRadius={liquidGlassTopbarProps.borderRadius}
           borderWidth={liquidGlassTopbarProps.borderWidth}
           backgroundOpacity={liquidGlassTopbarProps.backgroundOpacity}
           brightness={liquidGlassTopbarProps.brightness}
