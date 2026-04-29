@@ -307,7 +307,8 @@ export async function answerPakistaniLegalQuestion({
   role,
   simpleLanguageMode,
   language,
-  recentMessages
+  recentMessages,
+  userId
 }: {
   question: string;
   caseId?: string;
@@ -316,6 +317,7 @@ export async function answerPakistaniLegalQuestion({
   simpleLanguageMode?: boolean;
   language?: AppLanguage;
   recentMessages?: RecentThreadMessage[];
+  userId?: string;
 }) {
   const outputLanguage = normalizeLanguage(language);
   let context = "";
@@ -389,7 +391,12 @@ export async function answerPakistaniLegalQuestion({
     `User question: ${question}`
   ].join("\n\n");
 
-  const response = await runAiTask(prompt, modelInput || question);
+  const response = await runAiTask(prompt, modelInput || question, {
+    feature: "ai.chat",
+    userId,
+    caseId,
+    documentId
+  });
   return {
     ...response,
     sources: Array.from(new Set(sources)).slice(0, 8)

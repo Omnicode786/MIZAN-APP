@@ -1,6 +1,7 @@
 import { generateGeminiInsight, generateGeminiVisionInsight } from "@/lib/ai/providers/gemini";
 import { generateMockInsight, generateMockVisionInsight } from "@/lib/ai/providers/mock";
 import { generateOpenAIInsight, generateOpenAIVisionInsight } from "@/lib/ai/providers/openai";
+import { assertAiUsageAvailable } from "@/lib/ai-usage";
 import { recordAiUsage, trackError } from "@/lib/observability";
 
 type AiProvider = "gemini" | "openai" | "mock";
@@ -81,6 +82,10 @@ export async function runAiTask(prompt: string, context?: string, options?: AiTa
     throw new AiProviderError(provider, new Error("AI prompt is empty."));
   }
 
+  if (options?.userId) {
+    await assertAiUsageAvailable(options.userId);
+  }
+
   try {
     let result;
     if (provider === "openai") {
@@ -139,6 +144,10 @@ export async function runVisionAiTask(
 
   if (!Array.isArray(images) || images.some((image) => !image?.mimeType || !image?.data)) {
     throw new AiProviderError(provider, new Error("AI image input is invalid."));
+  }
+
+  if (options?.userId) {
+    await assertAiUsageAvailable(options.userId);
   }
 
   try {

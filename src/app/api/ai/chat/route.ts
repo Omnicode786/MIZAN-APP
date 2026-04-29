@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError, handleApiError, notFound, unauthorized, validationError } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+import { assertAiUsageAvailable } from "@/lib/ai-usage";
 import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/lib/legal-ai";
 import { runAgentTurn } from "@/lib/ai/agent-runner";
 import { createAgentActionReviewFromAssistantMessage } from "@/lib/agent-action-reviews";
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     if (!user) return unauthorized();
 
     const body = schema.parse(await request.json());
+    await assertAiUsageAvailable(user.id);
     const language = normalizeLanguage(body.language);
     let caseTitle: string | undefined;
 
@@ -100,7 +102,8 @@ export async function POST(request: Request) {
           role: user.role,
           simpleLanguageMode: user.clientProfile?.simpleLanguageMode,
           language,
-          recentMessages
+          recentMessages,
+          userId: user.id
         });
 
     if (!threadId) {

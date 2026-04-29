@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AnimatePresence,
   motion,
@@ -254,7 +254,6 @@ export default function LandingPage() {
               src="/logo.png"
               alt=""
               fill
-              priority
               sizes="(max-width: 1024px) 86vw, 900px"
               className="object-contain"
             />
@@ -425,7 +424,7 @@ export default function LandingPage() {
                 <motion.div
                   className="lg:col-span-6"
                   style={shouldReduceMotion ? undefined : { y: contentY }}
-                  initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+                  initial={false}
                   animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 >
@@ -434,7 +433,7 @@ export default function LandingPage() {
                       <div>
                         <motion.div
                           className="flex flex-wrap items-center gap-2"
-                          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                          initial={false}
                           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                           transition={{ delay: 0.05, duration: 0.6 }}
                         >
@@ -462,7 +461,7 @@ export default function LandingPage() {
 
                         <motion.h1
                           className="mt-4 max-w-[520px] text-balance text-[42px] font-bold leading-[50px] tracking-[-0.02em] text-foreground"
-                          initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                          initial={false}
                           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                           transition={{ delay: 0.12, duration: 0.72 }}
                         >
@@ -471,7 +470,7 @@ export default function LandingPage() {
 
                         <motion.p
                           className="mt-6 max-w-[480px] text-[14px] leading-[22px] text-muted-foreground"
-                          initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                          initial={false}
                           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                           transition={{ delay: 0.22, duration: 0.68 }}
                         >
@@ -482,7 +481,7 @@ export default function LandingPage() {
 
                         <motion.div
                           className="mt-7 flex flex-wrap items-center gap-3"
-                          initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                          initial={false}
                           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                           transition={{ delay: 0.3, duration: 0.68 }}
                         >
@@ -498,7 +497,7 @@ export default function LandingPage() {
 
                       <motion.div
                         className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 pt-2"
-                        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                        initial={false}
                         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                         transition={{ delay: 0.36, duration: 0.64 }}
                       >
@@ -519,7 +518,7 @@ export default function LandingPage() {
                 <motion.div
                   className="lg:col-span-6 lg:pt-2"
                   style={shouldReduceMotion ? undefined : { y: visualY }}
-                  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.985, y: 18 }}
+                  initial={false}
                   animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
                   transition={{ delay: 0.14, duration: 0.9, ease: "easeOut" }}
                 >
@@ -1045,23 +1044,10 @@ function HeroAction({
   children: ReactNode;
 }) {
   const shouldReduceMotion = useReducedMotion();
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-
-  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (shouldReduceMotion) return;
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 8;
-    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 8;
-    setOffset({ x, y });
-  }
 
   return (
     <motion.div
       className="relative"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={() => setOffset({ x: 0, y: 0 })}
-      animate={shouldReduceMotion ? undefined : { x: offset.x, y: offset.y }}
       whileHover={shouldReduceMotion ? undefined : { y: -4 }}
       transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.4 }}
     >

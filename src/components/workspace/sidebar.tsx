@@ -30,13 +30,13 @@ import { FrostedSurface as GlassSurface } from "@/components/ui/frosted-surface"
 import { useLanguage } from "@/hooks/use-language";
 import { t, type TranslationKey } from "@/lib/translations";
 
-type NavItem = {
+export type NavItem = {
   href: string;
   label: string;
   translationKey?: TranslationKey;
 };
 
-function resolveIcon(item: NavItem): LucideIcon {
+export function resolveSidebarIcon(item: NavItem): LucideIcon {
   const text = `${item.href} ${item.label}`.toLowerCase();
   if (text.includes("dashboard")) return BarChart3;
   if (text.includes("assistant") || text.includes("ai ")) return Bot;
@@ -152,7 +152,7 @@ export function Sidebar({
 
             {nav.map((item) => {
               const active = currentPath === item.href || currentPath?.startsWith(item.href + "/");
-              const Icon = resolveIcon(item);
+              const Icon = resolveSidebarIcon(item);
               const label = item.translationKey ? t(language, item.translationKey) : item.label;
 
               return (

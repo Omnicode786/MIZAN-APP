@@ -2,16 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
-import { useReducedMotion } from "framer-motion";
-import { gsap } from "gsap";
-import { useGSAP } from "@gsap/react";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { cn } from "@/lib/utils";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -94,6 +88,24 @@ const portalCards = [
   }
 ];
 
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const onChange = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener("change", onChange);
+    return () => mediaQuery.removeEventListener("change", onChange);
+  }, []);
+
+  return prefersReducedMotion;
+}
+
 function Kicker({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <p
@@ -146,24 +158,39 @@ function ImageLayer({
 
 export function HomeTwoPage() {
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = usePrefersReducedMotion();
 
-  useGSAP(
-    () => {
+  useEffect(() => {
+    let cancelled = false;
+    let cleanupAnimations = () => {};
+    let idleHandle: number | null = null;
+    let timeoutHandle: number | null = null;
+
+    const startAnimations = async () => {
       const root = rootRef.current;
       if (!root) return;
 
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger")
+      ]);
+
+      if (cancelled) return;
+
+      gsap.registerPlugin(ScrollTrigger);
       const mm = gsap.matchMedia();
 
       mm.add(
         {
           all: "(min-width: 0px)",
           isDesktop: "(min-width: 1024px)",
+          canHover: "(hover: hover) and (pointer: fine)",
           reduceMotion: "(prefers-reduced-motion: reduce)"
         },
         (context) => {
           const reduceMotion = Boolean(context.conditions?.reduceMotion || shouldReduceMotion);
           const isDesktop = Boolean(context.conditions?.isDesktop);
+          const canHover = Boolean(context.conditions?.canHover);
 
           if (reduceMotion) {
             gsap.set(
@@ -174,7 +201,7 @@ export function HomeTwoPage() {
           }
 
           const cursor = root.querySelector<HTMLElement>(".home2-cursor");
-          if (cursor && isDesktop) {
+          if (cursor && isDesktop && canHover) {
             const xTo = gsap.quickTo(cursor, "x", { duration: 0.45, ease: "power3" });
             const yTo = gsap.quickTo(cursor, "y", { duration: 0.45, ease: "power3" });
             const moveCursor = (event: PointerEvent) => {
@@ -186,26 +213,8 @@ export function HomeTwoPage() {
             context.add(() => window.removeEventListener("pointermove", moveCursor));
           }
 
-          gsap.set(".home2-title-line-inner", { yPercent: 116, rotateX: -16, autoAlpha: 0 });
-          gsap.set(".home2-hero-copy .home2-reveal, .home2-hero-actions", { y: 34, autoAlpha: 0 });
-          gsap.set(".home2-hero-image, .home2-float-image", { clipPath: "inset(16% 16% 16% 16% round 2rem)" });
           gsap.set(".home2-word-inner", { yPercent: 112, rotateX: -10 });
           gsap.set(".home2-story-frame", { y: 70, autoAlpha: 0, scale: 0.96 });
-          gsap.set(".home2-process-card, .home2-portal-card, .home2-reveal:not(.home2-hero-copy .home2-reveal)", {
-            y: 46,
-            autoAlpha: 0
-          });
-
-          gsap
-            .timeline({ defaults: { ease: "power4.out" } })
-            .to(".home2-hero-image", { clipPath: "inset(0% 0% 0% 0% round 2rem)", duration: 1.15 })
-            .to(
-              ".home2-title-line-inner",
-              { yPercent: 0, rotateX: 0, autoAlpha: 1, duration: 1.12, stagger: 0.11 },
-              "-=0.84"
-            )
-            .to(".home2-hero-copy .home2-reveal, .home2-hero-actions", { y: 0, autoAlpha: 1, duration: 0.78, stagger: 0.09 }, "-=0.52")
-            .to(".home2-float-image", { clipPath: "inset(0% 0% 0% 0% round 1.5rem)", duration: 0.92, stagger: 0.1 }, "-=0.62");
 
           gsap
             .timeline({
@@ -244,7 +253,16 @@ export function HomeTwoPage() {
             );
           });
 
-          ScrollTrigger.batch(".home2-reveal, .home2-process-card, .home2-portal-card", {
+          const revealTargets = gsap.utils
+            .toArray<HTMLElement>(".home2-reveal, .home2-process-card, .home2-portal-card")
+            .filter((item) => !item.closest(".home2-hero"));
+
+          gsap.set(revealTargets, {
+            y: 46,
+            autoAlpha: 0
+          });
+
+          ScrollTrigger.batch(revealTargets, {
             start: "top 84%",
             once: true,
             onEnter: (batch) => {
@@ -274,47 +292,68 @@ export function HomeTwoPage() {
             });
           });
 
-          const magneticCards = gsap.utils.toArray<HTMLElement>(".home2-magnetic");
+          const magneticCards = isDesktop && canHover ? gsap.utils.toArray<HTMLElement>(".home2-magnetic") : [];
           magneticCards.forEach((card) => {
             const image = card.querySelector(".home2-parallax-image");
             const overlay = card.querySelector<HTMLElement>(".home2-card-light");
+            const xTo = gsap.quickTo(card, "x", { duration: 0.28, ease: "power3.out" });
+            const yTo = gsap.quickTo(card, "y", { duration: 0.28, ease: "power3.out" });
+            const rotateXTo = gsap.quickTo(card, "rotateX", { duration: 0.28, ease: "power3.out" });
+            const rotateYTo = gsap.quickTo(card, "rotateY", { duration: 0.28, ease: "power3.out" });
+            let rect: DOMRect | null = null;
+            let frame = 0;
+            let latestEvent: MouseEvent | null = null;
 
             const enter = () => {
-              gsap.to(card, { scale: 1.025, duration: 0.3, ease: "power3.out", overwrite: true });
-              if (image) gsap.to(image, { scale: 1.18, duration: 0.6, ease: "power3.out", overwrite: true });
+              rect = card.getBoundingClientRect();
+              gsap.to(card, { scale: 1.018, duration: 0.24, ease: "power3.out", overwrite: true });
+              if (image) gsap.to(image, { scale: 1.14, duration: 0.5, ease: "power3.out", overwrite: true });
             };
-            const move = (event: MouseEvent) => {
-              const rect = card.getBoundingClientRect();
-              const x = (event.clientX - rect.left) / rect.width - 0.5;
-              const y = (event.clientY - rect.top) / rect.height - 0.5;
-              gsap.to(card, {
-                x: x * 18,
-                y: y * 14,
-                rotateX: -y * 7,
-                rotateY: x * 8,
-                duration: 0.34,
-                ease: "power3.out",
-                overwrite: true
-              });
+
+            const flushMove = () => {
+              frame = 0;
+              if (!rect || !latestEvent) return;
+
+              const x = (latestEvent.clientX - rect.left) / rect.width - 0.5;
+              const y = (latestEvent.clientY - rect.top) / rect.height - 0.5;
+              xTo(x * 14);
+              yTo(y * 10);
+              rotateXTo(-y * 5);
+              rotateYTo(x * 6);
+
               if (overlay) {
                 overlay.style.setProperty("--mx", `${(x + 0.5) * 100}%`);
                 overlay.style.setProperty("--my", `${(y + 0.5) * 100}%`);
                 gsap.to(overlay, { autoAlpha: 1, duration: 0.22, overwrite: true });
               }
             };
+
+            const move = (event: MouseEvent) => {
+              latestEvent = event;
+              if (!frame) {
+                frame = window.requestAnimationFrame(flushMove);
+              }
+            };
+
             const leave = () => {
+              rect = null;
+              latestEvent = null;
+              if (frame) {
+                window.cancelAnimationFrame(frame);
+                frame = 0;
+              }
+              xTo(0);
+              yTo(0);
+              rotateXTo(0);
+              rotateYTo(0);
               gsap.to(card, {
-                x: 0,
-                y: 0,
-                rotateX: 0,
-                rotateY: 0,
                 scale: 1,
-                duration: 0.65,
-                ease: "elastic.out(1, 0.62)",
+                duration: 0.42,
+                ease: "power3.out",
                 overwrite: true
               });
-              if (image) gsap.to(image, { scale: 1.08, duration: 0.62, ease: "power3.out", overwrite: true });
-              if (overlay) gsap.to(overlay, { autoAlpha: 0, duration: 0.26, overwrite: true });
+              if (image) gsap.to(image, { scale: 1.08, duration: 0.42, ease: "power3.out", overwrite: true });
+              if (overlay) gsap.to(overlay, { autoAlpha: 0, duration: 0.22, overwrite: true });
             };
 
             card.addEventListener("mouseenter", enter);
@@ -324,6 +363,9 @@ export function HomeTwoPage() {
               card.removeEventListener("mouseenter", enter);
               card.removeEventListener("mousemove", move);
               card.removeEventListener("mouseleave", leave);
+              if (frame) {
+                window.cancelAnimationFrame(frame);
+              }
             });
           });
 
@@ -408,14 +450,39 @@ export function HomeTwoPage() {
               .to(".home2-proof-copy", { y: -64 }, 0);
           }
 
-          ScrollTrigger.refresh();
+          window.requestAnimationFrame(() => ScrollTrigger.refresh());
         }
       );
 
-      return () => mm.revert();
-    },
-    { scope: rootRef, dependencies: [shouldReduceMotion] }
-  );
+      cleanupAnimations = () => mm.revert();
+    };
+
+    const browserWindow = window as typeof window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+
+    if (browserWindow.requestIdleCallback) {
+      idleHandle = browserWindow.requestIdleCallback(() => {
+        void startAnimations();
+      }, { timeout: 1000 });
+    } else {
+      timeoutHandle = window.setTimeout(() => {
+        void startAnimations();
+      }, 350);
+    }
+
+    return () => {
+      cancelled = true;
+      if (idleHandle !== null) {
+        browserWindow.cancelIdleCallback?.(idleHandle);
+      }
+      if (timeoutHandle !== null) {
+        window.clearTimeout(timeoutHandle);
+      }
+      cleanupAnimations();
+    };
+  }, [shouldReduceMotion]);
 
   return (
     <div

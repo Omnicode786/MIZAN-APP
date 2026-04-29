@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { MobileBottomNav } from "@/components/workspace/mobile-bottom-nav";
 import { Sidebar } from "@/components/workspace/sidebar";
 import { Topbar } from "@/components/workspace/topbar";
 import type { TranslationKey } from "@/lib/translations";
@@ -26,10 +27,11 @@ export function AppShell({
           </div>
         </div>
         <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
-          <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-3 pb-5 pt-24 sm:px-5 sm:pt-28 lg:px-6 xl:px-8 xl:pb-7">
+          <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-3 pb-40 pt-24 sm:px-5 sm:pb-44 sm:pt-28 lg:px-6 lg:pb-5 xl:px-8 xl:pb-7">
             {children}
           </div>
         </main>
+        <MobileBottomNav currentPath={currentPath} userRole={user?.role} />
       </div>
     </div>
   );

@@ -304,16 +304,16 @@ export function ClientAiAssistant({
                 value={selectedCase?.id || ""}
                 disabled={mode !== "case" || !cases.length}
                 onChange={(event) => setSelectedCaseId(event.target.value)}
-                className="glass-chip h-11 w-full rounded-2xl px-4 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                className="glass-chip h-11 w-full rounded-2xl bg-background px-4 text-sm text-foreground outline-none transition [color-scheme:light] focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#05070d] dark:text-slate-100 dark:[color-scheme:dark]"
               >
                 {cases.length ? (
                   cases.map((item) => (
-                    <option key={item.id} value={item.id}>
+                    <option key={item.id} value={item.id} className="bg-background text-foreground dark:bg-[#05070d] dark:text-slate-100">
                       {item.title}
                     </option>
                   ))
                 ) : (
-                  <option>No cases yet</option>
+                  <option className="bg-background text-foreground dark:bg-[#05070d] dark:text-slate-100">No cases yet</option>
                 )}
               </select>
             </div>
@@ -339,11 +339,13 @@ export function ClientAiAssistant({
               <select
                 value={activeThreadId || "new"}
                 onChange={(event) => setActiveThreadId(event.target.value === "new" ? null : event.target.value)}
-                className="glass-chip h-11 w-full rounded-2xl px-4 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
+                className="glass-chip h-11 w-full rounded-2xl bg-background px-4 text-sm text-foreground outline-none transition [color-scheme:light] focus-visible:ring-2 focus-visible:ring-ring dark:bg-[#05070d] dark:text-slate-100 dark:[color-scheme:dark]"
               >
-                <option value="new">New conversation</option>
+                <option value="new" className="bg-background text-foreground dark:bg-[#05070d] dark:text-slate-100">
+                  New conversation
+                </option>
                 {contextThreads.map((thread) => (
-                  <option key={thread.id} value={thread.id}>
+                  <option key={thread.id} value={thread.id} className="bg-background text-foreground dark:bg-[#05070d] dark:text-slate-100">
                     {thread.title || "Untitled conversation"}
                   </option>
                 ))}

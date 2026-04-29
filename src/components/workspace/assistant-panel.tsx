@@ -109,10 +109,10 @@ export function AssistantPanel({
             <select
               value={activeThread?.id}
               onChange={(e) => setActiveThreadId(e.target.value)}
-              className="glass-chip h-10 max-w-full rounded-2xl px-3 text-xs shadow-sm"
+              className="glass-chip h-10 max-w-full rounded-2xl bg-background px-3 text-xs text-foreground shadow-sm [color-scheme:light] dark:bg-[#05070d] dark:text-slate-100 dark:[color-scheme:dark]"
             >
               {threads.map((thread) => (
-                <option key={thread.id} value={thread.id}>
+                <option key={thread.id} value={thread.id} className="bg-background text-foreground dark:bg-[#05070d] dark:text-slate-100">
                   {thread.title || "Untitled thread"}
                 </option>
               ))}

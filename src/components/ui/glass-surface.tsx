@@ -92,6 +92,7 @@ const GlassSurface = ({
   const greenChannelRef = useRef<SVGFEDisplacementMapElement | null>(null);
   const blueChannelRef = useRef<SVGFEDisplacementMapElement | null>(null);
   const gaussianBlurRef = useRef<SVGFEGaussianBlurElement | null>(null);
+  const resizeFrameRef = useRef<number | null>(null);
 
   const isDarkMode = useDarkMode();
 
@@ -125,6 +126,14 @@ const GlassSurface = ({
 
   const updateDisplacementMap = () => {
     feImageRef.current?.setAttribute("href", generateDisplacementMap());
+  };
+
+  const scheduleDisplacementMapUpdate = () => {
+    if (resizeFrameRef.current !== null) return;
+    resizeFrameRef.current = window.requestAnimationFrame(() => {
+      resizeFrameRef.current = null;
+      updateDisplacementMap();
+    });
   };
 
   useEffect(() => {
@@ -164,32 +173,22 @@ const GlassSurface = ({
     if (!containerRef.current) return;
 
     const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
+      scheduleDisplacementMapUpdate();
     });
 
     resizeObserver.observe(containerRef.current);
 
     return () => {
       resizeObserver.disconnect();
+      if (resizeFrameRef.current !== null) {
+        window.cancelAnimationFrame(resizeFrameRef.current);
+        resizeFrameRef.current = null;
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
-    });
-
-    resizeObserver.observe(containerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    setTimeout(updateDisplacementMap, 0);
+    scheduleDisplacementMapUpdate();
   }, [width, height]);
 
   useEffect(() => {

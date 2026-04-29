@@ -41,6 +41,10 @@ export function handleApiError(
     return apiError("AI service is temporarily unavailable. Please try again.", 502);
   }
 
+  if (error instanceof Error && error.name === "AiUsageLimitError") {
+    return apiError(error.message, 429);
+  }
+
   if (error instanceof Error) {
     if (error.message === "Unauthorized") return unauthorized();
     if (error.message === "Forbidden") return forbidden();
