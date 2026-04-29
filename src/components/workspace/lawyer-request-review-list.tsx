@@ -26,7 +26,7 @@ type AssignmentRequest = {
   };
 };
 
-function statusVariant(status: string) {
+function statusVariant(status: string): "success" | "destructive" | "warning" {
   if (status === "ACCEPTED") return "success";
   if (status === "DECLINED") return "destructive";
   return "warning";

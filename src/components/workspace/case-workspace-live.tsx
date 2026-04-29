@@ -1179,7 +1179,7 @@ function ConsultationDesk({
   }) => void;
   onUpdate: (id: string, updates: Record<string, unknown>) => void;
 }) {
-  const usableAssignments = assignments.filter((assignment) => assignment.status !== "DECLINED");
+  const usableAssignments = assignments.filter((assignment) => assignment.status === "ACCEPTED");
 
   return (
     <div className="mt-5 rounded-2xl border border-border/60 bg-muted/10 p-4">
@@ -1211,7 +1211,7 @@ function ConsultationDesk({
         ))}
 
         {!usableAssignments.length && !consultations.length ? (
-          <EmptyState compact text="No lawyer is connected yet. Send a lawyer request first, then consultations can be proposed or requested here." />
+          <EmptyState compact text="No accepted lawyer is connected yet. Consultations unlock after the selected lawyer accepts the request." />
         ) : null}
       </div>
     </div>

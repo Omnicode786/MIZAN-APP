@@ -173,8 +173,8 @@ export default async function LawyerDashboardPage() {
                     No assigned matters yet
                   </h3>
                   <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                    When a client sends you a case request or approves a proposal,
-                    the matter will appear here for structured review.
+                    When you accept a client case request, the matter will appear
+                    here for structured review.
                   </p>
                 </CardContent>
               </Card>

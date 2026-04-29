@@ -255,7 +255,7 @@ export function PublicLawyersDirectory({
                       <div className="flex items-start gap-3">
                         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                         <p className="text-sm leading-6 text-muted-foreground">
-                          Contact and deeper collaboration unlock through the client workspace after a proposal is approved.
+                          Contact and deeper collaboration unlock through the client workspace after the selected lawyer accepts.
                         </p>
                       </div>
                     </div>

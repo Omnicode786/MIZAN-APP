@@ -183,7 +183,7 @@ const trustPrinciples = [
   },
   {
     title: "Privacy-aware collaboration",
-    text: "Clients control what they share. Lawyer contact and deeper collaboration unlock only after proposal approval.",
+    text: "Clients control what they share. Lawyer contact and deeper collaboration unlock only after the selected lawyer accepts.",
     icon: LockKeyhole
   }
 ];

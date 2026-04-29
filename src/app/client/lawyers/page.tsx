@@ -14,7 +14,7 @@ export default async function ClientLawyersPage() {
       <SectionHeader
         eyebrow="Find Lawyers"
         title="Search public lawyer profiles"
-        description="Clients initiate the request. The lawyer reviews your case, sends a proposal, and contact details unlock only after you approve it."
+        description="Clients choose a specific lawyer. The lawyer must accept the request before full case details and contact information unlock."
         action={<div />}
       />
       <LawyerDirectory cases={cases} />

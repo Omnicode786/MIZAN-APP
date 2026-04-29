@@ -106,6 +106,10 @@ export async function getCaseDetail(
     user.role === "LAWYER" && user.lawyerProfile
       ? { lawyerProfileId: user.lawyerProfile.id, status: "ACCEPTED" as const }
       : undefined;
+  const consultationWhere =
+    user.role === "LAWYER" && user.lawyerProfile
+      ? { lawyerProfileId: user.lawyerProfile.id }
+      : undefined;
 
   const detail = await prisma.case.findFirst({
     where,
@@ -300,6 +304,7 @@ export async function getCaseDetail(
         take: 10
       },
       consultationBookings: {
+        where: consultationWhere,
         select: {
           id: true,
           caseId: true,

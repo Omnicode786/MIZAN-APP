@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/workspace/app-shell";
 import { LawyerRequestReviewList } from "@/components/workspace/lawyer-request-review-list";
 import { SectionHeader } from "@/components/workspace/section-header";
@@ -53,7 +54,7 @@ export default async function LawyerReviewPage() {
         description="Clients can request only a selected lawyer. Accept a request to unlock full case details and contact information, or reject it without opening the case workspace."
         action={
           <Button asChild variant="outline">
-            <a href="/lawyer/ai-workflows">Review AI workflows</a>
+            <Link href="/lawyer/ai-workflows">Review AI workflows</Link>
           </Button>
         }
       />
