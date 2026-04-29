@@ -144,9 +144,7 @@ export default async function LawyerDebatePage({
           assignments: {
             some: {
               lawyerProfileId: lawyerProfile.id,
-              status: {
-                in: ["PENDING", "ACCEPTED"]
-              }
+              status: "ACCEPTED"
             }
           }
         },

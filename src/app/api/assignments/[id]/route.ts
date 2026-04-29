@@ -25,59 +25,75 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (!assignment) return notFound();
 
     const body = schema.parse(await request.json());
+    const isAssignedLawyer = user.role === "LAWYER" && assignment.lawyer.userId === user.id;
 
     if (body.mode === "proposal") {
-      if (user.role !== "LAWYER" || assignment.lawyer.userId !== user.id) return forbidden();
+      if (!isAssignedLawyer) return forbidden();
+      if (assignment.status !== "ACCEPTED") {
+        return validationError("Accept the case request before updating collaboration terms.");
+      }
 
       const updated = await prisma.caseAssignment.update({
         where: { id: params.id },
         data: {
           feeProposal: body.feeProposal,
           probability: body.probability,
-          proposalNotes: body.proposalNotes,
-          status: "PENDING"
+          proposalNotes: body.proposalNotes
         },
         include: { lawyer: { include: { user: true } } }
       });
 
-      await prisma.case.update({ where: { id: assignment.caseId }, data: { stage: "Proposal received" } });
-      await logActivity(assignment.caseId, user.id, "PROPOSAL_SENT", `Sent proposal for ${assignment.case.title}.`);
+      await prisma.case.update({ where: { id: assignment.caseId }, data: { stage: "Lawyer engaged" } });
+      await logActivity(assignment.caseId, user.id, "COLLABORATION_TERMS_UPDATED", `Updated collaboration terms for ${assignment.case.title}.`);
       await createNotification(
         assignment.case.client.userId,
-        "Proposal received",
-        `${assignment.lawyer.user.name} sent a proposal for ${assignment.case.title}.`,
-        "proposal",
+        "Collaboration terms updated",
+        `${assignment.lawyer.user.name} updated terms for ${assignment.case.title}.`,
+        "collaboration_terms",
         `/client/cases/${assignment.caseId}`
       );
       return NextResponse.json({ assignment: updated });
     }
 
     if (!body.decision) return validationError("Decision is required.");
-    if (user.role !== "CLIENT" || assignment.case.client.userId !== user.id) return forbidden();
+    if (!isAssignedLawyer) return forbidden();
+    if (assignment.status !== "PENDING") {
+      return validationError("Only pending case requests can be accepted or rejected.");
+    }
 
-    const updated = await prisma.caseAssignment.update({
-      where: { id: params.id },
-      data: {
-        status: body.decision
-      },
-      include: { lawyer: { include: { user: true } } }
+    const acceptedAt = new Date();
+    const updated = await prisma.$transaction(async (tx) => {
+      const nextAssignment = await tx.caseAssignment.update({
+        where: { id: params.id },
+        data: {
+          status: body.decision
+        },
+        include: { lawyer: { include: { user: true } } }
+      });
+
+      await tx.case.update({
+        where: { id: assignment.caseId },
+        data: {
+          sharedWithLawyerAt: body.decision === "ACCEPTED" ? acceptedAt : assignment.case.sharedWithLawyerAt,
+          stage: body.decision === "ACCEPTED" ? "Lawyer request accepted" : "Lawyer request rejected"
+        }
+      });
+
+      return nextAssignment;
     });
 
-    await prisma.case.update({
-      where: { id: assignment.caseId },
-      data: {
-        sharedWithLawyerAt: body.decision === "ACCEPTED" ? new Date() : assignment.case.sharedWithLawyerAt,
-        stage: body.decision === "ACCEPTED" ? "Lawyer engaged" : "Proposal declined"
-      }
-    });
-
-    await logActivity(assignment.caseId, user.id, body.decision === "ACCEPTED" ? "PROPOSAL_ACCEPTED" : "PROPOSAL_DECLINED", `Client ${body.decision === "ACCEPTED" ? "accepted" : "declined"} the proposal.`);
+    await logActivity(
+      assignment.caseId,
+      user.id,
+      body.decision === "ACCEPTED" ? "LAWYER_REQUEST_ACCEPTED" : "LAWYER_REQUEST_REJECTED",
+      `${assignment.lawyer.user.name} ${body.decision === "ACCEPTED" ? "accepted" : "rejected"} the case request.`
+    );
     await createNotification(
-      assignment.lawyer.userId,
-      body.decision === "ACCEPTED" ? "Proposal approved" : "Proposal declined",
-      `${assignment.case.client.user.name} ${body.decision === "ACCEPTED" ? "approved" : "declined"} your proposal for ${assignment.case.title}.`,
-      "proposal_decision",
-      `/lawyer/cases/${assignment.caseId}`
+      assignment.case.client.userId,
+      body.decision === "ACCEPTED" ? "Case request accepted" : "Case request rejected",
+      `${assignment.lawyer.user.name} ${body.decision === "ACCEPTED" ? "accepted" : "rejected"} your request for ${assignment.case.title}.`,
+      "case_request_decision",
+      `/client/cases/${assignment.caseId}`
     );
 
     return NextResponse.json({ assignment: updated });

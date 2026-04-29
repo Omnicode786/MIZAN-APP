@@ -10,7 +10,7 @@ export default async function LawyerDeadlinesPage() {
   const lawyerProfileId = user?.lawyerProfile?.id;
   const deadlines = await prisma.deadline.findMany({
     where: lawyerProfileId
-      ? { case: { assignments: { some: { lawyerProfileId } } } }
+      ? { case: { assignments: { some: { lawyerProfileId, status: "ACCEPTED" } } } }
       : { id: "__NO_ACCESS__" },
     select: {
       id: true,

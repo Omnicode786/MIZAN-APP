@@ -126,6 +126,10 @@ async function cleanupDeletedCaseAssets(input: {
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
     const user = await requireUser();
+    const assignmentWhere =
+      user.role === "LAWYER" && user.lawyerProfile
+        ? { lawyerProfileId: user.lawyerProfile.id }
+        : undefined;
     const legalCase = await prisma.case.findFirst({
       where: buildAccessibleCaseWhereForUser(user, params.id),
       select: {
@@ -159,6 +163,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
           }
         },
         assignments: {
+          where: assignmentWhere,
           select: {
             id: true,
             lawyerProfileId: true,

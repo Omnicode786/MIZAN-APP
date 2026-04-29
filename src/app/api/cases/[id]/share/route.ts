@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { forbidden, handleApiError, notFound } from "@/lib/api-response";
+import { forbidden, handleApiError, notFound, validationError } from "@/lib/api-response";
 import { createNotification, getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -23,23 +23,38 @@ export async function POST(request: Request, { params }: { params: { id: string 
     });
     if (!lawyer || !lawyer.isPublic) return notFound();
 
-    const assignment = await prisma.caseAssignment.upsert({
+    const existingAssignment = await prisma.caseAssignment.findUnique({
       where: {
         caseId_lawyerProfileId: {
           caseId: params.id,
           lawyerProfileId: body.lawyerProfileId
         }
       },
-      update: {
-        status: "PENDING"
-      },
-      create: {
-        caseId: params.id,
-        lawyerProfileId: body.lawyerProfileId,
-        status: "PENDING"
-      },
-      include: { lawyer: { include: { user: true } } }
+      select: { id: true, status: true }
     });
+    if (existingAssignment?.status === "ACCEPTED") {
+      return validationError("This lawyer already accepted the case request.");
+    }
+
+    const assignment = existingAssignment
+      ? await prisma.caseAssignment.update({
+          where: { id: existingAssignment.id },
+          data: {
+            status: "PENDING",
+            feeProposal: null,
+            probability: null,
+            proposalNotes: null
+          },
+          include: { lawyer: { include: { user: true } } }
+        })
+      : await prisma.caseAssignment.create({
+          data: {
+            caseId: params.id,
+            lawyerProfileId: body.lawyerProfileId,
+            status: "PENDING"
+          },
+          include: { lawyer: { include: { user: true } } }
+        });
 
     await prisma.case.update({
       where: { id: params.id },

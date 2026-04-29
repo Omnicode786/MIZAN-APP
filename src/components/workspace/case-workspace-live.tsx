@@ -444,8 +444,8 @@ export function CaseWorkspaceLive({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "proposal", feeProposal, probability, proposalNotes })
       });
-      await requireOk(res, "Unable to send proposal.");
-      showSuccess("Proposal sent.");
+      await requireOk(res, "Unable to save collaboration terms.");
+      showSuccess("Collaboration terms saved.");
       refresh();
     } catch (error) {
       showError(error, "Unable to send proposal.");
@@ -463,8 +463,8 @@ export function CaseWorkspaceLive({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "decision", decision })
       });
-      await requireOk(res, "Unable to update proposal.");
-      showSuccess(decision === "ACCEPTED" ? "Proposal approved." : "Proposal declined.");
+      await requireOk(res, "Unable to update request.");
+      showSuccess(decision === "ACCEPTED" ? "Request accepted." : "Request rejected.");
       refresh();
     } catch (error) {
       showError(error, "Unable to update proposal.");
@@ -795,8 +795,8 @@ export function CaseWorkspaceLive({
             <PanelCard>
               <MiniSectionHeader
                 icon={Scale}
-                title="Lawyer request and proposal flow"
-                description="Clients initiate the request. Lawyers review the live record, send a proposal, and contact details unlock only after approval."
+                title="Lawyer request status"
+                description="Clients send requests to selected lawyers. Full case access and contact details unlock only after the lawyer accepts."
               />
 
               <div className="mt-4 space-y-4">
@@ -1781,7 +1781,8 @@ function ProposalCard({
   );
   const [proposalNotes, setProposalNotes] = useState(assignment.proposalNotes || "");
 
-  const canEditProposal = role === "LAWYER" && assignment.lawyer?.userId === currentUser.id;
+  const canEditProposal =
+    role === "LAWYER" && assignment.lawyer?.userId === currentUser.id && assignment.status === "ACCEPTED";
   const contactsUnlocked = assignment.status === "ACCEPTED";
 
   return (
@@ -1825,7 +1826,7 @@ function ProposalCard({
           <Textarea
             value={proposalNotes}
             onChange={(e) => setProposalNotes(e.target.value)}
-            placeholder="Explain the fee, posture, and why you are a fit."
+            placeholder="Explain the fee, posture, and collaboration terms."
             className="min-h-[120px] md:col-span-2"
           />
           <div className="flex justify-end md:col-span-2">
@@ -1835,7 +1836,7 @@ function ProposalCard({
               }
               disabled={busy === `proposal-${assignment.id}`}
             >
-              {busy === `proposal-${assignment.id}` ? "Sending..." : "Send proposal"}
+              {busy === `proposal-${assignment.id}` ? "Saving..." : "Save terms"}
             </Button>
           </div>
         </div>
@@ -1845,7 +1846,13 @@ function ProposalCard({
             {assignment.proposalNotes ? (
               <FormattedAiContent content={assignment.proposalNotes} />
             ) : (
-              <p className="text-sm text-muted-foreground">Proposal not sent yet.</p>
+              <p className="text-sm text-muted-foreground">
+                {assignment.status === "PENDING"
+                  ? "Waiting for the lawyer to accept or reject this request."
+                  : assignment.status === "DECLINED"
+                    ? "The lawyer rejected this request."
+                    : "No collaboration terms have been added yet."}
+              </p>
             )}
           </div>
 
@@ -1863,20 +1870,8 @@ function ProposalCard({
           </div>
 
           {role === "CLIENT" && assignment.status === "PENDING" ? (
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button
-                onClick={() => onDecision(assignment.id, "ACCEPTED")}
-                disabled={busy === `decision-${assignment.id}`}
-              >
-                Approve
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onDecision(assignment.id, "DECLINED")}
-                disabled={busy === `decision-${assignment.id}`}
-              >
-                Decline
-              </Button>
+            <div className="mt-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+              Request pending. Only the selected lawyer can accept or reject it.
             </div>
           ) : null}
         </>

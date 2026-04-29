@@ -37,7 +37,8 @@ function getAccessibleCaseWhere(user: any): Prisma.CaseWhereInput {
     return {
       assignments: {
         some: {
-          lawyerProfileId: user.lawyerProfile.id
+          lawyerProfileId: user.lawyerProfile.id,
+          status: "ACCEPTED"
         }
       }
     };

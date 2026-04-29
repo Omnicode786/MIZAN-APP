@@ -21,7 +21,8 @@ export async function getCasesForRole(role: "CLIENT" | "LAWYER") {
       where: {
         assignments: {
           some: {
-            lawyerProfileId: user.lawyerProfile.id
+            lawyerProfileId: user.lawyerProfile.id,
+            status: "ACCEPTED"
           }
         }
       },
@@ -101,6 +102,10 @@ export async function getCaseDetail(
 
   const where = buildAccessibleCaseWhereForUser(user, caseId);
   const includeInternalNotes = user.role === "LAWYER";
+  const assignmentWhere =
+    user.role === "LAWYER" && user.lawyerProfile
+      ? { lawyerProfileId: user.lawyerProfile.id }
+      : undefined;
 
   const detail = await prisma.case.findFirst({
     where,
@@ -142,6 +147,7 @@ export async function getCaseDetail(
         }
       },
       assignments: {
+        where: assignmentWhere,
         select: {
           id: true,
           caseId: true,
@@ -506,6 +512,10 @@ export async function getCasePacketDetail(
         }
       },
       assignments: {
+        where:
+          user.role === "LAWYER" && user.lawyerProfile
+            ? { lawyerProfileId: user.lawyerProfile.id }
+            : undefined,
         select: {
           id: true,
           status: true,
@@ -660,7 +670,8 @@ export async function getDashboardSnapshot(role: "CLIENT" | "LAWYER") {
         ? {
             assignments: {
               some: {
-                lawyerProfileId: user.lawyerProfile.id
+                lawyerProfileId: user.lawyerProfile.id,
+                status: "ACCEPTED"
               }
             }
           }

@@ -10,7 +10,8 @@ export function buildAccessibleCaseWhereForUser(user: AppUser, caseId?: string):
       ? {
           assignments: {
             some: {
-              lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__"
+              lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
+              status: "ACCEPTED"
             }
           }
         }
@@ -95,7 +96,8 @@ export async function getAccessibleCase(caseId: string) {
             id: caseId,
             assignments: {
               some: {
-                lawyerProfileId: user.lawyerProfile?.id
+                lawyerProfileId: user.lawyerProfile?.id,
+                status: "ACCEPTED"
               }
             }
           }
@@ -141,6 +143,12 @@ export async function getAccessibleCase(caseId: string) {
         }
       },
       assignments: {
+        where:
+          user.role === "LAWYER"
+            ? {
+                lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__"
+              }
+            : undefined,
         select: {
           id: true,
           caseId: true,

@@ -87,6 +87,9 @@ export async function GET(request: Request) {
       user.role === "LAWYER"
         ? {
             lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
+            assignment: {
+              status: "ACCEPTED" as const
+            },
             caseId: query.caseId
           }
         : {
@@ -125,6 +128,7 @@ export async function POST(request: Request) {
           }
         },
         assignments: {
+          where: { status: "ACCEPTED" },
           select: {
             id: true,
             lawyerProfileId: true,
@@ -153,45 +157,11 @@ export async function POST(request: Request) {
         : null;
 
       if (!assignment && body.lawyerProfileId) {
-        const lawyer = await prisma.lawyerProfile.findFirst({
-          where: { id: body.lawyerProfileId, isPublic: true },
-          select: {
-            id: true,
-            userId: true,
-            user: { select: { id: true, name: true, email: true } }
-          }
-        });
-        if (!lawyer) return notFound();
-
-        assignment = await prisma.caseAssignment.upsert({
-          where: {
-            caseId_lawyerProfileId: {
-              caseId: legalCase.id,
-              lawyerProfileId: lawyer.id
-            }
-          },
-          create: {
-            caseId: legalCase.id,
-            lawyerProfileId: lawyer.id,
-            status: "PENDING"
-          },
-          update: { status: "PENDING" },
-          select: {
-            id: true,
-            lawyerProfileId: true,
-            status: true,
-            lawyer: {
-              select: {
-                id: true,
-                userId: true,
-                user: { select: { id: true, name: true, email: true } }
-              }
-            }
-          }
-        });
+        assignment =
+          legalCase.assignments.find((item) => item.lawyerProfileId === body.lawyerProfileId) || null;
       }
 
-      if (!assignment) return validationError("Please select a lawyer first.");
+      if (!assignment) return validationError("The lawyer must accept the case request before consultations can be created.");
 
       const consultation = await prisma.consultationBooking.create({
         data: {

@@ -29,7 +29,8 @@ export async function GET() {
             where: {
               assignments: {
                 some: {
-                  lawyerProfileId
+                  lawyerProfileId,
+                  status: "ACCEPTED"
                 }
               }
             },

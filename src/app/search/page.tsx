@@ -15,7 +15,7 @@ export default async function SearchPage() {
   const cases = await prisma.case.findMany({
     where: user.role === 'LAWYER'
       ? lawyerProfileId
-        ? { assignments: { some: { lawyerProfileId } } }
+        ? { assignments: { some: { lawyerProfileId, status: "ACCEPTED" as const } } }
         : { id: "__NO_ACCESS__" }
       : clientProfileId
         ? { clientProfileId }
