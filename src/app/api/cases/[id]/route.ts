@@ -1,6 +1,7 @@
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { forbidden, handleApiError, notFound } from "@/lib/api-response";
+import { apiError, forbidden, handleApiError, notFound } from "@/lib/api-response";
 import { buildAccessibleCaseWhereForUser, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -10,6 +11,10 @@ const patchSchema = z.object({
   status: z.enum(["DRAFT", "INTAKE", "ACTIVE", "REVIEW", "ESCALATED", "CLOSED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
   description: z.string().nullable().optional()
+});
+
+const deleteSchema = z.object({
+  password: z.string().min(1)
 });
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
@@ -131,17 +136,37 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const user = await requireUser();
-    if (user.role !== "CLIENT") return forbidden();
+    if (user.role !== "CLIENT" || !user.clientProfile) return forbidden();
+
+    const body = deleteSchema.parse(await request.json().catch(() => ({})));
     const legalCase = await prisma.case.findFirst({
       where: buildAccessibleCaseWhereForUser(user, params.id),
       select: { id: true }
     });
     if (!legalCase) return notFound();
 
-    await prisma.case.delete({ where: { id: params.id } });
+    const passwordOwner = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { passwordHash: true }
+    });
+    if (!passwordOwner) return notFound();
+
+    const passwordIsValid = await bcrypt.compare(body.password, passwordOwner.passwordHash);
+    if (!passwordIsValid) {
+      return apiError("Invalid password.", 401);
+    }
+
+    const deleted = await prisma.case.deleteMany({
+      where: {
+        id: params.id,
+        clientProfileId: user.clientProfile.id
+      }
+    });
+    if (deleted.count === 0) return notFound();
+
     await logActivity(null, user.id, "CASE_DELETED", `Deleted case ${params.id}`);
     return NextResponse.json({ ok: true });
   } catch (error) {

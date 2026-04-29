@@ -90,6 +90,8 @@ export function CaseWorkspaceLive({
   const [draftType, setDraftType] = useState("LEGAL_NOTICE");
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
   const [lazySections, setLazySections] = useState({
     documents: asArray(initialCase.documents),
     evidenceItems: asArray(initialCase.evidenceItems),
@@ -195,13 +197,23 @@ export function CaseWorkspaceLive({
   }
 
   async function deleteCase() {
-    if (!confirm("Delete this case and all its records?")) return;
+    if (role !== "CLIENT") return;
+    if (!deletePassword.trim()) {
+      setNotice({ type: "error", text: "Enter your account password to delete this case." });
+      return;
+    }
+    if (!confirm("Delete this case and all its records permanently?")) return;
 
     try {
       setBusy("delete-case");
       setNotice(null);
-      const res = await fetch(`/api/cases/${initialCase.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/cases/${initialCase.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: deletePassword })
+      });
       await requireOk(res, "Unable to delete case.");
+      setDeletePassword("");
       router.push(role === "CLIENT" ? "/client/cases" : "/lawyer/cases");
     } catch (error) {
       showError(error, "Unable to delete case.");
@@ -688,11 +700,49 @@ export function CaseWorkspaceLive({
                   {busy === "case" ? "Saving..." : "Save case changes"}
                 </Button>
                 {role === "CLIENT" ? (
-                  <Button variant="outline" onClick={deleteCase} disabled={busy === "delete-case"}>
-                    Delete case
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setDeleteConfirmOpen((open) => {
+                        if (open) setDeletePassword("");
+                        return !open;
+                      });
+                      setNotice(null);
+                    }}
+                    disabled={busy === "delete-case"}
+                  >
+                    {deleteConfirmOpen ? "Cancel delete" : "Delete case"}
                   </Button>
                 ) : null}
               </div>
+
+              {role === "CLIENT" && deleteConfirmOpen ? (
+                <div className="rounded-2xl border border-destructive/25 bg-destructive/5 p-4">
+                  <p className="text-sm font-medium text-destructive">Delete permanently</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Enter your account password. This is checked securely on the server before
+                    the case can be deleted.
+                  </p>
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      value={deletePassword}
+                      onChange={(event) => setDeletePassword(event.target.value)}
+                      placeholder="Confirm password"
+                      disabled={busy === "delete-case"}
+                    />
+                    <Button
+                      variant="destructive"
+                      onClick={deleteCase}
+                      disabled={busy === "delete-case" || !deletePassword.trim()}
+                      className="shrink-0"
+                    >
+                      {busy === "delete-case" ? "Deleting..." : "Confirm delete"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1">
