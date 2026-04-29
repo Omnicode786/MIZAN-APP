@@ -334,7 +334,12 @@ function WorkflowReviewCard({
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:flex-col">
-          {pending || processing ? (
+          {caseDeleted ? (
+            <Button type="button" variant="outline" disabled className="w-full lg:w-[150px]">
+              <XCircle className="mr-2 h-4 w-4" />
+              Case deleted
+            </Button>
+          ) : pending || processing ? (
             <>
               <Button type="button" disabled={busy || processing} onClick={onApprove} className="w-full lg:w-[150px]">
                 {busy || processing ? (
@@ -355,11 +360,6 @@ function WorkflowReviewCard({
                 Reject
               </Button>
             </>
-          ) : caseDeleted ? (
-            <Button type="button" variant="outline" disabled className="w-full lg:w-[150px]">
-              <XCircle className="mr-2 h-4 w-4" />
-              Case deleted
-            </Button>
           ) : actionHref ? (
             <Button asChild className="w-full lg:w-[150px]">
               <Link href={actionHref}>
