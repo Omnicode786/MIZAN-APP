@@ -128,7 +128,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     const user = await requireUser();
     const assignmentWhere =
       user.role === "LAWYER" && user.lawyerProfile
-        ? { lawyerProfileId: user.lawyerProfile.id }
+        ? { lawyerProfileId: user.lawyerProfile.id, status: "ACCEPTED" as const }
         : undefined;
     const legalCase = await prisma.case.findFirst({
       where: buildAccessibleCaseWhereForUser(user, params.id),

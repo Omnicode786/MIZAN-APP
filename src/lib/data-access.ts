@@ -104,7 +104,7 @@ export async function getCaseDetail(
   const includeInternalNotes = user.role === "LAWYER";
   const assignmentWhere =
     user.role === "LAWYER" && user.lawyerProfile
-      ? { lawyerProfileId: user.lawyerProfile.id }
+      ? { lawyerProfileId: user.lawyerProfile.id, status: "ACCEPTED" as const }
       : undefined;
 
   const detail = await prisma.case.findFirst({
@@ -514,7 +514,7 @@ export async function getCasePacketDetail(
       assignments: {
         where:
           user.role === "LAWYER" && user.lawyerProfile
-            ? { lawyerProfileId: user.lawyerProfile.id }
+            ? { lawyerProfileId: user.lawyerProfile.id, status: "ACCEPTED" as const }
             : undefined,
         select: {
           id: true,
