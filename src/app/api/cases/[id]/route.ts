@@ -246,6 +246,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   try {
     const user = await requireUser();
     if (user.role !== "CLIENT" || !user.clientProfile) return forbidden();
+    const clientProfileId = user.clientProfile.id;
 
     const body = deleteSchema.parse(await request.json().catch(() => ({})));
     const legalCase = await prisma.case.findFirst({
@@ -381,7 +382,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         tx.case.deleteMany({
           where: {
             id: params.id,
-            clientProfileId: user.clientProfile.id
+            clientProfileId
           }
         })
       ]);
