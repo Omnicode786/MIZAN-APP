@@ -146,7 +146,8 @@ export async function getAccessibleCase(caseId: string) {
         where:
           user.role === "LAWYER"
             ? {
-                lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__"
+                lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
+                status: "ACCEPTED"
               }
             : undefined,
         select: {

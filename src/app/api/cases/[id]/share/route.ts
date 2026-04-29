@@ -82,7 +82,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       "New case request",
       `${legalCase.client.user.name} requested your review for ${legalCase.title}.`,
       "case_request",
-      `/lawyer/cases/${params.id}`
+      "/lawyer/review"
     );
 
     return NextResponse.json({ assignment });

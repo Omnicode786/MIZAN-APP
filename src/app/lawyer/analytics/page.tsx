@@ -13,7 +13,7 @@ export default async function LawyerAnalyticsPage() {
     prisma.caseAssignment.count({ where: { ...where, status: "ACCEPTED" } }),
     prisma.caseAssignment.count({ where: { ...where, status: "PENDING" } }),
     prisma.caseAssignment.aggregate({
-      where,
+      where: { ...where, status: "ACCEPTED" },
       _avg: { probability: true }
     })
   ]);
@@ -24,12 +24,12 @@ export default async function LawyerAnalyticsPage() {
       <SectionHeader
         eyebrow="Analytics"
         title="Matter pipeline overview"
-        description="A compact read on how many files you are reviewing, how many proposals are pending, and how strong your current matters look."
+        description="A compact read on pending requests, accepted matters, and confidence for cases you have explicitly accepted."
       />
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          ['Active requests', pending],
-          ['Approved proposals', accepted],
+          ['Pending requests', pending],
+          ['Accepted cases', accepted],
           ['Average confidence', `${avgProbability}%`]
         ].map(([label, value]) => (
           <Card key={label} className="soft-hover"><CardContent className="p-6"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-4xl font-semibold">{value}</p></CardContent></Card>
