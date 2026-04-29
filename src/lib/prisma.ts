@@ -31,8 +31,31 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function inspectDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL || "";
+  if (!databaseUrl) {
+    return;
+  }
+
+  const usesNeon = databaseUrl.includes(".neon.tech");
+  const usesPooler = databaseUrl.includes("-pooler.");
+  const hasConnectionLimit = /[?&]connection_limit=/.test(databaseUrl);
+  const hasPoolTimeout = /[?&]pool_timeout=/.test(databaseUrl);
+
+  if (usesNeon && !usesPooler) {
+    logEvent("warn", "db.pooling_not_detected", {
+      message: "Neon DATABASE_URL should use the pooled -pooler host for application traffic."
+    });
+  }
+
+  if (usesPooler && (!hasConnectionLimit || !hasPoolTimeout)) {
+    logEvent("warn", "db.pooling_params_missing", {
+      message: "DATABASE_URL is pooled, but connection_limit and pool_timeout are not both configured."
+    });
+  }
+}
+
 async function withTransientReadRetry<T>(
-  client: PrismaClient,
   operationLabel: string,
   run: () => Promise<T>
 ) {
@@ -55,7 +78,6 @@ async function withTransientReadRetry<T>(
         message: error instanceof Error ? error.message : String(error)
       });
 
-      await client.$disconnect().catch(() => undefined);
       await delay(120 * 2 ** attempt);
     }
   }
@@ -73,7 +95,7 @@ function createPrismaWithRetry(client: PrismaClient) {
             return query(args);
           }
 
-          return withTransientReadRetry(client, `${model}.${operationName}`, () => query(args));
+          return withTransientReadRetry(`${model}.${operationName}`, () => query(args));
         }
       }
     }
@@ -86,6 +108,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   prismaWithRetry?: PrismaWithRetry;
   prismaObservabilityAttached?: boolean;
+  prismaConnectionInspected?: boolean;
 };
 
 const prismaClient =
@@ -99,6 +122,14 @@ const prismaClient =
   });
 
 export const prisma = globalForPrisma.prismaWithRetry ?? createPrismaWithRetry(prismaClient);
+
+globalForPrisma.prisma = prismaClient;
+globalForPrisma.prismaWithRetry = prisma;
+
+if (!globalForPrisma.prismaConnectionInspected) {
+  inspectDatabaseUrl();
+  globalForPrisma.prismaConnectionInspected = true;
+}
 
 if (!globalForPrisma.prismaObservabilityAttached) {
   const client = prismaClient as PrismaClient & {
@@ -144,9 +175,4 @@ if (!globalForPrisma.prismaObservabilityAttached) {
   });
 
   globalForPrisma.prismaObservabilityAttached = true;
-}
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prismaClient;
-  globalForPrisma.prismaWithRetry = prisma;
 }

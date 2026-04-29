@@ -1,11 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -249,6 +250,7 @@ model CaseAssignment {
   @@unique([caseId, lawyerProfileId])
   @@index([lawyerProfileId, status, updatedAt])
   @@index([caseId, status])
+  @@index([caseId, updatedAt])
 }
 
 model Document {
@@ -470,6 +472,8 @@ model AgentActionReview {
 
   @@index([createdById, status])
   @@index([caseId, status])
+  @@index([caseId, createdAt])
+  @@index([createdById, createdAt])
   @@index([assistantThreadId])
 }
 
@@ -498,8 +502,12 @@ model ConsultationBooking {
   requestedBy      User            @relation("ConsultationRequester", fields: [requestedById], references: [id], onDelete: Cascade)
 
   @@index([caseId, status])
+  @@index([caseId, scheduledAt])
   @@index([clientProfileId, status])
+  @@index([clientProfileId, createdAt])
   @@index([lawyerProfileId, status])
+  @@index([lawyerProfileId, createdAt])
+  @@index([assignmentId])
 }
 
 model RedactionJob {
