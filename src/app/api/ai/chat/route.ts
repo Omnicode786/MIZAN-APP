@@ -6,6 +6,11 @@ import { assertAiUsageAvailable } from "@/lib/ai-usage";
 import { answerPakistaniLegalQuestion, generateAssistantThreadTitle } from "@/lib/legal-ai";
 import { runAgentTurn } from "@/lib/ai/agent-runner";
 import { createAgentActionReviewFromAssistantMessage } from "@/lib/agent-action-reviews";
+import {
+  appendAssistantMessages,
+  assistantMessageAscendingOrder,
+  assistantMessageDescendingOrder
+} from "@/lib/assistant-message-order";
 import { normalizeLanguage } from "@/lib/language";
 import { withApiObservability } from "@/lib/observability";
 import { getAccessibleCase } from "@/lib/permissions";
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
 
       const latestMessages = await prisma.assistantMessage.findMany({
         where: { threadId },
-        orderBy: { createdAt: "desc" },
+        orderBy: assistantMessageDescendingOrder,
         take: 12,
         select: {
           role: true,
@@ -133,28 +138,27 @@ export async function POST(request: Request) {
 
     if (!threadId) return apiError("Unable to start this conversation right now.", 500);
 
-    const [, message] = await prisma.$transaction([
-      prisma.assistantMessage.create({
-        data: {
-          threadId,
+    const [, message] = await prisma.$transaction(async (tx) => {
+      const createdMessages = await appendAssistantMessages(tx, threadId, [
+        {
           role: "USER",
           content: body.question
-        }
-      }),
-      prisma.assistantMessage.create({
-        data: {
-          threadId,
+        },
+        {
           role: "AI",
           content: ai.text,
           confidence: ai.confidence,
           sources: ai.sources
         }
-      }),
-      prisma.assistantThread.update({
+      ]);
+
+      await tx.assistantThread.update({
         where: { id: threadId },
         data: { updatedAt: new Date() }
-      })
-    ]);
+      });
+
+      return createdMessages;
+    });
 
     try {
       await createAgentActionReviewFromAssistantMessage({
@@ -171,7 +175,7 @@ export async function POST(request: Request) {
 
     const thread = await prisma.assistantThread.findUnique({
       where: { id: threadId },
-      include: { messages: { orderBy: { createdAt: "asc" } } }
+      include: { messages: { orderBy: assistantMessageAscendingOrder } }
     });
 
     return NextResponse.json({ thread, message });

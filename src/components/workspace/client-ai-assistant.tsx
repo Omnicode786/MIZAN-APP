@@ -40,6 +40,8 @@ type AssistantMessage = {
   content: string;
   confidence?: number | null;
   sources?: string[];
+  sequence?: number | null;
+  createdAt?: string | Date | null;
 };
 
 type AssistantThread = {
@@ -125,7 +127,10 @@ export function ClientAiAssistant({
     [activeThreadId, threads]
   );
 
-  const messages = activeThread?.messages || [];
+  const messages = useMemo(
+    () => sortAssistantMessages(activeThread?.messages || []),
+    [activeThread?.messages]
+  );
   const quickPrompts = mode === "general" ? GENERAL_PROMPTS : CASE_PROMPTS;
   const canAsk = !loading && question.trim().length > 1 && (mode === "general" || Boolean(contextCaseId));
 
@@ -745,6 +750,21 @@ function AgentActionCard({
   );
 }
 
+function sortAssistantMessages(messages: AssistantMessage[]) {
+  return [...messages].sort((first, second) => {
+    const firstSequence = typeof first.sequence === "number" ? first.sequence : Number.MAX_SAFE_INTEGER;
+    const secondSequence = typeof second.sequence === "number" ? second.sequence : Number.MAX_SAFE_INTEGER;
+
+    if (firstSequence !== secondSequence) return firstSequence - secondSequence;
+
+    const firstTime = first.createdAt ? new Date(first.createdAt).getTime() : 0;
+    const secondTime = second.createdAt ? new Date(second.createdAt).getTime() : 0;
+
+    if (firstTime !== secondTime) return firstTime - secondTime;
+    return first.id.localeCompare(second.id);
+  });
+}
+
 function getCaseIdFromActionHref(href: string) {
   const match = href.match(/^\/(?:client|lawyer)\/cases\/([^/?#]+)(?:$|[/?#])/);
   return match?.[1] || "";
@@ -851,15 +871,19 @@ function normalizeThread(raw: any): AssistantThread {
     documentId: raw.documentId || null,
     scope: raw.scope || "GENERAL",
     messages: Array.isArray(raw.messages)
-      ? raw.messages.map((message: any) => ({
-          id: String(message.id),
-          role: message.role,
-          content: String(message.content || ""),
-          confidence: typeof message.confidence === "number" ? message.confidence : null,
-          sources: Array.isArray(message.sources)
-            ? message.sources.filter((source: unknown): source is string => typeof source === "string")
-            : []
-        }))
+      ? sortAssistantMessages(
+          raw.messages.map((message: any) => ({
+            id: String(message.id),
+            role: message.role,
+            content: String(message.content || ""),
+            confidence: typeof message.confidence === "number" ? message.confidence : null,
+            sequence: typeof message.sequence === "number" ? message.sequence : null,
+            createdAt: message.createdAt || null,
+            sources: Array.isArray(message.sources)
+              ? message.sources.filter((source: unknown): source is string => typeof source === "string")
+              : []
+          }))
+        )
       : []
   };
 }

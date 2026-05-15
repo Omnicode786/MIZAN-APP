@@ -594,6 +594,7 @@ model AssistantThread {
 model AssistantMessage {
   id                 String              @id @default(cuid())
   threadId           String
+  sequence           Int                 @default(0)
   role               MessageRole
   content            String
   sources            Json?
@@ -602,6 +603,8 @@ model AssistantMessage {
   thread             AssistantThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
   agentActionReviews AgentActionReview[]
 
+  @@unique([threadId, sequence])
+  @@index([threadId, sequence])
   @@index([threadId, createdAt])
 }
 

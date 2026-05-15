@@ -470,6 +470,7 @@ export async function getCaseDetail(
           content: string;
           confidence: number | null;
           sources: unknown;
+          sequence: number;
           createdAt: Date;
         }>
       >(Prisma.sql`
@@ -480,6 +481,7 @@ export async function getCaseDetail(
           ranked."content",
           ranked."confidence",
           ranked."sources",
+          ranked."sequence",
           ranked."createdAt"
         FROM (
           SELECT
@@ -489,13 +491,17 @@ export async function getCaseDetail(
             "content",
             "confidence",
             "sources",
+            "sequence",
             "createdAt",
-            ROW_NUMBER() OVER (PARTITION BY "threadId" ORDER BY "createdAt" DESC) AS rn
+            ROW_NUMBER() OVER (
+              PARTITION BY "threadId"
+              ORDER BY "sequence" DESC, "createdAt" DESC, "id" DESC
+            ) AS rn
           FROM "AssistantMessage"
           WHERE "threadId" IN (${Prisma.join(assistantThreadIds)})
         ) ranked
         WHERE ranked.rn <= 6
-        ORDER BY ranked."threadId" ASC, ranked."createdAt" DESC
+        ORDER BY ranked."threadId" ASC, ranked."sequence" DESC, ranked."createdAt" DESC, ranked."id" DESC
       `)
     : [];
 

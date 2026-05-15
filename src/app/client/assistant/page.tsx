@@ -72,6 +72,7 @@ export default async function ClientAssistantPage() {
           content: string;
           confidence: number | null;
           sources: unknown;
+          sequence: number;
           createdAt: Date;
         }>
       >(Prisma.sql`
@@ -82,6 +83,7 @@ export default async function ClientAssistantPage() {
           ranked."content",
           ranked."confidence",
           ranked."sources",
+          ranked."sequence",
           ranked."createdAt"
         FROM (
           SELECT
@@ -91,13 +93,17 @@ export default async function ClientAssistantPage() {
             "content",
             "confidence",
             "sources",
+            "sequence",
             "createdAt",
-            ROW_NUMBER() OVER (PARTITION BY "threadId" ORDER BY "createdAt" DESC) AS rn
+            ROW_NUMBER() OVER (
+              PARTITION BY "threadId"
+              ORDER BY "sequence" DESC, "createdAt" DESC, "id" DESC
+            ) AS rn
           FROM "AssistantMessage"
           WHERE "threadId" IN (${Prisma.join(threadIds)})
         ) ranked
         WHERE ranked.rn <= 6
-        ORDER BY ranked."threadId" ASC, ranked."createdAt" DESC
+        ORDER BY ranked."threadId" ASC, ranked."sequence" DESC, ranked."createdAt" DESC, ranked."id" DESC
       `)
     : [];
 
@@ -124,6 +130,8 @@ export default async function ClientAssistantPage() {
       role: message.role,
       content: message.content,
       confidence: message.confidence,
+      sequence: message.sequence,
+      createdAt: message.createdAt.toISOString(),
       sources: Array.isArray(message.sources)
         ? message.sources.filter((source): source is string => typeof source === "string")
         : []

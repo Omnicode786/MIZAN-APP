@@ -5,6 +5,7 @@ import {
   approveAgentActionReview,
   rejectAgentActionReview
 } from "@/lib/agent-action-reviews";
+import { appendAssistantMessages } from "@/lib/assistant-message-order";
 import { stripAssistantActionMeta } from "@/lib/assistant-message-meta";
 import { normalizeLanguage } from "@/lib/language";
 import { recordQueueMetric, withApiObservability } from "@/lib/observability";
@@ -27,21 +28,24 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const review = await rejectAgentActionReview({ user, id: params.id });
 
       if (review.assistantThreadId) {
-        await prisma.assistantMessage.createMany({
-          data: [
+        await prisma.$transaction(async (tx) => {
+          await appendAssistantMessages(tx, review.assistantThreadId!, [
             {
-              threadId: review.assistantThreadId,
               role: "USER",
               content: `Rejected queued action: ${review.title}`
             },
             {
-              threadId: review.assistantThreadId,
               role: "AI",
               content: "No action was saved. I kept this as a discussion only.",
               confidence: 0.9,
               sources: ["AI action review queue"]
             }
-          ]
+          ]);
+
+          await tx.assistantThread.update({
+            where: { id: review.assistantThreadId! },
+            data: { updatedAt: new Date() }
+          });
         });
       }
 
@@ -64,26 +68,24 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       });
 
     if (review.assistantThreadId) {
-      await prisma.assistantMessage.createMany({
-        data: [
+      await prisma.$transaction(async (tx) => {
+        await appendAssistantMessages(tx, review.assistantThreadId!, [
           {
-            threadId: review.assistantThreadId,
             role: "USER",
             content: `Approved queued action: ${review.title}`
           },
           {
-            threadId: review.assistantThreadId,
             role: "AI",
             content: result.text,
             confidence: result.confidence,
             sources: result.sources
           }
-        ]
-      });
+        ]);
 
-      await prisma.assistantThread.update({
-        where: { id: review.assistantThreadId },
-        data: { updatedAt: new Date() }
+        await tx.assistantThread.update({
+          where: { id: review.assistantThreadId! },
+          data: { updatedAt: new Date() }
+        });
       });
     }
 

@@ -18,6 +18,8 @@ type Message = {
   content: string;
   confidence?: number;
   sources?: string[];
+  sequence?: number | null;
+  createdAt?: string | Date | null;
 };
 
 type Thread = {
@@ -49,6 +51,10 @@ export function AssistantPanel({
   const activeThread = useMemo(
     () => threads.find((item) => item.id === activeThreadId) || threads[0],
     [threads, activeThreadId]
+  );
+  const messages = useMemo(
+    () => sortMessages(activeThread?.messages || []),
+    [activeThread?.messages]
   );
 
   async function ask() {
@@ -127,7 +133,7 @@ export function AssistantPanel({
         ) : null}
 
         <div className="premium-scroll max-h-[420px] space-y-3 overflow-y-auto pr-1">
-          {(activeThread?.messages || []).map((message) => {
+          {messages.map((message) => {
             const displayContent =
               message.role === "AI" ? stripAssistantActionMeta(message.content) : message.content;
 
@@ -199,4 +205,19 @@ export function AssistantPanel({
         </div>
     </GlassSurface>
   );
+}
+
+function sortMessages(messages: Message[]) {
+  return [...messages].sort((first, second) => {
+    const firstSequence = typeof first.sequence === "number" ? first.sequence : Number.MAX_SAFE_INTEGER;
+    const secondSequence = typeof second.sequence === "number" ? second.sequence : Number.MAX_SAFE_INTEGER;
+
+    if (firstSequence !== secondSequence) return firstSequence - secondSequence;
+
+    const firstTime = first.createdAt ? new Date(first.createdAt).getTime() : 0;
+    const secondTime = second.createdAt ? new Date(second.createdAt).getTime() : 0;
+
+    if (firstTime !== secondTime) return firstTime - secondTime;
+    return first.id.localeCompare(second.id);
+  });
 }
