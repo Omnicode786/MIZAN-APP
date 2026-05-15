@@ -69,6 +69,7 @@ const consultationSelect = {
     select: {
       id: true,
       status: true,
+      proposalStatus: true,
       feeProposal: true,
       probability: true
     }
@@ -89,13 +90,20 @@ export async function GET(request: Request) {
             lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
             assignment: {
               is: {
-                status: "ACCEPTED"
+                status: "ACCEPTED" as const,
+                proposalStatus: "ACCEPTED" as const
               }
             },
             caseId: query.caseId
           }
         : {
             clientProfileId: user.clientProfile?.id || "__NO_CLIENT_PROFILE__",
+            assignment: {
+              is: {
+                status: "ACCEPTED" as const,
+                proposalStatus: "ACCEPTED" as const
+              }
+            },
             caseId: query.caseId
           };
 
@@ -130,7 +138,7 @@ export async function POST(request: Request) {
           }
         },
         assignments: {
-          where: { status: "ACCEPTED" },
+          where: { status: "ACCEPTED" as const, proposalStatus: "ACCEPTED" as const },
           select: {
             id: true,
             lawyerProfileId: true,
@@ -163,7 +171,7 @@ export async function POST(request: Request) {
           legalCase.assignments.find((item) => item.lawyerProfileId === body.lawyerProfileId) || null;
       }
 
-      if (!assignment) return validationError("The lawyer must accept the case request before consultations can be created.");
+      if (!assignment) return validationError("Accept the lawyer proposal before creating consultations.");
 
       const consultation = await prisma.consultationBooking.create({
         data: {

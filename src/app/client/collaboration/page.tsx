@@ -43,7 +43,7 @@ export default async function ClientCollaborationPage() {
       <SectionHeader
         eyebrow="Collaboration"
         title="Shared discussion across cases"
-        description="Communication is structured by case. Open the relevant case workspace to reply, upload more proof, or review a proposal."
+        description="Communication is structured by case. Open the relevant case workspace to reply, upload more proof, or review lawyer request status."
         action={<Button asChild><Link href="/client/cases">Open case workspace</Link></Button>}
       />
       <div className="grid gap-4">

@@ -168,9 +168,12 @@ export async function GET(_request: Request, { params }: { params: { id: string 
             id: true,
             lawyerProfileId: true,
             status: true,
+            proposalStatus: true,
             feeProposal: true,
             probability: true,
             proposalNotes: true,
+            proposalSentAt: true,
+            proposalDecidedAt: true,
             lawyer: {
               select: {
                 id: true,
@@ -197,7 +200,21 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     });
     if (!legalCase) return notFound();
 
-    return NextResponse.json({ case: legalCase });
+    const visibleCase =
+      user.role === "LAWYER" && !legalCase.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
+        ? {
+            ...legalCase,
+            client: {
+              ...legalCase.client,
+              user: {
+                ...legalCase.client.user,
+                email: ""
+              }
+            }
+          }
+        : legalCase;
+
+    return NextResponse.json({ case: visibleCase });
   } catch (error) {
     return handleApiError(error, "CASE_GET_ROUTE", "Unable to load case.");
   }

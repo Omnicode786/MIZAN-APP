@@ -38,7 +38,7 @@ function getAccessibleCaseWhere(user: any): Prisma.CaseWhereInput {
       assignments: {
         some: {
           lawyerProfileId: user.lawyerProfile.id,
-          status: "ACCEPTED"
+          status: "ACCEPTED" as const
         }
       }
     };
@@ -52,7 +52,7 @@ function getAccessibleCaseWhere(user: any): Prisma.CaseWhereInput {
     };
   }
 
-  return {};
+  return noAccessCaseWhere();
 }
 
 function getSearchTerms(query: string) {

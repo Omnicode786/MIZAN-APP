@@ -11,7 +11,7 @@ export function buildAccessibleCaseWhereForUser(user: AppUser, caseId?: string):
           assignments: {
             some: {
               lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
-              status: "ACCEPTED"
+              status: "ACCEPTED" as const
             }
           }
         }
@@ -96,14 +96,14 @@ export async function getAccessibleCase(caseId: string) {
             id: caseId,
             assignments: {
               some: {
-                lawyerProfileId: user.lawyerProfile?.id,
-                status: "ACCEPTED"
+                lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
+                status: "ACCEPTED" as const
               }
             }
           }
         : {
             id: caseId,
-            clientProfileId: user.clientProfile?.id
+            clientProfileId: user.clientProfile?.id || "__NO_CLIENT_PROFILE__"
           },
     select: {
       id: true,
@@ -147,7 +147,7 @@ export async function getAccessibleCase(caseId: string) {
           user.role === "LAWYER"
             ? {
                 lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
-                status: "ACCEPTED"
+                status: "ACCEPTED" as const
               }
             : undefined,
         select: {
@@ -155,9 +155,12 @@ export async function getAccessibleCase(caseId: string) {
           caseId: true,
           lawyerProfileId: true,
           status: true,
+          proposalStatus: true,
           feeProposal: true,
           probability: true,
           proposalNotes: true,
+          proposalSentAt: true,
+          proposalDecidedAt: true,
           createdAt: true,
           updatedAt: true,
           lawyer: {
@@ -208,12 +211,27 @@ export async function getAccessibleCase(caseId: string) {
     }
   });
 
+  const sanitizedCase =
+    legalCase && user.role === "LAWYER" && !legalCase.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
+      ? {
+          ...legalCase,
+          client: {
+            ...legalCase.client,
+            phone: null,
+            user: {
+              ...legalCase.client.user,
+              email: ""
+            }
+          }
+        }
+      : legalCase;
+
   return {
     user,
     legalCase:
-      legalCase && !includeInternalNotes
-        ? ({ ...legalCase, internalNotes: [] } as typeof legalCase & { internalNotes: [] })
-        : legalCase
+      sanitizedCase && !includeInternalNotes
+        ? ({ ...sanitizedCase, internalNotes: [] } as typeof sanitizedCase & { internalNotes: [] })
+        : sanitizedCase
   };
 }
 

@@ -41,9 +41,12 @@ export async function POST(request: Request, { params }: { params: { id: string 
           where: { id: existingAssignment.id },
           data: {
             status: "PENDING",
+            proposalStatus: "NOT_SENT",
             feeProposal: null,
             probability: null,
-            proposalNotes: null
+            proposalNotes: null,
+            proposalSentAt: null,
+            proposalDecidedAt: null
           },
           include: { lawyer: { include: { user: true } } }
         })
@@ -51,7 +54,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
           data: {
             caseId: params.id,
             lawyerProfileId: body.lawyerProfileId,
-            status: "PENDING"
+            status: "PENDING",
+            proposalStatus: "NOT_SENT"
           },
           include: { lawyer: { include: { user: true } } }
         });
@@ -68,7 +72,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       data: {
         caseId: params.id,
         title: `Lawyer requested: ${lawyer.user.name}`,
-        description: "Client shared the case for proposal review.",
+        description: "Client sent a pending request to the selected lawyer.",
         eventDate: new Date(),
         confidence: 1,
         sourceLabel: "system",

@@ -31,7 +31,7 @@ const roleCards = [
   },
   {
     title: "Lawyer account",
-    text: "Receive structured case requests, review evidence, send proposals, verify drafts, and manage client matters.",
+    text: "Receive assigned case requests, accept suitable matters, verify drafts, and manage client workspaces.",
     icon: BriefcaseBusiness
   }
 ];

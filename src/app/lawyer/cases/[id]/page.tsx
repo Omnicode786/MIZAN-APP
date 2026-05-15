@@ -18,7 +18,7 @@ export default async function LawyerCaseDetailPage({ params }: { params: { id: s
       <SectionHeader
         eyebrow="Review Workspace"
         title={detail.title}
-        description="Review evidence, send a proposal, keep internal notes, challenge the file in debate mode, and verify drafts when they are ready."
+        description="Review evidence, set collaboration terms, keep internal notes, challenge the file in debate mode, and verify drafts when they are ready."
         action={<div />}
       />
       <CaseWorkspaceLive initialCase={detail} role="LAWYER" currentUser={user} />

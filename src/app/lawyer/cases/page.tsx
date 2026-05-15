@@ -13,8 +13,8 @@ export default async function LawyerCasesPage() {
     <AppShell nav={LAWYER_NAV} heading="Lawyer Workspace" currentPath="/lawyer/cases" user={user!}>
       <SectionHeader
         eyebrow="Case Queue"
-        title="Assigned and requested matters"
-        description="Open a matter to review evidence, send or revise your proposal, edit drafts, and challenge the file in debate mode."
+        title="Accepted matters"
+        description="Open an accepted matter to review evidence, set collaboration terms, edit drafts, and challenge the file in debate mode."
         action={<div />}
       />
       <div className="space-y-5">

@@ -1876,7 +1876,7 @@ const toolDefinitions: AgentToolDefinition[] = [
             }
           },
           assignments: {
-            where: { status: "ACCEPTED" },
+            where: { status: "ACCEPTED" as const, proposalStatus: "ACCEPTED" as const },
             select: {
               id: true,
               lawyerProfileId: true,
@@ -1923,7 +1923,7 @@ const toolDefinitions: AgentToolDefinition[] = [
         if (!assignment) {
           return {
             ok: false,
-            message: "The lawyer must accept the case request before I can create a consultation.",
+            message: "The client must accept the lawyer proposal before I can create a consultation.",
             status: "info"
           };
         }

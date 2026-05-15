@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { LanguageRuntime } from "@/components/language-runtime";
+import { ToastProvider } from "@/components/ui/toast-provider";
 import {
   ThemeProvider,
   THEME_PRESET_STORAGE_KEY,
@@ -63,8 +64,10 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground transition-colors duration-300">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <ThemeProvider>
-          <LanguageRuntime />
-          {children}
+          <ToastProvider>
+            <LanguageRuntime />
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

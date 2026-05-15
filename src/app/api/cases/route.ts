@@ -18,10 +18,11 @@ export async function GET() {
   try {
     const user = await getCurrentUserWithProfile();
     if (!user) return unauthorized();
+    if (user.role !== "CLIENT" && user.role !== "LAWYER") return forbidden();
     if (user.role === "LAWYER" && !user.lawyerProfile) return NextResponse.json({ cases: [] });
     if (user.role === "CLIENT" && !user.clientProfile) return NextResponse.json({ cases: [] });
-    const lawyerProfileId = user.lawyerProfile?.id;
-    const clientProfileId = user.clientProfile?.id;
+    const lawyerProfileId = user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__";
+    const clientProfileId = user.clientProfile?.id || "__NO_CLIENT_PROFILE__";
 
     const cases =
       user.role === "LAWYER"
@@ -30,7 +31,7 @@ export async function GET() {
               assignments: {
                 some: {
                   lawyerProfileId,
-                  status: "ACCEPTED"
+                  status: "ACCEPTED" as const
                 }
               }
             },

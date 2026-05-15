@@ -6,18 +6,18 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast-provider";
 
 type AssignmentRequest = {
   id: string;
   caseId: string;
   status: "PENDING" | "ACCEPTED" | "DECLINED" | string;
-  updatedAt: Date | string;
+  proposalStatus?: "NOT_SENT" | "SENT" | "ACCEPTED" | "DECLINED" | string;
   case: {
     id: string;
     title: string;
     category: string;
     priority: string;
-    description: string | null;
     client: {
       user: {
         name: string;
@@ -40,13 +40,12 @@ async function requireOk(response: Response, fallback: string) {
 
 export function LawyerRequestReviewList({ assignments }: { assignments: AssignmentRequest[] }) {
   const router = useRouter();
+  const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function decide(assignmentId: string, decision: "ACCEPTED" | "DECLINED") {
     try {
       setBusy(`${assignmentId}:${decision}`);
-      setMessage(null);
 
       const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "PATCH",
@@ -55,16 +54,14 @@ export function LawyerRequestReviewList({ assignments }: { assignments: Assignme
       });
 
       await requireOk(response, "Unable to update the case request.");
-      setMessage({
-        type: "success",
-        text: decision === "ACCEPTED" ? "Case request accepted. Full case access is now unlocked." : "Case request rejected."
-      });
+      toast.success(
+        decision === "ACCEPTED"
+          ? "Case request accepted. You can now review the case and send terms."
+          : "Case request rejected."
+      );
       router.refresh();
     } catch (error) {
-      setMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : "Unable to update the case request."
-      });
+      toast.error(error instanceof Error ? error.message : "Unable to update the case request.");
     } finally {
       setBusy(null);
     }
@@ -72,18 +69,6 @@ export function LawyerRequestReviewList({ assignments }: { assignments: Assignme
 
   return (
     <div className="grid gap-4">
-      {message ? (
-        <div
-          className={
-            message.type === "success"
-              ? "rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-200"
-              : "rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive"
-          }
-        >
-          {message.text}
-        </div>
-      ) : null}
-
       {assignments.map((assignment) => (
         <Card key={assignment.id} className="soft-hover">
           <CardContent className="p-5">
@@ -104,7 +89,13 @@ export function LawyerRequestReviewList({ assignments }: { assignments: Assignme
             </div>
 
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              {assignment.case.description || "No request summary was provided."}
+              {assignment.status === "ACCEPTED"
+                ? assignment.proposalStatus === "ACCEPTED"
+                  ? "Proposal accepted. Open the case workspace to continue work."
+                  : "Request accepted. Open the case workspace to review details and send collaboration terms."
+                : assignment.status === "DECLINED"
+                  ? "Rejected. Full case details remain locked."
+                  : "Full case details and contact stay locked until you accept this assigned request."}
             </p>
 
             <div className="mt-5 flex flex-wrap justify-end gap-2">

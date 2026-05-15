@@ -206,7 +206,7 @@ export function PublicLawyersDirectory({
 
                     <p className="mt-5 max-w-2xl text-[14px] leading-[24px] text-muted-foreground">
                       Browse public profiles, compare specialties, and start your matter when you are ready.
-                      Inside MIZAN, clients send structured case requests and lawyers respond with proposals.
+                      Inside MIZAN, clients send structured requests and selected lawyers accept or reject them.
                     </p>
                   </div>
 
@@ -317,7 +317,7 @@ export function PublicLawyersDirectory({
                   <span>{filteredLawyers.length} public profiles shown</span>
                 </div>
                 <Badge variant="outline" className="rounded-md px-3 py-1">
-                  Proposal based workflow
+                  Request acceptance workflow
                 </Badge>
               </div>
             </motion.div>
@@ -461,7 +461,7 @@ function LawyerCard({
                   ? `From PKR ${lawyer.fixedFeeFrom.toLocaleString()}`
                   : lawyer.hourlyRate
                     ? `PKR ${lawyer.hourlyRate.toLocaleString()} / hour`
-                    : "Proposal based pricing"}
+                    : "Terms after acceptance"}
               </p>
             </div>
           </div>

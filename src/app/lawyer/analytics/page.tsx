@@ -10,10 +10,10 @@ export default async function LawyerAnalyticsPage() {
   const lawyerProfileId = user?.lawyerProfile?.id;
   const where = lawyerProfileId ? { lawyerProfileId } : { id: "__NO_ACCESS__" };
   const [accepted, pending, probabilityAggregate] = await Promise.all([
-    prisma.caseAssignment.count({ where: { ...where, status: "ACCEPTED" } }),
+    prisma.caseAssignment.count({ where: { ...where, status: "ACCEPTED" as const } }),
     prisma.caseAssignment.count({ where: { ...where, status: "PENDING" } }),
     prisma.caseAssignment.aggregate({
-      where: { ...where, status: "ACCEPTED" },
+      where: { ...where, status: "ACCEPTED" as const },
       _avg: { probability: true }
     })
   ]);

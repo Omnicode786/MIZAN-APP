@@ -73,8 +73,8 @@ export default async function LawyerDashboardPage() {
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-                  Your workspace brings assigned cases, evidence posture, deadlines,
-                  drafts, proposals, private notes, and debate mode into one structured
+                  Your workspace brings accepted cases, evidence posture, deadlines,
+                  drafts, collaboration terms, private notes, and debate mode into one structured
                   review flow.
                 </p>
 
@@ -143,7 +143,7 @@ export default async function LawyerDashboardPage() {
                   Matters requiring review
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Open a case to review evidence, send proposals, verify drafts, or add
+                  Open a case to review evidence, set collaboration terms, verify drafts, or add
                   lawyer-only notes.
                 </p>
               </div>
@@ -201,7 +201,7 @@ export default async function LawyerDashboardPage() {
                 <div className="space-y-3 p-5">
                   {[
                     "Check uploaded evidence and AI summaries first.",
-                    "Review deadline posture before sending a proposal.",
+                    "Review deadline posture before setting collaboration terms.",
                     "Use internal notes for private strategy concerns.",
                     "Run debate mode when the case has enough facts."
                   ].map((item) => (

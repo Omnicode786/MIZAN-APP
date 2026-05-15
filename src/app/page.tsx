@@ -62,7 +62,7 @@ const productPillars = [
   },
   {
     title: "Client-to-lawyer workflow",
-    text: "Clients discover public lawyer profiles, share selected matters, receive proposals, and unlock contact only after approving the lawyer.",
+    text: "Clients discover public lawyer profiles, send a request to one selected lawyer, and unlock contact only after that lawyer accepts.",
     icon: BriefcaseBusiness
   },
   {
@@ -95,7 +95,7 @@ const workflowSteps = [
   },
   {
     title: "Request lawyer review",
-    detail: "Send a structured case brief to a selected lawyer and review their proposal.",
+    detail: "Send a structured case brief to one selected lawyer and track pending, accepted, or rejected status.",
     state: "Handoff"
   }
 ];
@@ -113,7 +113,7 @@ const clientFeatures = [
 
 const lawyerFeatures = [
   "Review assigned client matters",
-  "Send proposals with fee and posture",
+  "Accept requests and set collaboration terms",
   "Use AI pre-briefs and summaries",
   "Debate against AI opposing counsel",
   "Add private internal notes",
@@ -206,7 +206,7 @@ const journeyCards = [
   },
   {
     title: "Collaborate with lawyers",
-    text: "Send a structured request, compare proposals, and move forward with clearer legal preparation.",
+    text: "Send a structured request to a selected lawyer, wait for acceptance, and move forward with clearer legal preparation.",
     icon: MessageSquareText
   }
 ];
@@ -923,7 +923,7 @@ export default function LandingPage() {
                     Lawyer workflows with cleaner inputs and stronger preparation.
                   </h2>
                   <p className={`${bodyCopyClass} mt-2`}>
-                    Lawyers receive pre-structured matters, can send proposals, run
+                    Lawyers receive assigned requests, accept suitable matters, run
                     debate sessions, review drafts, add internal notes, and manage
                     deadlines from a professional workspace instead of messy client chats.
                   </p>

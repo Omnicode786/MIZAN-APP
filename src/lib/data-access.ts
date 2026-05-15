@@ -22,7 +22,7 @@ export async function getCasesForRole(role: "CLIENT" | "LAWYER") {
         assignments: {
           some: {
             lawyerProfileId: user.lawyerProfile.id,
-            status: "ACCEPTED"
+            status: "ACCEPTED" as const
           }
         }
       },
@@ -108,8 +108,25 @@ export async function getCaseDetail(
       : undefined;
   const consultationWhere =
     user.role === "LAWYER" && user.lawyerProfile
-      ? { lawyerProfileId: user.lawyerProfile.id }
-      : undefined;
+      ? {
+          lawyerProfileId: user.lawyerProfile.id,
+          assignment: {
+            is: {
+              status: "ACCEPTED" as const,
+              proposalStatus: "ACCEPTED" as const
+            }
+          }
+        }
+      : user.role === "CLIENT"
+        ? {
+            assignment: {
+              is: {
+                status: "ACCEPTED" as const,
+                proposalStatus: "ACCEPTED" as const
+              }
+            }
+          }
+        : undefined;
 
   const detail = await prisma.case.findFirst({
     where,
@@ -157,9 +174,12 @@ export async function getCaseDetail(
           caseId: true,
           lawyerProfileId: true,
           status: true,
+          proposalStatus: true,
           feeProposal: true,
           probability: true,
           proposalNotes: true,
+          proposalSentAt: true,
+          proposalDecidedAt: true,
           createdAt: true,
           updatedAt: true,
           lawyer: {
@@ -340,6 +360,7 @@ export async function getCaseDetail(
             select: {
               id: true,
               status: true,
+              proposalStatus: true,
               feeProposal: true,
               probability: true
             }
@@ -424,6 +445,21 @@ export async function getCaseDetail(
 
   if (!detail) return null;
 
+  const visibleDetail =
+    user.role === "LAWYER" && !detail.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
+      ? {
+          ...detail,
+          client: {
+            ...detail.client,
+            phone: null,
+            user: {
+              ...detail.client.user,
+              email: ""
+            }
+          }
+        }
+      : detail;
+
   const assistantThreadIds = detail.assistantThreads.map((thread) => thread.id);
   const assistantMessageRows = assistantThreadIds.length
     ? await prisma.$queryRaw<
@@ -471,7 +507,7 @@ export async function getCaseDetail(
   }
 
   return {
-    ...detail,
+    ...visibleDetail,
     documents: [],
     evidenceItems: [],
     timelineEvents: [],
@@ -494,7 +530,7 @@ export async function getCasePacketDetail(
   const user = currentUser || (await getCurrentUserWithProfile());
   if (!user) return null;
 
-  return prisma.case.findFirst({
+  const packet = await prisma.case.findFirst({
     where: buildAccessibleCaseWhereForUser(user, caseId),
     select: {
       id: true,
@@ -524,6 +560,7 @@ export async function getCasePacketDetail(
         select: {
           id: true,
           status: true,
+          proposalStatus: true,
           lawyer: {
             select: {
               id: true,
@@ -615,6 +652,22 @@ export async function getCasePacketDetail(
           : false
     }
   });
+
+  if (!packet) return null;
+  if (user.role === "LAWYER" && !packet.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")) {
+    return {
+      ...packet,
+      client: {
+        ...packet.client,
+        user: {
+          ...packet.client.user,
+          email: ""
+        }
+      }
+    };
+  }
+
+  return packet;
 }
 
 export function sanitizeAssistantThreads<
@@ -676,7 +729,7 @@ export async function getDashboardSnapshot(role: "CLIENT" | "LAWYER") {
             assignments: {
               some: {
                 lawyerProfileId: user.lawyerProfile.id,
-                status: "ACCEPTED"
+                status: "ACCEPTED" as const
               }
             }
           }

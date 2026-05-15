@@ -17,17 +17,18 @@ export default async function LawyerReviewPage() {
       caseId: true,
       lawyerProfileId: true,
       status: true,
+      proposalStatus: true,
       feeProposal: true,
       probability: true,
       proposalNotes: true,
-      updatedAt: true,
+      proposalSentAt: true,
+      proposalDecidedAt: true,
       case: {
         select: {
           id: true,
           title: true,
           category: true,
           priority: true,
-          description: true,
           client: {
             select: {
               id: true,

@@ -50,6 +50,13 @@ enum AssignmentStatus {
   DECLINED
 }
 
+enum ProposalStatus {
+  NOT_SENT
+  SENT
+  ACCEPTED
+  DECLINED
+}
+
 enum DocumentType {
   PDF
   IMAGE
@@ -238,9 +245,12 @@ model CaseAssignment {
   caseId          String
   lawyerProfileId String
   status          AssignmentStatus      @default(PENDING)
+  proposalStatus  ProposalStatus        @default(NOT_SENT)
   feeProposal     Float?
   probability     Float?
   proposalNotes   String?
+  proposalSentAt  DateTime?
+  proposalDecidedAt DateTime?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
   case            Case                  @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -249,7 +259,9 @@ model CaseAssignment {
 
   @@unique([caseId, lawyerProfileId])
   @@index([lawyerProfileId, status, updatedAt])
+  @@index([lawyerProfileId, status, proposalStatus, updatedAt])
   @@index([caseId, status])
+  @@index([caseId, status, proposalStatus])
   @@index([caseId, updatedAt])
 }
 

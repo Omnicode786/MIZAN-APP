@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       where: { id: params.id },
       include: {
         case: true,
-        assignment: { select: { status: true } },
+        assignment: { select: { status: true, proposalStatus: true } },
         client: { include: { user: true } },
         lawyer: { include: { user: true } }
       }
@@ -41,7 +41,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const isClient = user.role === "CLIENT" && user.clientProfile?.id === consultation.clientProfileId;
     const isLawyer = user.role === "LAWYER" && user.lawyerProfile?.id === consultation.lawyerProfileId;
     if (!isClient && !isLawyer) return forbidden();
-    if (isLawyer && consultation.assignment?.status !== "ACCEPTED") return forbidden();
+    if (
+      !consultation.assignment ||
+      consultation.assignment.status !== "ACCEPTED" ||
+      consultation.assignment.proposalStatus !== "ACCEPTED"
+    ) {
+      return forbidden();
+    }
 
     if (isClient && body.status && !["CONFIRMED", "CANCELLED"].includes(body.status)) {
       return validationError("Clients can only confirm or cancel consultations.");

@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FrostedSurface as GlassSurface } from "@/components/ui/frosted-surface";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast-provider";
 import { ActivityFeed } from "@/components/workspace/activity-feed";
 import { AssistantPanel } from "@/components/workspace/assistant-panel";
 import { DebatePanel } from "@/components/workspace/debate-panel";
@@ -74,6 +75,7 @@ export function CaseWorkspaceLive({
 }) {
   const router = useRouter();
   const language = useLanguage();
+  const toast = useToast();
 
   const [title, setTitle] = useState(initialCase.title);
   const [description, setDescription] = useState(initialCase.description || "");
@@ -151,11 +153,11 @@ export function CaseWorkspaceLive({
     const controller = new AbortController();
     loadCaseSections(controller.signal).catch((error) => {
       if (error instanceof Error && error.name === "AbortError") return;
-      setNotice({ type: "error", text: "Some workspace sections could not be loaded." });
+      toast.error("Some workspace sections could not be loaded.");
     });
 
     return () => controller.abort();
-  }, [loadCaseSections]);
+  }, [loadCaseSections, toast]);
 
   async function refresh() {
     router.refresh();
@@ -168,14 +170,13 @@ export function CaseWorkspaceLive({
   }
 
   function showSuccess(text: string) {
-    setNotice({ type: "success", text });
+    setNotice(null);
+    toast.success(text);
   }
 
   function showError(error: unknown, fallback: string) {
-    setNotice({
-      type: "error",
-      text: error instanceof Error ? error.message : fallback
-    });
+    setNotice(null);
+    toast.error(error instanceof Error ? error.message : fallback);
   }
 
   async function saveCase() {
@@ -199,7 +200,7 @@ export function CaseWorkspaceLive({
   async function deleteCase() {
     if (role !== "CLIENT") return;
     if (!deletePassword.trim()) {
-      setNotice({ type: "error", text: "Enter your account password to delete this case." });
+      toast.error("Enter your account password to delete this case.");
       return;
     }
     if (!confirm("Delete this case and all its records permanently?")) return;
@@ -448,7 +449,7 @@ export function CaseWorkspaceLive({
       showSuccess("Collaboration terms saved.");
       refresh();
     } catch (error) {
-      showError(error, "Unable to send proposal.");
+      showError(error, "Unable to save collaboration terms.");
     } finally {
       setBusy(null);
     }
@@ -467,7 +468,26 @@ export function CaseWorkspaceLive({
       showSuccess(decision === "ACCEPTED" ? "Request accepted." : "Request rejected.");
       refresh();
     } catch (error) {
-      showError(error, "Unable to update proposal.");
+      showError(error, "Unable to update request.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function decideLawyerProposal(assignmentId: string, decision: "ACCEPTED" | "DECLINED") {
+    try {
+      setBusy(`proposal-decision-${assignmentId}`);
+      setNotice(null);
+      const res = await fetch(`/api/assignments/${assignmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "proposalDecision", decision })
+      });
+      await requireOk(res, "Unable to update lawyer proposal.");
+      showSuccess(decision === "ACCEPTED" ? "Proposal accepted. Work can continue." : "Proposal declined. Lawyer access was removed.");
+      refresh();
+    } catch (error) {
+      showError(error, "Unable to update lawyer proposal.");
     } finally {
       setBusy(null);
     }
@@ -796,7 +816,7 @@ export function CaseWorkspaceLive({
               <MiniSectionHeader
                 icon={Scale}
                 title="Lawyer request status"
-                description="Clients send requests to selected lawyers. Full case access and contact details unlock only after the lawyer accepts."
+                description="Clients send requests to selected lawyers. Lawyers accept the request first, then clients decide whether to accept the proposal."
               />
 
               <div className="mt-4 space-y-4">
@@ -809,6 +829,7 @@ export function CaseWorkspaceLive({
                     busy={busy}
                     onSendProposal={sendProposal}
                     onDecision={decideProposal}
+                    onProposalDecision={decideLawyerProposal}
                     caseContact={initialCase.client?.user}
                     clientProfile={initialCase.client}
                   />
@@ -1179,14 +1200,16 @@ function ConsultationDesk({
   }) => void;
   onUpdate: (id: string, updates: Record<string, unknown>) => void;
 }) {
-  const usableAssignments = assignments.filter((assignment) => assignment.status === "ACCEPTED");
+  const usableAssignments = assignments.filter(
+    (assignment) => assignment.status === "ACCEPTED" && assignment.proposalStatus === "ACCEPTED"
+  );
 
   return (
     <div className="mt-5 rounded-2xl border border-border/60 bg-muted/10 p-4">
       <MiniSectionHeader
         icon={CreditCard}
         title="Paid consultation desk"
-        description="Request, propose, confirm, and track consultation slots connected to this case."
+        description="Consultations unlock only after the client accepts the lawyer proposal."
       />
 
       <div className="mt-4 space-y-3">
@@ -1211,7 +1234,7 @@ function ConsultationDesk({
         ))}
 
         {!usableAssignments.length && !consultations.length ? (
-          <EmptyState compact text="No accepted lawyer is connected yet. Consultations unlock after the selected lawyer accepts the request." />
+          <EmptyState compact text="No accepted proposal is connected yet. Consultations unlock after the client accepts the lawyer proposal." />
         ) : null}
       </div>
     </div>
@@ -1245,7 +1268,7 @@ function ConsultationRequestCard({
         <div className="min-w-0 flex-1">
           <p className="break-words font-medium">{lawyerName}</p>
           <p className="break-words text-xs text-muted-foreground">
-            {assignment.status === "ACCEPTED" ? "Engaged lawyer" : "Proposal/request in progress"}
+            Engaged lawyer
           </p>
         </div>
 
@@ -1772,6 +1795,7 @@ function ProposalCard({
   busy,
   onSendProposal,
   onDecision,
+  onProposalDecision,
   caseContact,
   clientProfile
 }: any) {
@@ -1782,8 +1806,17 @@ function ProposalCard({
   const [proposalNotes, setProposalNotes] = useState(assignment.proposalNotes || "");
 
   const canEditProposal =
-    role === "LAWYER" && assignment.lawyer?.userId === currentUser.id && assignment.status === "ACCEPTED";
-  const contactsUnlocked = assignment.status === "ACCEPTED";
+    role === "LAWYER" &&
+    assignment.lawyer?.userId === currentUser.id &&
+    assignment.status === "ACCEPTED" &&
+    assignment.proposalStatus !== "ACCEPTED";
+  const canClientDecideProposal =
+    role === "CLIENT" && assignment.status === "ACCEPTED" && assignment.proposalStatus === "SENT";
+  const contactsUnlocked = assignment.status === "ACCEPTED" && assignment.proposalStatus === "ACCEPTED";
+  const requestStatusLabel =
+    assignment.status === "ACCEPTED" && assignment.proposalStatus
+      ? `${assignment.status} | ${assignment.proposalStatus}`
+      : assignment.status;
 
   return (
     <div className="min-w-0 rounded-2xl border border-border/70 bg-background/80 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
@@ -1803,7 +1836,7 @@ function ProposalCard({
                 : "warning"
           }
         >
-          {assignment.status}
+          {requestStatusLabel}
         </SafePill>
       </div>
 
@@ -1850,8 +1883,10 @@ function ProposalCard({
                 {assignment.status === "PENDING"
                   ? "Waiting for the lawyer to accept or reject this request."
                   : assignment.status === "DECLINED"
-                    ? "The lawyer rejected this request."
-                    : "No collaboration terms have been added yet."}
+                    ? assignment.proposalStatus === "DECLINED"
+                      ? "The client declined this proposal."
+                      : "The lawyer rejected this request."
+                    : "The lawyer accepted the request. Waiting for collaboration terms."}
               </p>
             )}
           </div>
@@ -1872,6 +1907,37 @@ function ProposalCard({
           {role === "CLIENT" && assignment.status === "PENDING" ? (
             <div className="mt-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
               Request pending. Only the selected lawyer can accept or reject it.
+            </div>
+          ) : null}
+
+          {canClientDecideProposal ? (
+            <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                Review these terms. Accept to continue work and unlock consultations, or decline to remove lawyer access.
+              </p>
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  type="button"
+                  onClick={() => onProposalDecision(assignment.id, "ACCEPTED")}
+                  disabled={busy === `proposal-decision-${assignment.id}`}
+                >
+                  {busy === `proposal-decision-${assignment.id}` ? "Saving..." : "Accept proposal"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onProposalDecision(assignment.id, "DECLINED")}
+                  disabled={busy === `proposal-decision-${assignment.id}`}
+                >
+                  Decline
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {role === "CLIENT" && assignment.proposalStatus === "ACCEPTED" ? (
+            <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-200">
+              Proposal accepted. This lawyer can continue working on the case.
             </div>
           ) : null}
         </>

@@ -12,7 +12,7 @@ export default async function LawyerInternalNotesPage() {
   const lawyerProfileId = user?.lawyerProfile?.id;
   const notes = await prisma.internalNote.findMany({
     where: lawyerProfileId
-      ? { case: { assignments: { some: { lawyerProfileId, status: "ACCEPTED" } } } }
+      ? { case: { assignments: { some: { lawyerProfileId, status: "ACCEPTED" as const } } } }
       : { id: "__NO_ACCESS__" },
     select: {
       id: true,
