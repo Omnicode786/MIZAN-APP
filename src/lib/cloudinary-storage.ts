@@ -121,6 +121,12 @@ export function isCloudinaryConfigured() {
   return Boolean(getCloudinaryConfig());
 }
 
+export function getCloudinaryStorageBucket() {
+  const config = getCloudinaryConfig();
+  if (!config) return "";
+  return `${config.cloudName}/${config.folder}`;
+}
+
 export function getCloudinaryStorageMeta(metadata: unknown): CloudinaryStorageMeta | null {
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
     return null;

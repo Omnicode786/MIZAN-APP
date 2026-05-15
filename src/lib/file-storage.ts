@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { isCloudinaryConfigured, uploadToCloudinary } from "@/lib/cloudinary-storage";
+import { getCloudinaryStorageBucket, isCloudinaryConfigured, uploadToCloudinary } from "@/lib/cloudinary-storage";
 import { recordStorageMetric } from "@/lib/observability";
 
 export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
@@ -17,8 +17,14 @@ export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
       fileName: file.name,
       absolutePath: uploaded.secure_url,
       publicPath: uploaded.secure_url,
+      storageProvider: "cloudinary",
+      storageBucket: getCloudinaryStorageBucket(),
+      storageKey: uploaded.public_id,
+      storageUrl: uploaded.secure_url,
       metadata: {
         storageProvider: "cloudinary",
+        bucket: getCloudinaryStorageBucket(),
+        storageKey: uploaded.public_id,
         assetId: uploaded.asset_id,
         publicId: uploaded.public_id,
         version: uploaded.version,
@@ -52,8 +58,14 @@ export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
     fileName: file.name,
     absolutePath,
     publicPath: `/uploads/${safeName}`,
+    storageProvider: "local",
+    storageBucket: "public/uploads",
+    storageKey: safeName,
+    storageUrl: `/uploads/${safeName}`,
     metadata: {
       storageProvider: "local",
+      bucket: "public/uploads",
+      storageKey: safeName,
       publicPath: `/uploads/${safeName}`
     }
   };

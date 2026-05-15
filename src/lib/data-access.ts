@@ -586,10 +586,18 @@ export async function getCasePacketDetail(
       },
       documents: {
         select: {
-          id: true,
-          fileName: true,
-          mimeType: true,
-          probableCategory: true,
+            id: true,
+            fileName: true,
+            mimeType: true,
+            storageProvider: true,
+            storageBucket: true,
+            storageKey: true,
+            fileHash: true,
+            scanStatus: true,
+            scanCheckedAt: true,
+            processingStatus: true,
+            processedAt: true,
+            probableCategory: true,
           aiSummary: true,
           confidence: true,
           createdAt: true

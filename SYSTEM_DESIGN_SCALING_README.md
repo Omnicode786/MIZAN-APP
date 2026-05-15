@@ -293,11 +293,13 @@ Symptoms:
 
 Fixes:
 
-- move files to object storage
+- keep Cloudinary as the portable object-storage path for uploaded files when configured
+- keep local storage as development fallback only
 - process extraction in background jobs
 - store extracted text separately from list views
 - keep document metadata small
 - add virus scanning and file validation pipeline
+- persist storage provider, bucket, key, URL, SHA-256 hash, scan status, and processing status in Postgres
 
 ### Large Case Workspaces
 
@@ -450,13 +452,15 @@ Required job concepts:
 
 Goal: make uploads portable and scalable.
 
-Move from local/generated files to object storage:
+MIZAN already supports Cloudinary for uploads through `src/lib/file-storage.ts` and `src/lib/cloudinary-storage.ts`. Treat Cloudinary as the primary object storage path for uploaded documents/media, and treat local `public/uploads` storage as a development fallback only.
+
+If Cloudinary no longer fits every file class later, add another object storage backend behind the same storage abstraction:
 
 - S3
 - Cloudflare R2
 - Azure Blob
 - Google Cloud Storage
-- Cloudinary for media-heavy assets
+- Cloudinary for uploaded documents and media-heavy assets
 
 Store in Postgres:
 
@@ -467,6 +471,9 @@ Store in Postgres:
 - hash
 - scan status
 - owner/user/case/document relation
+- processing status
+- processed timestamp
+- storage provider
 
 Do not store large binary files in Postgres.
 

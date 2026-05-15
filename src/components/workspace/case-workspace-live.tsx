@@ -1547,6 +1547,31 @@ function DocumentCard({
             {document.probableCategory ? (
               <SafePill variant="outline">{document.probableCategory}</SafePill>
             ) : null}
+            {document.processingStatus && document.processingStatus !== "COMPLETED" ? (
+              <SafePill variant={document.processingStatus === "FAILED" ? "destructive" : "warning"}>
+                {document.processingStatus === "TEXT_UNREADABLE" ? "Text unreadable" : toTitleCase(document.processingStatus)}
+              </SafePill>
+            ) : null}
+            {document.scanStatus ? (
+              <SafePill
+                variant={
+                  document.scanStatus === "CLEAN"
+                    ? "success"
+                    : document.scanStatus === "INFECTED" || document.scanStatus === "FAILED"
+                      ? "destructive"
+                      : "outline"
+                }
+              >
+                {document.scanStatus === "CLEAN"
+                  ? "Scanned"
+                  : document.scanStatus === "SKIPPED"
+                    ? "Scan skipped"
+                    : toTitleCase(document.scanStatus)}
+              </SafePill>
+            ) : null}
+            {document.storageProvider ? (
+              <SafePill variant="outline">{toTitleCase(document.storageProvider)}</SafePill>
+            ) : null}
           </div>
 
           {isImage ? (

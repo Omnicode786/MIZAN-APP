@@ -66,7 +66,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       documentId: document.id,
       caseId: document.caseId,
       bytes: bytes.byteLength,
-      storageProvider: cloudinaryMeta?.publicId ? "cloudinary" : "local"
+      storageProvider: document.storageProvider || (cloudinaryMeta?.publicId ? "cloudinary" : "local")
     });
 
       return new NextResponse(new Uint8Array(bytes), {

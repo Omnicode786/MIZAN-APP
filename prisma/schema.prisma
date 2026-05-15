@@ -76,6 +76,22 @@ enum UploadSource {
   SYSTEM_GENERATED
 }
 
+enum DocumentScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  FAILED
+  SKIPPED
+}
+
+enum DocumentProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  TEXT_UNREADABLE
+}
+
 enum DraftType {
   COMPLAINT_LETTER
   LEGAL_NOTICE
@@ -273,6 +289,15 @@ model Document {
   filePath           String
   mimeType           String
   sizeBytes          Int
+  storageProvider    String                    @default("local")
+  storageBucket      String?
+  storageKey         String?
+  storageUrl         String?
+  fileHash           String?
+  scanStatus         DocumentScanStatus        @default(PENDING)
+  scanCheckedAt      DateTime?
+  processingStatus   DocumentProcessingStatus  @default(PENDING)
+  processedAt        DateTime?
   fileType           DocumentType
   sourceType         UploadSource        @default(USER_UPLOAD)
   probableCategory   String?
@@ -297,6 +322,10 @@ model Document {
   @@index([caseId, createdAt])
   @@index([uploadedById, createdAt])
   @@index([fileType, createdAt])
+  @@index([storageProvider, storageKey])
+  @@index([fileHash])
+  @@index([scanStatus, createdAt])
+  @@index([processingStatus, createdAt])
 }
 
 model EvidenceItem {

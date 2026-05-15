@@ -3,6 +3,7 @@ import { handleApiError, notFound, validationError } from "@/lib/api-response";
 import { buildClauseHeatmap } from "@/lib/document-pipeline/heatmap";
 import { extractDeadlines } from "@/lib/document-pipeline/deadlines";
 import { extractTextFromBufferWithDiagnostics, inferDocumentMimeType } from "@/lib/document-pipeline/extract";
+import { scanUploadedFile, sha256Buffer, validateUploadSignature } from "@/lib/document-pipeline/security";
 import { extractTimeline } from "@/lib/document-pipeline/timeline";
 import { saveUploadedFile } from "@/lib/file-storage";
 import {
@@ -56,6 +57,40 @@ export async function POST(request: Request) {
       }
 
       const fileBuffer = Buffer.from(await file.arrayBuffer());
+      const signatureCheck = validateUploadSignature(fileBuffer, mimeType);
+      if (!signatureCheck.ok) {
+        recordStorageMetric("document.upload.rejected", false, {
+          reason: "signature_mismatch",
+          bytes: file.size,
+          mimeType,
+          message: signatureCheck.message
+        });
+        return validationError(signatureCheck.message || "File type does not match the uploaded file.");
+      }
+
+      const fileHash = sha256Buffer(fileBuffer);
+      const scan = await scanUploadedFile(fileBuffer, {
+        fileName: file.name,
+        mimeType,
+        sizeBytes: file.size,
+        fileHash
+      });
+
+      if (!scan.allowed) {
+        recordStorageMetric("document.upload.rejected", false, {
+          reason: "virus_scan_failed",
+          scanStatus: scan.status,
+          bytes: file.size,
+          mimeType,
+          message: scan.message
+        });
+        return validationError(
+          scan.status === "INFECTED"
+            ? "This file was blocked because it failed the security scan."
+            : "The file security scan could not be completed. Please try again later."
+        );
+      }
+
       const stored = await saveUploadedFile(file, fileBuffer);
 
     let extractedText = "";
@@ -122,6 +157,13 @@ export async function POST(request: Request) {
 
     const documentMetadata = {
       storage: stored.metadata,
+      fileHash,
+      scan: {
+        status: scan.status,
+        checkedAt: scan.checkedAt.toISOString(),
+        message: scan.message,
+        ...(scan.metadata ? { metadata: scan.metadata } : {})
+      },
       analysisStatus: analysisUsable ? "completed" : "text_unreadable",
       extraction,
       ...(analysisUsable
@@ -142,6 +184,15 @@ export async function POST(request: Request) {
         filePath: stored.publicPath,
         mimeType,
         sizeBytes: file.size,
+        storageProvider: stored.storageProvider,
+        storageBucket: stored.storageBucket,
+        storageKey: stored.storageKey,
+        storageUrl: stored.storageUrl,
+        fileHash,
+        scanStatus: scan.status,
+        scanCheckedAt: scan.checkedAt,
+        processingStatus: analysisUsable ? "COMPLETED" : "TEXT_UNREADABLE",
+        processedAt: new Date(),
         fileType: inferDocumentType(mimeType),
         sourceType: user.role === "LAWYER" ? "LAWYER_UPLOAD" : "USER_UPLOAD",
         probableCategory: legalCase.category,
