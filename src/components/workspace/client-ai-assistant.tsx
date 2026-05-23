@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Bot,
   Briefcase,
@@ -66,6 +68,20 @@ type CaseOption = {
 };
 
 type Mode = "general" | "case";
+type ChatPhase = "idle" | "launchingUserMessage" | "waitingForAI" | "typingAI";
+type ChatRequestContext = { threadId: string | null; caseId?: string };
+
+type FlyingBubbleState = {
+  id: string;
+  text: string;
+  request: ChatRequestContext;
+  from: { left: number; top: number; width: number };
+  to: { left: number; top: number };
+};
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
 const GENERAL_PROMPTS = [
   "Create a case from my story.",
@@ -93,6 +109,7 @@ export function ClientAiAssistant({
 }) {
   const router = useRouter();
   const language = useLanguage();
+  const prefersReducedMotion = useReducedMotion();
   const [mode, setMode] = useState<Mode>("general");
   const [selectedCaseId, setSelectedCaseId] = useState(cases[0]?.id || "");
   const [threads, setThreads] = useState(initialThreads);
@@ -100,9 +117,22 @@ export function ClientAiAssistant({
     initialThreads.find((thread) => !thread.caseId && !thread.documentId)?.id || null
   );
   const [question, setQuestion] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<ChatPhase>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [flyingBubble, setFlyingBubble] = useState<FlyingBubbleState | null>(null);
+  const [optimisticUserMessage, setOptimisticUserMessage] = useState<AssistantMessage | null>(null);
+  const [pendingThread, setPendingThread] = useState<AssistantThread | null>(null);
+  const [typingMessage, setTypingMessage] = useState<AssistantMessage | null>(null);
+  const chatViewportRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const typingAnchorRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const autoScrollRef = useRef(true);
+  const submitLockRef = useRef(false);
+  const activeRequestIdRef = useRef(0);
+  const completedLaunchIdRef = useRef<string | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
+  const typingTimerRef = useRef<number | null>(null);
 
   const selectedCase = useMemo(
     () => cases.find((item) => item.id === selectedCaseId) || cases[0],
@@ -131,8 +161,94 @@ export function ClientAiAssistant({
     () => sortAssistantMessages(activeThread?.messages || []),
     [activeThread?.messages]
   );
+  const isChatBusy = phase !== "idle";
+  const displayedMessages = useMemo(() => {
+    let visibleMessages = pendingThread
+      ? sortAssistantMessages(
+          pendingThread.messages.filter((message) => message.id !== typingMessage?.id)
+        )
+      : messages;
+
+    if (optimisticUserMessage && !pendingThread) {
+      visibleMessages = sortAssistantMessages([...visibleMessages, optimisticUserMessage]);
+    }
+
+    if (typingMessage) {
+      visibleMessages = sortAssistantMessages([...visibleMessages, typingMessage]);
+    }
+
+    return visibleMessages;
+  }, [messages, optimisticUserMessage, pendingThread, typingMessage]);
   const quickPrompts = mode === "general" ? GENERAL_PROMPTS : CASE_PROMPTS;
-  const canAsk = !loading && question.trim().length > 1 && (mode === "general" || Boolean(contextCaseId));
+  const canAsk = !isChatBusy && question.trim().length > 1 && (mode === "general" || Boolean(contextCaseId));
+
+  const scheduleScrollToBottom = useCallback((force = false) => {
+    if (!force && !autoScrollRef.current) return;
+    if (scrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(scrollFrameRef.current);
+    }
+
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      const viewport = chatViewportRef.current;
+      if (viewport) {
+        viewport.scrollTo({
+          top: viewport.scrollHeight,
+          behavior: force && !prefersReducedMotion ? "smooth" : "auto"
+        });
+      } else {
+        scrollRef.current?.scrollIntoView({
+          block: "end",
+          behavior: force && !prefersReducedMotion ? "smooth" : "auto"
+        });
+      }
+      scrollFrameRef.current = null;
+    });
+  }, [prefersReducedMotion]);
+
+  const scheduleScrollToActiveResponse = useCallback(() => {
+    if (scrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(scrollFrameRef.current);
+    }
+
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      const viewport = chatViewportRef.current;
+      const anchor = typingAnchorRef.current;
+
+      if (!viewport || !anchor) {
+        scheduleScrollToBottom(true);
+        return;
+      }
+
+      const viewportRect = viewport.getBoundingClientRect();
+      const anchorRect = anchor.getBoundingClientRect();
+      const overflow = anchorRect.bottom - viewportRect.bottom + 28;
+      const above = anchorRect.top - viewportRect.top - 28;
+      const delta = overflow > 0 ? overflow : above < 0 ? above : 0;
+
+      if (delta !== 0) {
+        viewport.scrollTo({
+          top: Math.max(0, viewport.scrollTop + delta),
+          behavior: "auto"
+        });
+      }
+
+      autoScrollRef.current = true;
+      scrollFrameRef.current = null;
+    });
+  }, [scheduleScrollToBottom]);
+
+  const handleChatScroll = useCallback(() => {
+    if (phase === "typingAI") {
+      autoScrollRef.current = true;
+      return;
+    }
+
+    const node = chatViewportRef.current;
+    if (!node) return;
+
+    const distanceFromBottom = node.scrollHeight - node.scrollTop - node.clientHeight;
+    autoScrollRef.current = distanceFromBottom < 96;
+  }, [phase]);
 
   useEffect(() => {
     if (!activeThreadId) return;
@@ -149,19 +265,141 @@ export function ClientAiAssistant({
   }, [activeThread, activeThreadId, contextCaseId, contextThreads, mode]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ block: "end" });
-  }, [messages.length, loading]);
+    scheduleScrollToBottom(phase === "launchingUserMessage" || phase === "waitingForAI");
+  }, [displayedMessages.length, phase, scheduleScrollToBottom]);
 
-  async function ask(nextQuestion?: string) {
-    const text = (nextQuestion || question).trim();
-    if (!text || loading) return;
+  useEffect(() => {
+    if (typingMessage) scheduleScrollToActiveResponse();
+  }, [scheduleScrollToActiveResponse, typingMessage?.content]);
 
-    if (mode === "case" && !contextCaseId) {
-      setError("Select a case before starting case mode.");
+  useEffect(() => {
+    return () => {
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+      if (typingTimerRef.current !== null) {
+        window.clearTimeout(typingTimerRef.current);
+      }
+    };
+  }, []);
+
+  function createFlyingBubble(text: string, request: ChatRequestContext): FlyingBubbleState {
+    const sourceRect = composerRef.current?.getBoundingClientRect();
+    const viewportRect = chatViewportRef.current?.getBoundingClientRect();
+    const safeLeft = (viewportRect?.left ?? 16) + 16;
+    const safeRight = (viewportRect?.right ?? window.innerWidth - 16) - 16;
+    const safeTop = (viewportRect?.top ?? 80) + 16;
+    const safeBottom = (viewportRect?.bottom ?? window.innerHeight - 120) - 16;
+    const containerWidth = Math.max(220, safeRight - safeLeft);
+    const width = Math.min(containerWidth, Math.max(220, Math.min(containerWidth * 0.82, 560)));
+    const minLeft = safeLeft;
+    const maxLeft = Math.max(minLeft, safeRight - width);
+    const fromLeft = clampNumber(sourceRect ? sourceRect.right - width : maxLeft, minLeft, maxLeft);
+    const fromTop = clampNumber(sourceRect ? sourceRect.top : safeBottom - 76, safeTop, Math.max(safeTop, safeBottom - 76));
+    const toLeft = clampNumber(safeRight - width, minLeft, maxLeft);
+    const toTop = clampNumber(safeBottom - 76, safeTop, Math.max(safeTop, safeBottom - 76));
+
+    return {
+      id: `flying-${Date.now()}`,
+      text,
+      request,
+      from: { left: fromLeft, top: fromTop, width },
+      to: { left: toLeft, top: toTop }
+    };
+  }
+
+  function commitOptimisticUserMessage(text: string) {
+    const nextSequence =
+      displayedMessages.reduce(
+        (max, message) => Math.max(max, typeof message.sequence === "number" ? message.sequence : -1),
+        -1
+      ) + 1;
+
+    const message = {
+      id: `optimistic-user-${Date.now()}`,
+      role: "USER",
+      content: text,
+      sequence: nextSequence,
+      createdAt: new Date().toISOString(),
+      sources: []
+    } satisfies AssistantMessage;
+
+    setOptimisticUserMessage(message);
+    scheduleScrollToBottom(true);
+  }
+
+  function finishAiTyping(finalThread: AssistantThread, latestAiMessage: AssistantMessage | null) {
+    setThreads((current) => [
+      finalThread,
+      ...current.filter((thread) => thread.id !== finalThread.id)
+    ]);
+    setActiveThreadId(finalThread.id);
+    setError(null);
+    setPendingThread(null);
+    setTypingMessage(null);
+    setOptimisticUserMessage(null);
+    setPhase("idle");
+    submitLockRef.current = false;
+    scheduleScrollToBottom(true);
+
+    const latestAction = latestAiMessage ? extractAssistantActionMeta(latestAiMessage.content) : null;
+    if (latestAction?.status === "success") {
+      router.refresh();
+    }
+  }
+
+  function startAiTyping(finalThread: AssistantThread) {
+    if (typingTimerRef.current !== null) {
+      window.clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = null;
+    }
+
+    const sortedMessages = sortAssistantMessages(finalThread.messages);
+    const latestAiMessage = [...sortedMessages].reverse().find((message) => message.role === "AI") || null;
+
+    if (!latestAiMessage) {
+      finishAiTyping(finalThread, null);
       return;
     }
 
-    setLoading(true);
+    setPendingThread(finalThread);
+    setTypingMessage({ ...latestAiMessage, content: "" });
+    setPhase("typingAI");
+    autoScrollRef.current = true;
+    scheduleScrollToActiveResponse();
+
+    const fullText = latestAiMessage.content || "";
+    if (prefersReducedMotion || !fullText) {
+      setTypingMessage(latestAiMessage);
+      finishAiTyping(finalThread, latestAiMessage);
+      return;
+    }
+
+    let index = 0;
+    const chunkSize = Math.max(3, Math.ceil(fullText.length / 120));
+
+    const tick = () => {
+      index = Math.min(fullText.length, index + chunkSize);
+      setTypingMessage({ ...latestAiMessage, content: fullText.slice(0, index) });
+      scheduleScrollToActiveResponse();
+
+      if (index < fullText.length) {
+        typingTimerRef.current = window.setTimeout(tick, 24);
+        return;
+      }
+
+      typingTimerRef.current = window.setTimeout(() => {
+        finishAiTyping(finalThread, latestAiMessage);
+      }, 180);
+    };
+
+    typingTimerRef.current = window.setTimeout(tick, 90);
+  }
+
+  async function requestAiResponse(text: string, request: ChatRequestContext) {
+    const requestId = activeRequestIdRef.current + 1;
+    activeRequestIdRef.current = requestId;
+    setPhase("waitingForAI");
     setError(null);
 
     try {
@@ -169,8 +407,8 @@ export function ClientAiAssistant({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          threadId: activeThread?.id,
-          caseId: mode === "case" ? contextCaseId : undefined,
+          ...(request.threadId ? { threadId: request.threadId } : {}),
+          ...(request.caseId ? { caseId: request.caseId } : {}),
           question: text,
           language,
           agentMode: true
@@ -180,31 +418,84 @@ export function ClientAiAssistant({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
+        if (activeRequestIdRef.current !== requestId) return;
         setError(data?.error || "The AI assistant could not answer right now.");
+        setQuestion(text);
+        setOptimisticUserMessage(null);
+        setPendingThread(null);
+        setTypingMessage(null);
+        setPhase("idle");
+        submitLockRef.current = false;
         return;
       }
 
-      const updatedThread = normalizeThread(data.thread);
-      setThreads((current) => [
-        updatedThread,
-        ...current.filter((thread) => thread.id !== updatedThread.id)
-      ]);
-      setActiveThreadId(updatedThread.id);
-      setQuestion("");
-
-      const latestAiMessage = [...updatedThread.messages].reverse().find((message) => message.role === "AI");
-      const latestAction = latestAiMessage ? extractAssistantActionMeta(latestAiMessage.content) : null;
-      if (latestAction?.status === "success") {
-        router.refresh();
+      if (!data?.thread) {
+        if (activeRequestIdRef.current !== requestId) return;
+        setError("The AI assistant answered, but the conversation could not be loaded.");
+        setQuestion(text);
+        setOptimisticUserMessage(null);
+        setPendingThread(null);
+        setTypingMessage(null);
+        setPhase("idle");
+        submitLockRef.current = false;
+        return;
       }
+
+      if (activeRequestIdRef.current !== requestId) return;
+      startAiTyping(normalizeThread(data.thread));
     } catch {
+      if (activeRequestIdRef.current !== requestId) return;
       setError("The AI assistant could not answer right now. Please try again.");
-    } finally {
-      setLoading(false);
+      setQuestion(text);
+      setOptimisticUserMessage(null);
+      setPendingThread(null);
+      setTypingMessage(null);
+      setPhase("idle");
+      submitLockRef.current = false;
     }
   }
 
+  function completeUserLaunch(launchId: string, text: string, request: ChatRequestContext) {
+    if (completedLaunchIdRef.current === launchId) return;
+    completedLaunchIdRef.current = launchId;
+    setFlyingBubble(null);
+    commitOptimisticUserMessage(text);
+    void requestAiResponse(text, request);
+  }
+
+  async function ask(nextQuestion?: string) {
+    const text = (nextQuestion || question).trim();
+    if (!text || isChatBusy || submitLockRef.current) return;
+
+    if (mode === "case" && !contextCaseId) {
+      setError("Select a case before starting case mode.");
+      return;
+    }
+
+    submitLockRef.current = true;
+    completedLaunchIdRef.current = null;
+    const requestContext: ChatRequestContext = {
+      threadId: activeThread?.id || null,
+      caseId: mode === "case" ? contextCaseId : undefined
+    };
+    setError(null);
+    setQuestion("");
+    autoScrollRef.current = true;
+    scheduleScrollToBottom(true);
+
+    if (prefersReducedMotion) {
+      setPhase("waitingForAI");
+      commitOptimisticUserMessage(text);
+      void requestAiResponse(text, requestContext);
+      return;
+    }
+
+    setPhase("launchingUserMessage");
+    setFlyingBubble(createFlyingBubble(text, requestContext));
+  }
+
   function startNewConversation() {
+    if (isChatBusy) return;
     setActiveThreadId(null);
     setQuestion("");
     setError(null);
@@ -284,12 +575,14 @@ export function ClientAiAssistant({
                   active={mode === "general"}
                   icon={Sparkles}
                   label="General"
+                  disabled={isChatBusy}
                   onClick={() => setMode("general")}
                 />
                 <ModeButton
                   active={mode === "case"}
                   icon={Briefcase}
                   label="Case"
+                  disabled={isChatBusy}
                   onClick={() => setMode("case")}
                 />
               </div>
@@ -307,7 +600,7 @@ export function ClientAiAssistant({
 
               <select
                 value={selectedCase?.id || ""}
-                disabled={mode !== "case" || !cases.length}
+                disabled={isChatBusy || mode !== "case" || !cases.length}
                 onChange={(event) => setSelectedCaseId(event.target.value)}
                 className="glass-chip h-11 w-full rounded-2xl bg-background px-4 text-sm text-foreground outline-none transition [color-scheme:light] focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#05070d] dark:text-slate-100 dark:[color-scheme:dark]"
               >
@@ -335,6 +628,7 @@ export function ClientAiAssistant({
                   size="icon"
                   variant="outline"
                   title="New chat"
+                  disabled={isChatBusy}
                   onClick={startNewConversation}
                 >
                   <Plus className="h-4 w-4" />
@@ -343,6 +637,7 @@ export function ClientAiAssistant({
 
               <select
                 value={activeThreadId || "new"}
+                disabled={isChatBusy}
                 onChange={(event) => setActiveThreadId(event.target.value === "new" ? null : event.target.value)}
                 className="glass-chip h-11 w-full rounded-2xl bg-background px-4 text-sm text-foreground outline-none transition [color-scheme:light] focus-visible:ring-2 focus-visible:ring-ring dark:bg-[#05070d] dark:text-slate-100 dark:[color-scheme:dark]"
               >
@@ -366,7 +661,7 @@ export function ClientAiAssistant({
                   <button
                     key={prompt}
                     type="button"
-                    disabled={loading || (mode === "case" && !contextCaseId)}
+                    disabled={isChatBusy || (mode === "case" && !contextCaseId)}
                     onClick={() => ask(prompt)}
                     className="glass-subtle w-full rounded-2xl px-4 py-3 text-left text-sm leading-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -402,7 +697,7 @@ export function ClientAiAssistant({
               </Badge>
               {activeThread ? (
                 <Badge variant="outline" className="rounded-full px-3 py-1">
-                  {activeThread.messages.length} messages
+                  {displayedMessages.length} messages
                 </Badge>
               ) : (
                 <Badge variant="outline" className="rounded-full px-3 py-1">
@@ -418,19 +713,25 @@ export function ClientAiAssistant({
             </div>
           ) : null}
 
-          <div className="premium-scroll flex-1 overflow-y-auto p-5">
-            {messages.length ? (
+          <div
+            ref={chatViewportRef}
+            onScroll={handleChatScroll}
+            className="premium-scroll flex-1 overflow-y-auto p-5"
+          >
+            {displayedMessages.length ? (
               <div className="space-y-4">
-                {messages.map((message) => (
+                {displayedMessages.map((message) => (
                   <MessageBubble
                     key={message.id}
                     message={message}
-                    disabled={loading}
+                    disabled={isChatBusy}
                     knownCaseIds={knownCaseIds}
                     onSend={ask}
+                    isTyping={typingMessage?.id === message.id && phase === "typingAI"}
+                    typingAnchorRef={typingAnchorRef}
                   />
                 ))}
-                {loading ? <ThinkingBubble /> : null}
+                {phase === "waitingForAI" ? <ThinkingBubble /> : null}
                 <div ref={scrollRef} />
               </div>
             ) : (
@@ -441,14 +742,17 @@ export function ClientAiAssistant({
           <div className="border-t border-white/15 bg-white/10 p-5 dark:bg-white/5">
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
               <Textarea
+                ref={composerRef}
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
-                    ask();
+                    if (canAsk) void ask();
                   }
                 }}
+                disabled={isChatBusy}
+                aria-label="AI assistant message"
                 placeholder={
                   mode === "general"
                     ? "Ask about rights, notices, refunds, contracts, complaints..."
@@ -461,12 +765,13 @@ export function ClientAiAssistant({
                 size="lg"
                 disabled={!canAsk}
                 onClick={() => ask()}
+                aria-label="Send message to AI assistant"
                 className="h-12 min-w-[130px]"
               >
-                {loading ? (
+                {isChatBusy ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Agent is organizing your matter...
+                    {phase === "launchingUserMessage" ? "Sending..." : "Agent is organizing..."}
                   </>
                 ) : (
                   <>
@@ -479,6 +784,32 @@ export function ClientAiAssistant({
           </div>
         </main>
       </GlassSurface>
+      <AnimatePresence>
+        {flyingBubble ? (
+          <motion.div
+            key={flyingBubble.id}
+            className="pointer-events-none fixed z-[80] rounded-[1.5rem] border border-primary bg-primary p-4 text-sm leading-6 text-primary-foreground shadow-[0_24px_70px_rgba(15,23,42,0.28)]"
+            style={{
+              left: flyingBubble.from.left,
+              top: flyingBubble.from.top,
+              width: flyingBubble.from.width,
+              transformOrigin: "right bottom"
+            }}
+            initial={{ opacity: 0.72, scale: 0.96, x: 0, y: 0 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              x: flyingBubble.to.left - flyingBubble.from.left,
+              y: flyingBubble.to.top - flyingBubble.from.top
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.46, ease: [0.22, 1, 0.36, 1] }}
+            onAnimationComplete={() => completeUserLaunch(flyingBubble.id, flyingBubble.text, flyingBubble.request)}
+          >
+            <p className="max-h-28 overflow-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{flyingBubble.text}</p>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
@@ -487,19 +818,22 @@ function ModeButton({
   active,
   icon: Icon,
   label,
+  disabled = false,
   onClick
 }: {
   active: boolean;
   icon: typeof Bot;
   label: string;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex h-12 items-center justify-center gap-2 rounded-2xl border text-sm font-medium transition",
+        "flex h-12 items-center justify-center gap-2 rounded-2xl border text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60",
         active
           ? "border-primary bg-primary text-primary-foreground shadow-soft"
           : "glass-chip border-white/30 bg-white/40 text-muted-foreground hover:bg-white/50 hover:text-foreground dark:bg-white/5 dark:hover:bg-white/10"
@@ -626,12 +960,16 @@ function MessageBubble({
   message,
   disabled,
   knownCaseIds,
-  onSend
+  onSend,
+  isTyping = false,
+  typingAnchorRef
 }: {
   message: AssistantMessage;
   disabled?: boolean;
   knownCaseIds: ReadonlySet<string>;
   onSend: (message: string) => void;
+  isTyping?: boolean;
+  typingAnchorRef?: MutableRefObject<HTMLDivElement | null>;
 }) {
   const isAi = message.role === "AI";
   const sources = Array.isArray(message.sources) ? message.sources : [];
@@ -643,10 +981,16 @@ function MessageBubble({
   const displayContent = isAi ? stripAssistantActionMeta(message.content) : message.content;
 
   return (
-    <div className={cn("flex", isAi ? "justify-start" : "justify-end")}>
+    <motion.div
+      ref={isTyping ? typingAnchorRef : undefined}
+      className={cn("flex", isAi ? "justify-start" : "justify-end")}
+      initial={isTyping ? { opacity: 0, y: 14, scale: 0.98 } : false}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div
         className={cn(
-          "max-w-[92%] overflow-visible rounded-[1.5rem] border p-4 break-words md:max-w-[82%]",
+          "max-w-[92%] overflow-visible rounded-[1.5rem] border p-4 break-words [overflow-wrap:anywhere] md:max-w-[82%]",
           isAi
             ? "glass-subtle border-primary/20 bg-primary/10"
             : "border-primary bg-primary text-primary-foreground shadow-soft"
@@ -665,13 +1009,20 @@ function MessageBubble({
 
         {isAi ? (
           <div className="max-w-none overflow-visible">
-            <FormattedAiContent content={displayContent} />
+            {displayContent.trim() ? (
+              <FormattedAiContent content={displayContent} />
+            ) : (
+              <p className="text-sm leading-6 text-muted-foreground">AI is drafting the response...</p>
+            )}
+            {isTyping ? (
+              <span className="mt-2 inline-block h-4 w-[2px] animate-pulse rounded-full bg-primary align-bottom" />
+            ) : null}
             <div className="mt-3">
               <AiTranslationActions text={displayContent} />
             </div>
           </div>
         ) : (
-          <p className="whitespace-pre-wrap text-sm leading-6">{message.content}</p>
+          <p className="whitespace-pre-wrap break-words text-sm leading-6 [overflow-wrap:anywhere]">{message.content}</p>
         )}
 
         {isAi && sources.length ? (
@@ -694,7 +1045,7 @@ function MessageBubble({
           />
         ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
