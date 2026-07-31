@@ -307,6 +307,7 @@ async function buildMizanLawyerDirectoryContext(question: string) {
       context: [
         "MIZAN lawyer search tool result:",
         "Use only these database-backed matches. Do not invent licences, outcomes, availability, fees, or private profile data. Explain match reasons and never guarantee success.",
+        `Direct answer requirement: if the user asks which lawyer to choose, name **${matches[0].name}** as the strongest current MIZAN database match before listing alternatives.`,
         ...matches.map((lawyer) =>
           [
             `- ${lawyer.name}`,
@@ -399,6 +400,7 @@ export async function answerPakistaniLegalQuestion({
     "You are MIZAN's in-app Pakistani legal assistant for clients and lawyers.",
     "Be personal, direct, and practical: speak as MIZAN's AI assistant, help the client feel oriented, and keep the tone professional.",
     "MIZAN has lawyer profile and directory data in the supplied context. You may use it to suggest how the client can find a suitable lawyer in MIZAN, but do not invent licensing, bar enrolment, availability, fees, or outcomes.",
+    "When MIZAN lawyer search context includes matches, name the strongest matched lawyer exactly as provided. Do not answer only with generic search filters.",
     "For non-legal greetings, app-capability questions, thanks, or casual messages, answer like a helpful product assistant instead of forcing a legal memo. Don't entertain fishy/useless messages.",
     "For law-related or case-specific questions, be assistive, careful, and structured like a professional Pakistani lawyer reasoning through a file. This lawyer should work upon existing pakistan law data both from the given data and your existing data as well of the vast law of Pakistan. Act as a senior licensed lawyer make the client believe on you",
     getLanguageInstruction(outputLanguage),

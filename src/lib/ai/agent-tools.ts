@@ -2164,7 +2164,7 @@ const toolDefinitions: AgentToolDefinition[] = [
   },
   {
     name: "recommend_lawyer_search_filters",
-    description: "Recommend practical lawyer search filters based on the current case type and workflow needs.",
+    description: "Search real MIZAN lawyer profiles and recommend named lawyer matches for the client's case or legal issue.",
     kind: "analysis",
     allowedRoles: ["CLIENT"],
     schema: caseArtifactSchema,
@@ -2179,52 +2179,100 @@ const toolDefinitions: AgentToolDefinition[] = [
       const lawyerSearch = await searchLawyersForCase({
         caseSummary: [
           question,
+          args.focus,
           resolved?.legalCase?.title,
-          resolved?.legalCase?.description
+          resolved?.legalCase?.description,
+          resolved?.legalCase?.parties?.join(", ")
         ]
           .filter(Boolean)
           .join("\n"),
-        practiceArea: resolved?.legalCase?.category,
+        practiceArea: args.focus || resolved?.legalCase?.category,
         caseCategory: resolved?.legalCase?.category,
         jurisdiction: resolved?.legalCase?.jurisdiction || undefined,
         limit: 5
       });
 
-      const context = [
-        resolved?.legalCase ? `Case: ${resolved.legalCase.title} (${resolved.legalCase.category})` : "",
-        "Database-backed lawyer matcher results:",
-        ...lawyerSearch.matches.map(
-          (lawyer) =>
-            `- ${lawyer.name}; lawyerId: ${lawyer.lawyerId}; practice areas: ${lawyer.practiceAreas.join(", ") || "n/a"}; city: ${lawyer.city || "n/a"}; jurisdictions: ${lawyer.jurisdictions.join(", ") || "n/a"}; languages: ${lawyer.languages.join(", ") || "n/a"}; verified: ${lawyer.verificationStatus}; availability: ${lawyer.availability}; match score: ${lawyer.matchScore}; reasons: ${lawyer.matchReasons.join("; ") || "general searchable profile match"}`
-        )
-      ]
-        .filter(Boolean)
-        .join("\n");
+      if (!lawyerSearch.matches.length) {
+        return {
+          ok: true,
+          message: [
+            "## Lawyer Match",
+            "I could not find a suitable public lawyer profile in MIZAN for the details available right now.",
+            "",
+            "Try adding the city, practice area, preferred language, consultation type, or expected budget so I can search more precisely.",
+            "",
+            "I will not invent a lawyer name when the platform database does not have a real match."
+          ].join("\n"),
+          action: {
+            type: "open_lawyers",
+            label: "Browse lawyers",
+            href: "/client/lawyers"
+          },
+          cardTitle: "No lawyer match found",
+          cardMessage: "MIZAN did not find a suitable public lawyer profile from the available details.",
+          status: "info",
+          sources: ["MIZAN lawyer database"],
+          data: { matches: [] }
+        };
+      }
 
-      const result = await runAiTask(
-        [
-          "You are MIZAN's workflow assistant helping a client narrow lawyer search filters.",
-          getLanguageInstruction(language),
-          "Recommend search filters, priorities, and what to compare between lawyers.",
-          "Do not invent licences, outcomes, or fees.",
-          "Return Markdown only.",
-          "Use headings and bullet points."
-        ].join("\n\n"),
-        `${question}\n\n${context}`,
-        { maxOutputTokens: 1200, temperature: 0.2 }
-      );
+      const [topMatch, ...otherMatches] = lawyerSearch.matches;
+      const caseLabel = resolved?.legalCase
+        ? `for **${resolved.legalCase.title}** (${resolved.legalCase.category.replace(/_/g, " ").toLowerCase()})`
+        : "for this issue";
+      const verificationNote =
+        topMatch.verificationStatus === "VERIFIED"
+          ? "This is a MIZAN verified public profile."
+          : "This public profile is not marked verified yet, so check credentials before proceeding.";
+      const comparisonLines = otherMatches.length
+        ? otherMatches.map((lawyer) => {
+            const location = lawyer.city ? `, ${lawyer.city}` : "";
+            const areas = lawyer.practiceAreas.length ? ` - ${lawyer.practiceAreas.join(", ")}` : "";
+            return `- **${lawyer.name}**${location}${areas} (score ${lawyer.matchScore})`;
+          })
+        : ["- No other close matches were found in the current public lawyer database."];
+
+      const message = [
+        "## Recommended Lawyer",
+        `The strongest MIZAN database match ${caseLabel} is **${topMatch.name}**.`,
+        "",
+        "### Profile Snapshot",
+        `- **Name:** ${topMatch.name}`,
+        `- **Firm:** ${topMatch.firmName || "Independent practice"}`,
+        `- **City:** ${topMatch.city || "Not listed"}`,
+        `- **Practice areas:** ${topMatch.practiceAreas.join(", ") || "Not listed"}`,
+        `- **Jurisdictions:** ${topMatch.jurisdictions.join(", ") || "Pakistan"}`,
+        `- **Languages:** ${topMatch.languages.join(", ") || "Not listed"}`,
+        `- **Experience:** ${topMatch.yearsOfExperience} years`,
+        `- **Fee:** ${topMatch.feeFrom ? `From PKR ${topMatch.feeFrom.toLocaleString()}` : "Proposal based"}`,
+        `- **Verification:** ${topMatch.verificationStatus}`,
+        `- **Availability:** ${topMatch.availability}`,
+        "",
+        "### Why This Match",
+        ...topMatch.matchReasons.map((reason) => `- ${reason}`),
+        "",
+        "### Other Options To Compare",
+        ...comparisonLines,
+        "",
+        "### Caution",
+        `- ${verificationNote}`,
+        "- A lawyer match does not guarantee a successful outcome.",
+        "- Compare the lawyer's proposal, conflict position, fee, timeline, and comfort with your facts before continuing."
+      ].join("\n");
 
       return {
         ok: true,
-        message: result.text,
+        message,
         action: {
           type: "open_lawyers",
-          label: "Browse lawyers",
+          label: "Open lawyer directory",
           href: "/client/lawyers"
         },
-        cardTitle: "Lawyer search filters",
-        cardMessage: "I prepared practical filters you can use in the lawyer directory.",
-        status: "info"
+        cardTitle: `Recommended lawyer: ${topMatch.name}`,
+        cardMessage: `Top MIZAN database match for this matter: ${topMatch.name}.`,
+        status: "info",
+        sources: ["MIZAN lawyer database", ...lawyerSearch.matches.map((lawyer) => lawyer.name)].slice(0, 8),
+        data: { matches: lawyerSearch.matches }
       };
     }
   },

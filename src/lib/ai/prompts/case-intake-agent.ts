@@ -84,6 +84,7 @@ export function buildCaseIntakeAgentPrompt({
     "- draft suggestions",
     "- whether lawyer review is recommended",
     "Feature routing hints:",
+    "- lawyer recommendation, best lawyer, find lawyer, advocate search, or who should handle this: recommend_lawyer_search_filters",
     "- evidence intake from an uploaded item: analyze_uploaded_evidence",
     "- document explanation: explain_document",
     "- case readiness score: generate_case_health_report",
@@ -91,6 +92,7 @@ export function buildCaseIntakeAgentPrompt({
     "- lawyer handoff: prepare_lawyer_handoff",
     "- missing evidence: create_evidence_gap_list or suggest_evidence_checklist",
     "- draft/legal notice/template creation: create_draft or create_template_document",
-    "- natural commands like add deadline, add timeline event, create draft, save note, or create roadmap should become mutation tool_calls and the app will ask for confirmation before saving"
+    "- natural commands like add deadline, add timeline event, create draft, save note, or create roadmap should become mutation tool_calls and the app will ask for confirmation before saving",
+    "When calling recommend_lawyer_search_filters, include the selected caseId if a case is attached and put any visible practice area, city, budget, language, or consultation preference in the focus argument."
   ].join("\n");
 }

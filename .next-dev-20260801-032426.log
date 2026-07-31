@@ -1,0 +1,184 @@
+
+> mizan@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 10.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 18.7s (1478 modules)
+ GET / 200 in 1411ms
+ GET / 200 in 159ms
+ GET / 200 in 239ms
+ ○ Compiling /home-2 ...
+ ✓ Compiled /src/middleware in 11.8s (1648 modules)
+ GET /home-2 200 in 12075ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 5.4s (1497 modules)
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 2.5s (896 modules)
+{"timestamp":"2026-07-31T22:26:20.777Z","level":"info","event":"api.request.start","route":"/api/auth/login","feature":"auth","requestId":"3b620265-ae7a-4558-985b-689d09234f6f","method":"POST"}
+{"timestamp":"2026-07-31T22:26:23.329Z","level":"info","event":"auth.login_success","route":"/api/auth/login","feature":"auth","requestId":"3b620265-ae7a-4558-985b-689d09234f6f","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT"}
+{"timestamp":"2026-07-31T22:26:23.339Z","level":"info","event":"api.request.complete","route":"/api/auth/login","feature":"auth","requestId":"3b620265-ae7a-4558-985b-689d09234f6f","method":"POST","status":200,"durationMs":2563}
+ POST /api/auth/login 200 in 5711ms
+ ○ Compiling /client/dashboard ...
+ ✓ Compiled /client/dashboard in 5.1s (1789 modules)
+ ○ Compiling /client/cases ...
+ ✓ Compiled /client/cases in 1740ms (1801 modules)
+ ○ Compiling /client/assistant ...
+ ✓ Compiled /client/assistant in 3.1s (1820 modules)
+ ○ Compiling /api/ai/chat ...
+ ✓ Compiled /api/ai/chat in 3.4s (1414 modules)
+{"timestamp":"2026-07-31T22:27:31.911Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"bd4153e0-22db-4892-be7c-700aa2ae98c4","method":"POST"}
+{"timestamp":"2026-07-31T22:27:36.137Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"bd4153e0-22db-4892-be7c-700aa2ae98c4","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00027855,"durationMs":2160,"success":true}
+{"timestamp":"2026-07-31T22:27:38.132Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"bd4153e0-22db-4892-be7c-700aa2ae98c4","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0001359,"durationMs":1989,"success":true}
+ ○ Compiling /client/lawyers ...
+{"timestamp":"2026-07-31T22:27:41.704Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"bd4153e0-22db-4892-be7c-700aa2ae98c4","method":"POST","status":200,"durationMs":9793}
+ POST /api/ai/chat 200 in 15299ms
+ ✓ Compiled /client/lawyers in 1426ms (2203 modules)
+ ○ Compiling /api/lawyers/public ...
+ ✓ Compiled /api/lawyers/public in 627ms (1421 modules)
+{"timestamp":"2026-07-31T22:27:43.871Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"961618ef-93a4-4cbc-851e-dc4c40b430bb","method":"GET"}
+{"timestamp":"2026-07-31T22:27:44.739Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"961618ef-93a4-4cbc-851e-dc4c40b430bb","method":"GET","status":200,"durationMs":869}
+ GET /api/lawyers/public 200 in 1649ms
+{"timestamp":"2026-07-31T22:27:44.834Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"b530e0c9-59bd-4474-8544-34244fdb8d98","method":"GET"}
+{"timestamp":"2026-07-31T22:27:45.264Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"b530e0c9-59bd-4474-8544-34244fdb8d98","method":"GET","status":200,"durationMs":430}
+ GET /api/lawyers/public 200 in 490ms
+{"timestamp":"2026-07-31T22:28:19.243Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"6631cf0f-f62a-427c-a577-3ecb0d9326e3","method":"POST"}
+{"timestamp":"2026-07-31T22:28:23.205Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"6631cf0f-f62a-427c-a577-3ecb0d9326e3","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0003012,"durationMs":1941,"success":true}
+{"timestamp":"2026-07-31T22:28:30.791Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"6631cf0f-f62a-427c-a577-3ecb0d9326e3","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0002058,"durationMs":6288,"success":true}
+{"timestamp":"2026-07-31T22:28:32.800Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"6631cf0f-f62a-427c-a577-3ecb0d9326e3","method":"POST","status":200,"durationMs":13557}
+ POST /api/ai/chat 200 in 13998ms
+{"timestamp":"2026-07-31T22:29:00.133Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"6f0784f7-dadd-4669-a682-900063e5917c","method":"GET"}
+{"timestamp":"2026-07-31T22:29:00.747Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"6f0784f7-dadd-4669-a682-900063e5917c","method":"GET","status":200,"durationMs":614}
+ GET /api/lawyers/public 200 in 678ms
+{"timestamp":"2026-07-31T22:29:00.811Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"f2b4b3ba-4e16-401c-9101-3f400e75bdb2","method":"GET"}
+{"timestamp":"2026-07-31T22:29:01.290Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"f2b4b3ba-4e16-401c-9101-3f400e75bdb2","method":"GET","status":200,"durationMs":479}
+ GET /api/lawyers/public 200 in 516ms
+{"timestamp":"2026-07-31T22:29:23.841Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"d78313a5-edf8-43e3-a7eb-55ef86afd17e","method":"POST"}
+{"timestamp":"2026-07-31T22:29:28.467Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"d78313a5-edf8-43e3-a7eb-55ef86afd17e","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0003261,"durationMs":2959,"success":true}
+{"timestamp":"2026-07-31T22:29:33.517Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"d78313a5-edf8-43e3-a7eb-55ef86afd17e","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0006285,"durationMs":3960,"success":true}
+{"timestamp":"2026-07-31T22:29:35.770Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"d78313a5-edf8-43e3-a7eb-55ef86afd17e","method":"POST","status":200,"durationMs":11929}
+ POST /api/ai/chat 200 in 12021ms
+{"timestamp":"2026-07-31T22:32:03.986Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"0a713443-8e66-49b2-b04e-ad4ec3d413d9","method":"POST"}
+{"timestamp":"2026-07-31T22:32:10.478Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"0a713443-8e66-49b2-b04e-ad4ec3d413d9","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0004203,"durationMs":2343,"success":true}
+{"timestamp":"2026-07-31T22:32:14.037Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"0a713443-8e66-49b2-b04e-ad4ec3d413d9","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0004584,"durationMs":3546,"success":true}
+{"timestamp":"2026-07-31T22:32:17.460Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"0a713443-8e66-49b2-b04e-ad4ec3d413d9","method":"POST","status":200,"durationMs":13474}
+ POST /api/ai/chat 200 in 13567ms
+ ○ Compiling /api/ai/translate ...
+ ✓ Compiled /api/ai/translate in 1389ms (1400 modules)
+{"timestamp":"2026-07-31T22:32:58.535Z","level":"info","event":"api.request.start","route":"/api/ai/translate","feature":"ai.translate","requestId":"31f9ce7f-48f0-4b9d-ad48-e49854bdb0f1","method":"POST"}
+{"timestamp":"2026-07-31T22:33:10.233Z","level":"info","event":"ai.usage","route":"/api/ai/translate","feature":"ai.translate","requestId":"31f9ce7f-48f0-4b9d-ad48-e49854bdb0f1","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0002682,"durationMs":11053,"success":true}
+{"timestamp":"2026-07-31T22:33:10.240Z","level":"info","event":"api.request.complete","route":"/api/ai/translate","feature":"ai.translate","requestId":"31f9ce7f-48f0-4b9d-ad48-e49854bdb0f1","method":"POST","status":200,"durationMs":11704}
+ POST /api/ai/translate 200 in 13288ms
+ ○ Compiling /client/cases/[id] ...
+ ✓ Compiled /client/cases/[id] in 4.1s (1826 modules)
+ ○ Compiling /api/cases/[id]/sections ...
+ ✓ Compiled /api/cases/[id]/sections in 947ms (1022 modules)
+ GET /api/cases/cmp5b1q9a000byc7qlo25r9cr/sections?documentsLimit=20&timelineLimit=50&evidenceLimit=50&activityLimit=30 200 in 5262ms
+ ✓ Compiled in 2.2s (812 modules)
+ ✓ Compiled in 1552ms (812 modules)
+ ✓ Compiled in 1467ms (812 modules)
+ ✓ Compiled in 1316ms (812 modules)
+ ○ Compiling /api/documents/upload ...
+ ✓ Compiled /api/documents/upload in 1934ms (1397 modules)
+{"timestamp":"2026-07-31T22:35:58.927Z","level":"info","event":"api.request.start","route":"/api/documents/upload","feature":"documents.upload","requestId":"3e86ea31-39ca-4c8f-b7e3-48bda6705327","method":"POST"}
+{"timestamp":"2026-07-31T22:36:04.701Z","level":"info","event":"storage.operation","route":"/api/documents/upload","feature":"documents.upload","requestId":"3e86ea31-39ca-4c8f-b7e3-48bda6705327","method":"POST","operation":"cloudinary.upload","success":true,"resourceType":"image","bytes":1995373,"durationMs":3167}
+{"timestamp":"2026-07-31T22:36:04.703Z","level":"info","event":"storage.operation","route":"/api/documents/upload","feature":"documents.upload","requestId":"3e86ea31-39ca-4c8f-b7e3-48bda6705327","method":"POST","operation":"document.save.cloudinary","success":true,"bytes":1995373,"mimeType":"image/png","durationMs":3170}
+ ✓ Compiled in 3s (2209 modules)
+{"timestamp":"2026-07-31T22:36:20.202Z","level":"info","event":"ai.usage","route":"/api/documents/upload","feature":"vision","requestId":"3e86ea31-39ca-4c8f-b7e3-48bda6705327","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0001149,"durationMs":15491,"success":true}
+{"timestamp":"2026-07-31T22:36:29.997Z","level":"info","event":"ai.usage","route":"/api/documents/upload","feature":"vision","requestId":"3e86ea31-39ca-4c8f-b7e3-48bda6705327","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0002283,"durationMs":9785,"success":true}
+{"timestamp":"2026-07-31T22:36:32.642Z","level":"info","event":"storage.operation","route":"/api/documents/upload","feature":"documents.upload","requestId":"3e86ea31-39ca-4c8f-b7e3-48bda6705327","method":"POST","operation":"document.upload.completed","success":true,"userId":"cmodvudvc0000xq7dfumff3ep","caseId":"cmp5b1q9a000byc7qlo25r9cr","documentId":"cms9iuzln000nbda0b0csljpd","bytes":1995373,"mimeType":"image/png"}
+{"timestamp":"2026-07-31T22:36:32.649Z","level":"info","event":"api.request.complete","route":"/api/documents/upload","feature":"documents.upload","requestId":"3e86ea31-39ca-4c8f-b7e3-48bda6705327","method":"POST","status":200,"durationMs":33722}
+ POST /api/documents/upload 200 in 36250ms
+ ○ Compiling /api/cases/[id]/sections ...
+ ✓ Compiled /api/cases/[id]/sections in 583ms (1399 modules)
+ GET /api/cases/cmp5b1q9a000byc7qlo25r9cr/sections?documentsLimit=20&timelineLimit=50&evidenceLimit=50&activityLimit=30 200 in 3167ms
+ ○ Compiling /api/documents/[id] ...
+ ✓ Compiled /api/documents/[id] in 1287ms (1401 modules)
+{"timestamp":"2026-07-31T22:36:41.004Z","level":"info","event":"api.request.start","route":"/api/documents/[id]","feature":"documents.download","requestId":"2ea0d04e-742c-4635-9ff5-1891ad8f30fd","method":"GET"}
+{"timestamp":"2026-07-31T22:36:46.549Z","level":"info","event":"storage.operation","route":"/api/documents/[id]","feature":"documents.download","requestId":"2ea0d04e-742c-4635-9ff5-1891ad8f30fd","method":"GET","operation":"document.download","success":true,"documentId":"cms9iuzln000nbda0b0csljpd","caseId":"cmp5b1q9a000byc7qlo25r9cr","bytes":1995373,"storageProvider":"cloudinary"}
+{"timestamp":"2026-07-31T22:36:46.564Z","level":"info","event":"api.request.complete","route":"/api/documents/[id]","feature":"documents.download","requestId":"2ea0d04e-742c-4635-9ff5-1891ad8f30fd","method":"GET","status":200,"durationMs":5559}
+ GET /api/documents/cms9iuzln000nbda0b0csljpd 200 in 10549ms
+{"timestamp":"2026-07-31T22:37:28.422Z","level":"info","event":"api.request.start","route":"/api/documents/[id]","feature":"documents.download","requestId":"da954614-d9e5-40d7-b86a-7548c63a6941","method":"GET"}
+{"timestamp":"2026-07-31T22:37:36.023Z","level":"info","event":"storage.operation","route":"/api/documents/[id]","feature":"documents.download","requestId":"da954614-d9e5-40d7-b86a-7548c63a6941","method":"GET","operation":"document.download","success":true,"documentId":"cms9iuzln000nbda0b0csljpd","caseId":"cmp5b1q9a000byc7qlo25r9cr","bytes":1995373,"storageProvider":"cloudinary"}
+{"timestamp":"2026-07-31T22:37:36.034Z","level":"info","event":"api.request.complete","route":"/api/documents/[id]","feature":"documents.download","requestId":"da954614-d9e5-40d7-b86a-7548c63a6941","method":"GET","status":200,"durationMs":7612}
+ GET /api/documents/cms9iuzln000nbda0b0csljpd 200 in 7698ms
+ ○ Compiling /client/evidence ...
+ ✓ Compiled /client/evidence in 3.1s (2189 modules)
+ ○ Compiling /search ...
+ ✓ Compiled /search in 2.3s (2188 modules)
+ ✓ Compiled in 1460ms (817 modules)
+ ○ Compiling /api/search ...
+ ✓ Compiled /api/search in 1369ms (1387 modules)
+{"timestamp":"2026-07-31T22:38:03.199Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"2a60dd51-6751-4b74-a2d4-df38b0f5bfe7","method":"POST"}
+{"timestamp":"2026-07-31T22:38:05.671Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"2a60dd51-6751-4b74-a2d4-df38b0f5bfe7","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-07-31T22:38:05.678Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"2a60dd51-6751-4b74-a2d4-df38b0f5bfe7","method":"POST","status":200,"durationMs":2479}
+ POST /api/search 200 in 4108ms
+{"timestamp":"2026-07-31T22:38:11.297Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"051aa78b-f041-403e-b6b9-ac5ae1dfb8cf","method":"POST"}
+{"timestamp":"2026-07-31T22:38:11.690Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"261af93d-9195-4a11-89a0-221545792c2e","method":"POST"}
+{"timestamp":"2026-07-31T22:38:13.818Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"261af93d-9195-4a11-89a0-221545792c2e","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-07-31T22:38:13.824Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"261af93d-9195-4a11-89a0-221545792c2e","method":"POST","status":200,"durationMs":2134}
+ POST /api/search 200 in 2224ms
+{"timestamp":"2026-07-31T22:38:15.607Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"3e48e93f-e682-42d3-9dc0-145deb737ae0","method":"POST"}
+{"timestamp":"2026-07-31T22:38:17.412Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"3e48e93f-e682-42d3-9dc0-145deb737ae0","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-07-31T22:38:17.417Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"3e48e93f-e682-42d3-9dc0-145deb737ae0","method":"POST","status":200,"durationMs":1811}
+ POST /api/search 200 in 1876ms
+{"timestamp":"2026-07-31T22:38:20.346Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"1a0be316-6d5c-49cf-9de0-31c2898ac229","method":"POST"}
+{"timestamp":"2026-07-31T22:38:22.013Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"1a0be316-6d5c-49cf-9de0-31c2898ac229","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-07-31T22:38:22.018Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"1a0be316-6d5c-49cf-9de0-31c2898ac229","method":"POST","status":200,"durationMs":1672}
+ POST /api/search 200 in 1765ms
+{"timestamp":"2026-07-31T22:38:23.588Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"3b8c3af4-f898-4475-aab4-749b436aeaab","method":"POST"}
+ POST /api/search 200 in 158ms
+{"timestamp":"2026-07-31T22:38:24.140Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"42646f17-01c1-4929-a37c-b9ff8b22b314","method":"POST"}
+ POST /api/search 200 in 168ms
+{"timestamp":"2026-07-31T22:38:24.652Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"ea141908-9225-48bf-b6d5-6be9b465d913","method":"POST"}
+{"timestamp":"2026-07-31T22:38:25.566Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"ea141908-9225-48bf-b6d5-6be9b465d913","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":0,"documentCount":0,"evidenceCount":0}
+{"timestamp":"2026-07-31T22:38:25.570Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"ea141908-9225-48bf-b6d5-6be9b465d913","method":"POST","status":200,"durationMs":918}
+ POST /api/search 200 in 955ms
+{"timestamp":"2026-07-31T22:38:36.220Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"67231673-9c3e-4ccf-84dd-1f12edec3f20","method":"POST"}
+{"timestamp":"2026-07-31T22:38:38.018Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"67231673-9c3e-4ccf-84dd-1f12edec3f20","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-07-31T22:38:38.026Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"67231673-9c3e-4ccf-84dd-1f12edec3f20","method":"POST","status":200,"durationMs":1806}
+ POST /api/search 200 in 1897ms
+ ✓ Compiled in 1726ms (817 modules)
+ ○ Compiling /api/ai/chat ...
+ ✓ Compiled /api/ai/chat in 3.2s (1393 modules)
+{"timestamp":"2026-07-31T22:41:38.246Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"767afeb3-7dff-45e4-b29f-127fe6f4fffc","method":"POST"}
+{"timestamp":"2026-07-31T22:41:44.957Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"767afeb3-7dff-45e4-b29f-127fe6f4fffc","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0004212,"durationMs":1983,"success":true}
+{"timestamp":"2026-07-31T22:41:50.321Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"767afeb3-7dff-45e4-b29f-127fe6f4fffc","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00052035,"durationMs":5318,"success":true}
+{"timestamp":"2026-07-31T22:41:54.432Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"767afeb3-7dff-45e4-b29f-127fe6f4fffc","method":"POST","status":200,"durationMs":16187}
+ POST /api/ai/chat 200 in 20053ms
+ ○ Compiling /client/lawyers ...
+ ✓ Compiled /client/lawyers in 710ms (1398 modules)
+ GET /client/lawyers 200 in 2326ms
+ ○ Compiling /api/lawyers/public ...
+ ✓ Compiled /api/lawyers/public in 787ms (1400 modules)
+{"timestamp":"2026-07-31T22:42:08.879Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"38548bd1-2bb0-4c7e-89e8-9951a2c15b81","method":"GET"}
+{"timestamp":"2026-07-31T22:42:09.769Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"38548bd1-2bb0-4c7e-89e8-9951a2c15b81","method":"GET","status":200,"durationMs":889}
+ GET /api/lawyers/public 200 in 1882ms
+{"timestamp":"2026-07-31T22:42:09.873Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"29100281-ea43-4d39-821b-f9ecd2216e99","method":"GET"}
+{"timestamp":"2026-07-31T22:42:10.329Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"29100281-ea43-4d39-821b-f9ecd2216e99","method":"GET","status":200,"durationMs":456}
+ GET /api/lawyers/public 200 in 522ms
+{"timestamp":"2026-07-31T22:42:22.804Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"9938b477-710b-40df-86b4-598c82129cc6","method":"POST"}
+{"timestamp":"2026-07-31T22:42:27.101Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"9938b477-710b-40df-86b4-598c82129cc6","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00047025,"durationMs":2399,"success":true}
+{"timestamp":"2026-07-31T22:42:30.191Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"9938b477-710b-40df-86b4-598c82129cc6","method":"POST","status":200,"durationMs":7387}
+ POST /api/ai/chat 200 in 7763ms
+{"timestamp":"2026-07-31T22:42:42.498Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"1accbeb9-2c3f-4824-b23d-20fa18bda7b3","method":"GET"}
+{"timestamp":"2026-07-31T22:42:43.417Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"1accbeb9-2c3f-4824-b23d-20fa18bda7b3","method":"GET","status":200,"durationMs":919}
+ GET /api/lawyers/public 200 in 997ms
+{"timestamp":"2026-07-31T22:42:43.554Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"036ebabe-3d36-4fa1-b72d-864933c8f76d","method":"GET"}
+{"timestamp":"2026-07-31T22:42:44.016Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"036ebabe-3d36-4fa1-b72d-864933c8f76d","method":"GET","status":200,"durationMs":463}
+ GET /api/lawyers/public 200 in 551ms
+{"timestamp":"2026-07-31T22:43:32.905Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"5f7a9c0c-add6-411f-b2d5-8b77a3a28ace","method":"POST"}
+{"timestamp":"2026-07-31T22:43:38.115Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"5f7a9c0c-add6-411f-b2d5-8b77a3a28ace","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00046995,"durationMs":2412,"success":true}
+{"timestamp":"2026-07-31T22:43:39.912Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"5f7a9c0c-add6-411f-b2d5-8b77a3a28ace","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0005217,"durationMs":1791,"success":true}
+{"timestamp":"2026-07-31T22:43:43.837Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"5f7a9c0c-add6-411f-b2d5-8b77a3a28ace","method":"POST","status":200,"durationMs":10932}
+ POST /api/ai/chat 200 in 11063ms
+ ○ Compiling /settings ...
+ ✓ Compiled /settings in 4.5s (2238 modules)
+ ○ Compiling /client/dashboard ...
+ ✓ Compiled /client/dashboard in 1260ms (996 modules)
+ ✓ Compiled in 3.5s (845 modules)
