@@ -11,7 +11,7 @@ import {
 } from "@/lib/assistant-message-meta";
 import { deleteFromCloudinary, getCloudinaryStorageMeta } from "@/lib/cloudinary-storage";
 import { recordStorageMetric, trackError } from "@/lib/observability";
-import { buildAccessibleCaseWhereForUser, logActivity, requireUser } from "@/lib/permissions";
+import { buildAccessibleCaseWhereForUser, canDeleteCaseForUser, logActivity, logCaseAudit, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
@@ -19,7 +19,9 @@ const patchSchema = z.object({
   stage: z.string().optional(),
   status: z.enum(["DRAFT", "INTAKE", "ACTIVE", "REVIEW", "ESCALATED", "CLOSED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
-  description: z.string().nullable().optional()
+  description: z.string().nullable().optional(),
+  parties: z.array(z.string().min(1)).optional(),
+  jurisdiction: z.string().nullable().optional()
 });
 
 const deleteSchema = z.object({
@@ -136,10 +138,13 @@ export async function GET(_request: Request, { params }: { params: { id: string 
         id: true,
         title: true,
         category: true,
+        origin: true,
         status: true,
         priority: true,
         stage: true,
         description: true,
+        parties: true,
+        jurisdiction: true,
         caseHealthScore: true,
         evidenceCompleteness: true,
         evidenceStrength: true,
@@ -148,6 +153,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
         escalationReadiness: true,
         creatorId: true,
         clientProfileId: true,
+        lawyerOwnerProfileId: true,
         createdAt: true,
         updatedAt: true,
         client: {
@@ -192,8 +198,22 @@ export async function GET(_request: Request, { params }: { params: { id: string 
             timelineEvents: true,
             deadlines: true,
             drafts: true,
-            comments: true,
-            activityLogs: true
+            comments:
+              user.role === "CLIENT"
+                ? {
+                    where: { visibility: "SHARED" as const }
+                  }
+                : true,
+            activityLogs:
+              user.role === "CLIENT"
+                ? {
+                    where: {
+                      action: {
+                        notIn: ["INTERNAL_NOTE_ADDED", "DOCUMENT_REMOVAL_BLOCKED", "CASE_DELETE_CONFIRMED"]
+                      }
+                    }
+                  }
+                : true
           }
         }
       }
@@ -201,7 +221,10 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     if (!legalCase) return notFound();
 
     const visibleCase =
-      user.role === "LAWYER" && !legalCase.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
+      user.role === "LAWYER" &&
+      legalCase.origin === "CLIENT_SUBMITTED" &&
+      legalCase.client &&
+      !legalCase.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
         ? {
             ...legalCase,
             client: {
@@ -225,7 +248,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const user = await requireUser();
     const legalCase = await prisma.case.findFirst({
       where: buildAccessibleCaseWhereForUser(user, params.id),
-      select: { id: true }
+      select: {
+        id: true,
+        title: true,
+        stage: true,
+        status: true,
+        priority: true,
+        description: true,
+        parties: true,
+        jurisdiction: true
+      }
     });
     if (!legalCase) return notFound();
 
@@ -237,16 +269,21 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         stage: body.stage,
         status: body.status,
         priority: body.priority,
-        description: body.description === undefined ? undefined : body.description || null
+        description: body.description === undefined ? undefined : body.description || null,
+        parties: body.parties?.map((party) => party.trim()).filter(Boolean),
+        jurisdiction: body.jurisdiction === undefined ? undefined : body.jurisdiction || null
       },
       select: {
         id: true,
         title: true,
         category: true,
+        origin: true,
         status: true,
         priority: true,
         stage: true,
         description: true,
+        parties: true,
+        jurisdiction: true,
         caseHealthScore: true,
         evidenceCompleteness: true,
         evidenceStrength: true,
@@ -257,7 +294,30 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
     });
 
-    await logActivity(params.id, user.id, "CASE_UPDATED", `Updated case workspace fields.`);
+    await logCaseAudit({
+      caseId: params.id,
+      actorId: user.id,
+      action: "CASE_UPDATED",
+      detail: "Updated case workspace fields.",
+      previousValue: {
+        title: legalCase.title,
+        stage: legalCase.stage,
+        status: legalCase.status,
+        priority: legalCase.priority,
+        description: legalCase.description,
+        parties: legalCase.parties,
+        jurisdiction: legalCase.jurisdiction
+      },
+      updatedValue: {
+        title: updated.title,
+        stage: updated.stage,
+        status: updated.status,
+        priority: updated.priority,
+        description: updated.description,
+        parties: updated.parties,
+        jurisdiction: updated.jurisdiction
+      }
+    });
     return NextResponse.json({ case: updated });
   } catch (error) {
     return handleApiError(error, "CASE_UPDATE_ROUTE", "Unable to update case.");
@@ -267,8 +327,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const user = await requireUser();
-    if (user.role !== "CLIENT" || !user.clientProfile) return forbidden();
-    const clientProfileId = user.clientProfile.id;
+    if (user.role !== "CLIENT" && user.role !== "LAWYER" && user.role !== "ADMIN") return forbidden();
 
     const body = deleteSchema.parse(await request.json().catch(() => ({})));
     const legalCase = await prisma.case.findFirst({
@@ -277,6 +336,8 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         id: true,
         title: true,
         clientProfileId: true,
+        lawyerOwnerProfileId: true,
+        origin: true,
         documents: {
           select: {
             id: true,
@@ -299,6 +360,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       }
     });
     if (!legalCase) return notFound();
+    if (!canDeleteCaseForUser(user, legalCase)) return forbidden();
 
     const passwordOwner = await prisma.user.findUnique({
       where: { id: user.id },
@@ -347,7 +409,23 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         });
       }
 
-      const [openWorkflowRecords, closedWorkflowRecords, activityLogs, notifications, deleted] = await Promise.all([
+      await tx.activityLog.create({
+        data: {
+          caseId: params.id,
+          actorId: user.id,
+          action: "CASE_DELETE_CONFIRMED",
+          detail: `Deletion confirmed for case ${legalCase.title}.`,
+          metadata: {
+            deletedCaseId: params.id,
+            deletedCaseTitle: legalCase.title,
+            deletedAt: deletedAt.toISOString(),
+            origin: legalCase.origin,
+            protectedAudit: true
+          }
+        }
+      });
+
+      const [openWorkflowRecords, closedWorkflowRecords, notifications, deleted] = await Promise.all([
         tx.agentActionReview.updateMany({
           where: {
             AND: [
@@ -390,9 +468,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
             resultAction: deletedCaseAction
           }
         }),
-        tx.activityLog.deleteMany({
-          where: { caseId: params.id }
-        }),
         tx.notification.deleteMany({
           where: {
             OR: [
@@ -402,14 +477,11 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
           }
         }),
         tx.case.deleteMany({
-          where: {
-            id: params.id,
-            clientProfileId
-          }
+          where: { id: params.id }
         })
       ]);
 
-      return { workflowRecords: openWorkflowRecords.count + closedWorkflowRecords.count, activityLogs, notifications, deleted };
+      return { workflowRecords: openWorkflowRecords.count + closedWorkflowRecords.count, notifications, deleted };
     });
     if (transactionResult.deleted.count === 0) return notFound();
 
@@ -422,7 +494,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     await logActivity(null, user.id, "CASE_DELETED", `Deleted case ${params.id}`, {
       caseTitle: legalCase.title,
       workflowRecordsDetached: transactionResult.workflowRecords,
-      activityLogsDeleted: transactionResult.activityLogs.count,
+      activityLogsPreserved: true,
       notificationsDeleted: transactionResult.notifications.count,
       assistantMessagesMarkedDeleted: assistantMessageUpdates.length
     });

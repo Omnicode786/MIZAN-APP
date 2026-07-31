@@ -22,7 +22,7 @@ type AssignmentRequest = {
       user: {
         name: string;
       };
-    };
+    } | null;
   };
 };
 
@@ -79,7 +79,7 @@ export function LawyerRequestReviewList({ assignments }: { assignments: Assignme
                   <Badge variant={statusVariant(assignment.status)}>{assignment.status}</Badge>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Client: {assignment.case.client.user.name}
+                  Client: {assignment.case.client?.user.name || "Registered client"}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Badge variant="outline">{assignment.case.category}</Badge>

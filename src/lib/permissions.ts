@@ -1,32 +1,18 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+import {
+  buildAccessibleCaseWhereForUser,
+  canDeleteCaseForUser,
+  canPermanentlyRemoveDocumentForUser
+} from "@/lib/permission-rules";
 
 export type AppUser = NonNullable<Awaited<ReturnType<typeof getCurrentUserWithProfile>>>;
-
-export function buildAccessibleCaseWhereForUser(user: AppUser, caseId?: string): Prisma.CaseWhereInput {
-  const baseWhere =
-    user.role === "LAWYER"
-      ? {
-          assignments: {
-            some: {
-              lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
-              status: "ACCEPTED" as const
-            }
-          }
-        }
-      : {
-          clientProfileId: user.clientProfile?.id || "__NO_CLIENT_PROFILE__"
-        };
-
-  if (!caseId) {
-    return baseWhere;
-  }
-
-  return {
-    AND: [baseWhere, { id: caseId }]
-  };
-}
+export {
+  buildAccessibleCaseWhereForUser,
+  canDeleteCaseForUser,
+  canPermanentlyRemoveDocumentForUser
+};
 
 export async function getAccessibleCaseForUser<T extends Prisma.CaseInclude | undefined = undefined>(
   user: AppUser,
@@ -90,29 +76,18 @@ export async function getAccessibleCase(caseId: string) {
   const includeInternalNotes = user.role === "LAWYER";
 
   const legalCase = await prisma.case.findFirst({
-    where:
-      user.role === "LAWYER"
-        ? {
-            id: caseId,
-            assignments: {
-              some: {
-                lawyerProfileId: user.lawyerProfile?.id || "__NO_LAWYER_PROFILE__",
-                status: "ACCEPTED" as const
-              }
-            }
-          }
-        : {
-            id: caseId,
-            clientProfileId: user.clientProfile?.id || "__NO_CLIENT_PROFILE__"
-          },
+    where: buildAccessibleCaseWhereForUser(user, caseId),
     select: {
       id: true,
       title: true,
       category: true,
+      origin: true,
       status: true,
       priority: true,
       stage: true,
       description: true,
+      parties: true,
+      jurisdiction: true,
       caseHealthScore: true,
       evidenceCompleteness: true,
       evidenceStrength: true,
@@ -122,6 +97,7 @@ export async function getAccessibleCase(caseId: string) {
       escalationReadiness: true,
       creatorId: true,
       clientProfileId: true,
+      lawyerOwnerProfileId: true,
       lawyerRequestedAt: true,
       sharedWithLawyerAt: true,
       createdAt: true,
@@ -201,10 +177,29 @@ export async function getAccessibleCase(caseId: string) {
           timelineEvents: true,
           deadlines: true,
           drafts: true,
-          comments: true,
+          comments:
+            user.role === "CLIENT"
+              ? {
+                  where: { visibility: "SHARED" as const }
+                }
+              : true,
           internalNotes: true,
-          activityLogs: true,
-          assistantThreads: true,
+          activityLogs:
+            user.role === "CLIENT"
+              ? {
+                  where: {
+                    action: {
+                      notIn: ["INTERNAL_NOTE_ADDED", "DOCUMENT_REMOVAL_BLOCKED", "CASE_DELETE_CONFIRMED"]
+                    }
+                  }
+                }
+              : true,
+          assistantThreads: {
+            where: {
+              createdById: user.id,
+              ownerRole: user.role
+            }
+          },
           debateSessions: true
         }
       }
@@ -212,7 +207,11 @@ export async function getAccessibleCase(caseId: string) {
   });
 
   const sanitizedCase =
-    legalCase && user.role === "LAWYER" && !legalCase.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
+    legalCase &&
+    legalCase.client &&
+    user.role === "LAWYER" &&
+    legalCase.origin === "CLIENT_SUBMITTED" &&
+    !legalCase.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
       ? {
           ...legalCase,
           client: {
@@ -238,6 +237,23 @@ export async function getAccessibleCase(caseId: string) {
 export async function logActivity(caseId: string | null, actorId: string | null, action: string, detail?: string, metadata?: any) {
   return prisma.activityLog.create({
     data: { caseId: caseId || undefined, actorId: actorId || undefined, action, detail, metadata }
+  });
+}
+
+export async function logCaseAudit(input: {
+  caseId: string | null;
+  actorId: string | null;
+  action: string;
+  detail?: string;
+  previousValue?: Prisma.InputJsonValue;
+  updatedValue?: Prisma.InputJsonValue;
+  metadata?: Prisma.InputJsonValue;
+}) {
+  return logActivity(input.caseId, input.actorId, input.action, input.detail, {
+    ...(input.metadata && typeof input.metadata === "object" ? (input.metadata as Record<string, unknown>) : {}),
+    previousValue: input.previousValue ?? null,
+    updatedValue: input.updatedValue ?? null,
+    protectedAudit: true
   });
 }
 

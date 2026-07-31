@@ -30,6 +30,14 @@ export function CaseCard({
               {legalCase.description || "No case description added yet."}
             </p>
             <div className="flex flex-wrap gap-2">
+              {legalCase.origin ? (
+                <Badge variant={legalCase.origin === "LAWYER_CREATED" ? "success" : "outline"}>
+                  {toTitleCase(legalCase.origin)}
+                </Badge>
+              ) : null}
+              {legalCase.jurisdiction ? (
+                <Badge variant="outline">{legalCase.jurisdiction}</Badge>
+              ) : null}
               <Badge variant="outline">{toTitleCase(legalCase.status)}</Badge>
               <Badge variant={legalCase.priority === "HIGH" || legalCase.priority === "CRITICAL" ? "destructive" : "secondary"}>
                 {toTitleCase(legalCase.priority)}

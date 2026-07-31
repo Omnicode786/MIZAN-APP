@@ -4,22 +4,15 @@ import { AppShell } from "@/components/workspace/app-shell";
 import { SectionHeader } from "@/components/workspace/section-header";
 import { CLIENT_NAV, LAWYER_NAV } from "@/lib/constants";
 import { getCurrentUserWithProfile } from "@/lib/auth";
+import { buildAccessibleCaseWhereForUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 export default async function SearchPage() {
   const user = await getCurrentUserWithProfile();
   if (!user) redirect("/login");
 
-  const lawyerProfileId = user.lawyerProfile?.id;
-  const clientProfileId = user.clientProfile?.id;
   const cases = await prisma.case.findMany({
-    where: user.role === 'LAWYER'
-      ? lawyerProfileId
-        ? { assignments: { some: { lawyerProfileId, status: "ACCEPTED" as const } } }
-        : { id: "__NO_ACCESS__" }
-      : clientProfileId
-        ? { clientProfileId }
-        : { id: "__NO_ACCESS__" },
+    where: buildAccessibleCaseWhereForUser(user),
     select: {
       id: true,
       title: true,

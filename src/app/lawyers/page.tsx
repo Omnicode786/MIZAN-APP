@@ -8,12 +8,20 @@ export default async function LawyersPage() {
   const [user, lawyers] = await Promise.all([
     getCurrentUserWithProfile().catch(() => null),
     prisma.lawyerProfile.findMany({
-      where: { isPublic: true },
+      where: {
+        isPublic: true,
+        searchable: true,
+        availability: { not: "UNAVAILABLE" }
+      },
       select: {
         id: true,
         firmName: true,
         bio: true,
         specialties: true,
+        languages: true,
+        jurisdictions: true,
+        consultationTypes: true,
+        availability: true,
         yearsExperience: true,
         hourlyRate: true,
         fixedFeeFrom: true,
@@ -41,6 +49,10 @@ export default async function LawyersPage() {
         firmName: lawyer.firmName,
         bio: lawyer.bio,
         specialties: lawyer.specialties,
+        languages: lawyer.languages,
+        jurisdictions: lawyer.jurisdictions,
+        consultationTypes: lawyer.consultationTypes,
+        availability: lawyer.availability,
         yearsExperience: lawyer.yearsExperience,
         hourlyRate: lawyer.hourlyRate,
         fixedFeeFrom: lawyer.fixedFeeFrom,

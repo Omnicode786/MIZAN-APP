@@ -12,8 +12,6 @@ import {
 import { AppShell } from "@/components/workspace/app-shell";
 import { CaseCard } from "@/components/workspace/case-card";
 import { DeadlineBoard } from "@/components/workspace/deadline-board";
-import { RiskReadinessDashboard } from "@/components/workspace/risk-readiness-dashboard";
-import { SectionHeader } from "@/components/workspace/section-header";
 import { TimelineView } from "@/components/workspace/timeline-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,7 +79,7 @@ export default async function LawyerDashboardPage() {
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Button asChild>
                     <Link href="/lawyer/cases">
-                      Open case queue
+                      Create or open cases
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -119,43 +117,29 @@ export default async function LawyerDashboardPage() {
           </section>
         </GlassSurface>
 
-        <SectionHeader
-          eyebrow="Matter Intelligence"
-          title="Risk and readiness overview"
-          description="Quickly scan evidence strength, draft readiness, deadline risk, and escalation posture before opening each file."
-          action={
-            <Button asChild variant="outline">
-              <Link href="/lawyer/cases">View all matters</Link>
-            </Button>
-          }
-        />
-
-        <RiskReadinessDashboard metrics={snapshot.metrics} />
-
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,420px)]">
           <div className="space-y-6">
             <div className="surface-panel flex items-end justify-between gap-4 rounded-[2rem] p-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-                  Case Queue
+                  Needs attention
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-                  Matters requiring review
+                  Recent client and private matters
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Open a case to review evidence, set collaboration terms, verify drafts, or add
-                  lawyer-only notes.
+                  Open a matter to review evidence, add private notes, draft strategy, or continue accepted client work.
                 </p>
               </div>
 
-              <Badge variant="secondary">
-                {activeCases} active
-              </Badge>
+              <Button asChild variant="outline">
+                <Link href="/lawyer/cases">View all matters</Link>
+              </Button>
             </div>
 
             {snapshot.cases?.length ? (
               <div className="grid gap-4">
-                {snapshot.cases.map((legalCase: any) => (
+                {snapshot.cases.slice(0, 4).map((legalCase: any) => (
                   <CaseCard
                     key={legalCase.id}
                     legalCase={legalCase}

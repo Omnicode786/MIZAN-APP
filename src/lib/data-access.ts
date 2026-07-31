@@ -18,22 +18,20 @@ export async function getCasesForRole(role: "CLIENT" | "LAWYER") {
     if (!user.lawyerProfile) return [];
 
     return prisma.case.findMany({
-      where: {
-        assignments: {
-          some: {
-            lawyerProfileId: user.lawyerProfile.id,
-            status: "ACCEPTED" as const
-          }
-        }
-      },
+      where: buildAccessibleCaseWhereForUser(user),
       select: {
         id: true,
         title: true,
         category: true,
+        origin: true,
         status: true,
         priority: true,
         stage: true,
         description: true,
+        parties: true,
+        jurisdiction: true,
+        clientProfileId: true,
+        lawyerOwnerProfileId: true,
         caseHealthScore: true,
         evidenceCompleteness: true,
         evidenceStrength: true,
@@ -64,10 +62,15 @@ export async function getCasesForRole(role: "CLIENT" | "LAWYER") {
       id: true,
       title: true,
       category: true,
+      origin: true,
       status: true,
       priority: true,
       stage: true,
       description: true,
+      parties: true,
+      jurisdiction: true,
+      clientProfileId: true,
+      lawyerOwnerProfileId: true,
       caseHealthScore: true,
       evidenceCompleteness: true,
       evidenceStrength: true,
@@ -134,10 +137,13 @@ export async function getCaseDetail(
       id: true,
       title: true,
       category: true,
+      origin: true,
       status: true,
       priority: true,
       stage: true,
       description: true,
+      parties: true,
+      jurisdiction: true,
       caseHealthScore: true,
       evidenceCompleteness: true,
       evidenceStrength: true,
@@ -147,6 +153,7 @@ export async function getCaseDetail(
       escalationReadiness: true,
       creatorId: true,
       clientProfileId: true,
+      lawyerOwnerProfileId: true,
       lawyerRequestedAt: true,
       sharedWithLawyerAt: true,
       createdAt: true,
@@ -246,6 +253,7 @@ export async function getCaseDetail(
         take: 6
       },
       comments: {
+        where: user.role === "CLIENT" ? { visibility: "SHARED" as const } : undefined,
         select: {
           id: true,
           caseId: true,
@@ -384,9 +392,14 @@ export async function getCaseDetail(
         take: 20
       },
       assistantThreads: {
+        where: {
+          createdById: user.id,
+          ownerRole: user.role
+        },
         select: {
           id: true,
           title: true,
+          ownerRole: true,
           scope: true,
           caseId: true,
           documentId: true,
@@ -433,10 +446,29 @@ export async function getCaseDetail(
           timelineEvents: true,
           deadlines: true,
           drafts: true,
-          comments: true,
+          comments:
+            user.role === "CLIENT"
+              ? {
+                  where: { visibility: "SHARED" as const }
+                }
+              : true,
           internalNotes: true,
-          activityLogs: true,
-          assistantThreads: true,
+          activityLogs:
+            user.role === "CLIENT"
+              ? {
+                  where: {
+                    action: {
+                      notIn: ["INTERNAL_NOTE_ADDED", "DOCUMENT_REMOVAL_BLOCKED", "CASE_DELETE_CONFIRMED"]
+                    }
+                  }
+                }
+              : true,
+          assistantThreads: {
+            where: {
+              createdById: user.id,
+              ownerRole: user.role
+            }
+          },
           debateSessions: true
         }
       }
@@ -446,7 +478,10 @@ export async function getCaseDetail(
   if (!detail) return null;
 
   const visibleDetail =
-    user.role === "LAWYER" && !detail.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
+    user.role === "LAWYER" &&
+    detail.origin === "CLIENT_SUBMITTED" &&
+    detail.client &&
+    !detail.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
       ? {
           ...detail,
           client: {
@@ -542,10 +577,15 @@ export async function getCasePacketDetail(
       id: true,
       title: true,
       category: true,
+      origin: true,
       status: true,
       priority: true,
       stage: true,
       description: true,
+      parties: true,
+      jurisdiction: true,
+      clientProfileId: true,
+      lawyerOwnerProfileId: true,
       client: {
         select: {
           id: true,
@@ -668,7 +708,12 @@ export async function getCasePacketDetail(
   });
 
   if (!packet) return null;
-  if (user.role === "LAWYER" && !packet.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")) {
+  if (
+    user.role === "LAWYER" &&
+    packet.origin === "CLIENT_SUBMITTED" &&
+    packet.client &&
+    !packet.assignments.some((assignment) => assignment.proposalStatus === "ACCEPTED")
+  ) {
     return {
       ...packet,
       client: {
@@ -740,12 +785,17 @@ export async function getDashboardSnapshot(role: "CLIENT" | "LAWYER") {
     role === "LAWYER"
       ? user.lawyerProfile
         ? {
-            assignments: {
-              some: {
-                lawyerProfileId: user.lawyerProfile.id,
-                status: "ACCEPTED" as const
+            OR: [
+              { lawyerOwnerProfileId: user.lawyerProfile.id },
+              {
+                assignments: {
+                  some: {
+                    lawyerProfileId: user.lawyerProfile.id,
+                    status: "ACCEPTED" as const
+                  }
+                }
               }
-            }
+            ]
           }
         : { id: "__NO_ACCESS__" }
       : user.clientProfile
@@ -758,10 +808,15 @@ export async function getDashboardSnapshot(role: "CLIENT" | "LAWYER") {
       id: true,
       title: true,
       category: true,
+      origin: true,
       status: true,
       priority: true,
       stage: true,
       description: true,
+      parties: true,
+      jurisdiction: true,
+      clientProfileId: true,
+      lawyerOwnerProfileId: true,
       caseHealthScore: true,
       evidenceCompleteness: true,
       evidenceStrength: true,

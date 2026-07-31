@@ -38,6 +38,10 @@ type PublicLawyer = {
   firmName: string | null;
   bio: string | null;
   specialties: string[];
+  languages: string[];
+  jurisdictions: string[];
+  consultationTypes: string[];
+  availability: string;
   yearsExperience: number;
   hourlyRate: number | null;
   fixedFeeFrom: number | null;
@@ -92,7 +96,11 @@ export function PublicLawyersDirectory({
           lawyer.firmName || "",
           lawyer.city || "",
           lawyer.bio || "",
-          ...lawyer.specialties
+          lawyer.availability,
+          ...lawyer.specialties,
+          ...lawyer.languages,
+          ...lawyer.jurisdictions,
+          ...lawyer.consultationTypes
         ]
           .join(" ")
           .toLowerCase()
@@ -437,6 +445,9 @@ function LawyerCard({
                 {lawyer.rating.toFixed(1)}
               </Badge>
             ) : null}
+            <Badge variant={lawyer.availability === "AVAILABLE" ? "success" : "secondary"} className="rounded-md px-2.5 py-1">
+              {lawyer.availability.replace(/_/g, " ")}
+            </Badge>
           </div>
 
           <p className="mt-4 line-clamp-4 text-sm leading-6 text-muted-foreground">
@@ -449,6 +460,27 @@ function LawyerCard({
                 {item}
               </Badge>
             ))}
+          </div>
+
+          <div className="mt-4 grid gap-2 text-xs leading-5 text-muted-foreground">
+            {lawyer.jurisdictions.length ? (
+              <p>
+                <span className="font-medium text-foreground">Jurisdictions:</span>{" "}
+                {lawyer.jurisdictions.slice(0, 3).join(", ")}
+              </p>
+            ) : null}
+            {lawyer.languages.length ? (
+              <p>
+                <span className="font-medium text-foreground">Languages:</span>{" "}
+                {lawyer.languages.slice(0, 4).join(", ")}
+              </p>
+            ) : null}
+            {lawyer.consultationTypes.length ? (
+              <p>
+                <span className="font-medium text-foreground">Consultation:</span>{" "}
+                {lawyer.consultationTypes.slice(0, 3).join(", ")}
+              </p>
+            ) : null}
           </div>
 
           <div className="mt-auto pt-5">

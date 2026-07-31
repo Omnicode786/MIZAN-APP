@@ -25,6 +25,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (!assignment) return notFound();
 
     const body = schema.parse(await request.json());
+    const clientProfile = assignment.case.client;
+    if (!clientProfile) {
+      return validationError("This assignment is not connected to a registered client case.");
+    }
+
     const isAssignedLawyer = user.role === "LAWYER" && assignment.lawyer.userId === user.id;
 
     if (body.mode === "proposal") {
@@ -52,7 +57,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       await prisma.case.update({ where: { id: assignment.caseId }, data: { stage: "Lawyer proposal sent" } });
       await logActivity(assignment.caseId, user.id, "LAWYER_PROPOSAL_SENT", `Sent collaboration terms for ${assignment.case.title}.`);
       await createNotification(
-        assignment.case.client.userId,
+        clientProfile.userId,
         "Lawyer proposal ready",
         `${assignment.lawyer.user.name} sent collaboration terms for ${assignment.case.title}.`,
         "lawyer_proposal",
@@ -97,12 +102,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         assignment.caseId,
         user.id,
         accepted ? "LAWYER_PROPOSAL_ACCEPTED" : "LAWYER_PROPOSAL_DECLINED",
-        `${assignment.case.client.user.name} ${accepted ? "accepted" : "declined"} ${assignment.lawyer.user.name}'s proposal.`
+        `${clientProfile.user.name} ${accepted ? "accepted" : "declined"} ${assignment.lawyer.user.name}'s proposal.`
       );
       await createNotification(
         assignment.lawyer.userId,
         accepted ? "Proposal accepted" : "Proposal declined",
-        `${assignment.case.client.user.name} ${accepted ? "accepted" : "declined"} your proposal for ${assignment.case.title}.`,
+        `${clientProfile.user.name} ${accepted ? "accepted" : "declined"} your proposal for ${assignment.case.title}.`,
         "lawyer_proposal_decision",
         accepted ? `/lawyer/cases/${assignment.caseId}` : "/lawyer/review"
       );
@@ -144,7 +149,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       `${assignment.lawyer.user.name} ${body.decision === "ACCEPTED" ? "accepted" : "rejected"} the case request.`
     );
     await createNotification(
-      assignment.case.client.userId,
+      clientProfile.userId,
       body.decision === "ACCEPTED" ? "Case request accepted" : "Case request rejected",
       `${assignment.lawyer.user.name} ${body.decision === "ACCEPTED" ? "accepted" : "rejected"} your request for ${assignment.case.title}.`,
       "case_request_decision",

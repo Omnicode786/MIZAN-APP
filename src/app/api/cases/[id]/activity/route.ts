@@ -14,11 +14,36 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const accessibleCase = await prisma.case.findFirst({
       where: buildAccessibleCaseWhereForUser(user, params.id),
-      select: { id: true, _count: { select: { activityLogs: true } } }
+      select: {
+        id: true,
+        _count: {
+          select: {
+            activityLogs:
+              user.role === "CLIENT"
+                ? {
+                    where: {
+                      action: {
+                        notIn: ["INTERNAL_NOTE_ADDED", "DOCUMENT_REMOVAL_BLOCKED", "CASE_DELETE_CONFIRMED"]
+                      }
+                    }
+                  }
+                : true
+          }
+        }
+      }
     });
     if (!accessibleCase) return notFound();
 
-    const where = { caseId: params.id };
+    const where = {
+      caseId: params.id,
+      ...(user.role === "CLIENT"
+        ? {
+            action: {
+              notIn: ["INTERNAL_NOTE_ADDED", "DOCUMENT_REMOVAL_BLOCKED", "CASE_DELETE_CONFIRMED"]
+            }
+          }
+        : {})
+    };
     const activityLogs = await prisma.activityLog.findMany({
       where,
       select: {

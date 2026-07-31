@@ -55,6 +55,7 @@ export async function POST(request: Request) {
       const thread = await prisma.assistantThread.create({
         data: {
           createdById: user.id,
+          ownerRole: user.role,
           caseId: body.caseId,
           documentId: body.documentId,
           title: provisionalTitle,
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
 
     if (!createdThreadForRequest) {
       const existingThread = await prisma.assistantThread.findFirst({
-        where: { id: threadId, createdById: user.id }
+        where: { id: threadId, createdById: user.id, ownerRole: user.role }
       });
 
       if (!existingThread) return notFound();

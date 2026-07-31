@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { handleApiError, unauthorized } from "@/lib/api-response";
 import { getCurrentUserWithProfile } from "@/lib/auth";
 import { logEvent, withApiObservability } from "@/lib/observability";
+import { buildAccessibleCaseWhereForUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -25,35 +26,6 @@ const urduSearchMap: Record<string, string[]> = {
   "شکایت": ["complaint", "grievance"],
   "وکیل": ["lawyer", "advocate"]
 };
-
-function noAccessCaseWhere(): Prisma.CaseWhereInput {
-  return { id: "__NO_ACCESS__" };
-}
-
-function getAccessibleCaseWhere(user: any): Prisma.CaseWhereInput {
-  if (user.role === "LAWYER") {
-    if (!user.lawyerProfile?.id) return noAccessCaseWhere();
-
-    return {
-      assignments: {
-        some: {
-          lawyerProfileId: user.lawyerProfile.id,
-          status: "ACCEPTED" as const
-        }
-      }
-    };
-  }
-
-  if (user.role === "CLIENT") {
-    if (!user.clientProfile?.id) return noAccessCaseWhere();
-
-    return {
-      clientProfileId: user.clientProfile.id
-    };
-  }
-
-  return noAccessCaseWhere();
-}
 
 function getSearchTerms(query: string) {
   return query
@@ -155,7 +127,7 @@ export async function POST(request: Request) {
     const terms = getSearchTerms(query);
     const expandedQueries = expandSearchQuery(query);
 
-    const accessibleCaseWhere = getAccessibleCaseWhere(user);
+    const accessibleCaseWhere = buildAccessibleCaseWhereForUser(user);
 
     const caseWhere: Prisma.CaseWhereInput =
       body.caseId && body.caseId !== "all"

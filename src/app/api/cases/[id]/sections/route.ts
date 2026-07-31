@@ -30,7 +30,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
             documents: true,
             evidenceItems: true,
             timelineEvents: true,
-            activityLogs: true
+            activityLogs:
+              user.role === "CLIENT"
+                ? {
+                    where: {
+                      action: {
+                        notIn: ["INTERNAL_NOTE_ADDED", "DOCUMENT_REMOVAL_BLOCKED", "CASE_DELETE_CONFIRMED"]
+                      }
+                    }
+                  }
+                : true
           }
         }
       }
@@ -113,7 +122,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
         take: evidenceLimit
       }),
       prisma.activityLog.findMany({
-        where: { caseId: params.id },
+        where: {
+          caseId: params.id,
+          ...(user.role === "CLIENT"
+            ? {
+                action: {
+                  notIn: ["INTERNAL_NOTE_ADDED", "DOCUMENT_REMOVAL_BLOCKED", "CASE_DELETE_CONFIRMED"]
+                }
+              }
+            : {})
+        },
         select: {
           id: true,
           caseId: true,

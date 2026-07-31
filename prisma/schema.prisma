@@ -37,6 +37,12 @@ enum CaseStatus {
   CLOSED
 }
 
+enum CaseOrigin {
+  CLIENT_SUBMITTED
+  LAWYER_CREATED
+  ADMIN_CREATED
+}
+
 enum Priority {
   LOW
   MEDIUM
@@ -194,6 +200,12 @@ model LawyerProfile {
   firmName        String?
   bio             String?
   specialties     String[]
+  languages       String[]              @default([])
+  jurisdictions   String[]              @default([])
+  consultationTypes String[]             @default([])
+  availability    String                @default("AVAILABLE")
+  searchable      Boolean               @default(true)
+  barRegistration String?
   yearsExperience Int                   @default(0)
   hourlyRate      Float?
   fixedFeeFrom    Float?
@@ -205,20 +217,26 @@ model LawyerProfile {
   updatedAt       DateTime              @updatedAt
   user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignments     CaseAssignment[]
+  ownedCases      Case[]                @relation("LawyerOwnedCases")
   consultations   ConsultationBooking[]
 
   @@index([isPublic, verifiedBadge, rating])
+  @@index([isPublic, searchable, verifiedBadge, rating])
   @@index([city])
+  @@index([availability])
 }
 
 model Case {
   id                   String                @id @default(cuid())
   title                String
   category             CaseCategory
+  origin               CaseOrigin            @default(CLIENT_SUBMITTED)
   status               CaseStatus            @default(INTAKE)
   priority             Priority              @default(MEDIUM)
   stage                String                @default("Document Intake")
   description          String?
+  parties              String[]              @default([])
+  jurisdiction         String?
   caseHealthScore      Float                 @default(0)
   evidenceCompleteness Float                 @default(0)
   evidenceStrength     Float                 @default(0)
@@ -227,13 +245,15 @@ model Case {
   draftReadiness       Float                 @default(0)
   escalationReadiness  Float                 @default(0)
   creatorId            String
-  clientProfileId      String
+  clientProfileId      String?
+  lawyerOwnerProfileId String?
   lawyerRequestedAt    DateTime?
   sharedWithLawyerAt   DateTime?
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   creator              User                  @relation("CaseCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  client               ClientProfile         @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  client               ClientProfile?        @relation(fields: [clientProfileId], references: [id], onDelete: SetNull)
+  lawyerOwner          LawyerProfile?        @relation("LawyerOwnedCases", fields: [lawyerOwnerProfileId], references: [id], onDelete: SetNull)
   assignments          CaseAssignment[]
   documents            Document[]
   evidenceItems        EvidenceItem[]
@@ -252,8 +272,11 @@ model Case {
   debateSessions       DebateSession[]
 
   @@index([clientProfileId, updatedAt])
+  @@index([lawyerOwnerProfileId, updatedAt])
   @@index([creatorId, createdAt])
   @@index([status, updatedAt])
+  @@index([origin, updatedAt])
+  @@index([jurisdiction])
 }
 
 model CaseAssignment {
@@ -603,6 +626,7 @@ model ActivityLog {
 model AssistantThread {
   id                 String              @id @default(cuid())
   createdById        String
+  ownerRole          Role                @default(CLIENT)
   caseId             String?
   documentId         String?
   title              String?
@@ -616,6 +640,8 @@ model AssistantThread {
   agentActionReviews AgentActionReview[]
 
   @@index([createdById, updatedAt])
+  @@index([createdById, ownerRole, updatedAt])
+  @@index([caseId, createdById, ownerRole, updatedAt])
   @@index([caseId, updatedAt])
   @@index([documentId, updatedAt])
 }

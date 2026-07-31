@@ -128,6 +128,17 @@ export function LawyerDirectory({ cases }: { cases: any[] }) {
                   </Badge>
                 ))}
               </div>
+              <div className="mt-3 grid gap-1 text-xs leading-5 text-muted-foreground">
+                {lawyer.jurisdictions?.length ? (
+                  <p>Jurisdictions: {lawyer.jurisdictions.slice(0, 3).join(", ")}</p>
+                ) : null}
+                {lawyer.languages?.length ? (
+                  <p>Languages: {lawyer.languages.slice(0, 4).join(", ")}</p>
+                ) : null}
+                {lawyer.consultationTypes?.length ? (
+                  <p>Consultation: {lawyer.consultationTypes.slice(0, 3).join(", ")}</p>
+                ) : null}
+              </div>
               <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-foreground">
                 <span>{lawyer.yearsExperience} years</span>
                 <span>

@@ -4,6 +4,7 @@ import { runAiTask, runVisionAiTask } from "@/lib/ai";
 import { readUploadedFileBytes } from "@/lib/document-pipeline/extract";
 import { buildPakistanLawContext } from "@/lib/pakistan-law/retrieval";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
+import { searchLawyersForCase } from "@/lib/lawyer-search";
 import { stripAssistantActionMeta } from "@/lib/assistant-message-meta";
 import {
   getLanguageInstruction,
@@ -141,9 +142,12 @@ export async function buildCaseContext(caseId: string) {
       id: true,
       title: true,
       category: true,
+      origin: true,
       status: true,
       stage: true,
       description: true,
+      parties: true,
+      jurisdiction: true,
       client: {
         select: {
           user: {
@@ -225,10 +229,13 @@ export async function buildCaseContext(caseId: string) {
   const text = [
     `Case title: ${legalCase.title}`,
     `Category: ${legalCase.category}`,
+    `Origin: ${legalCase.origin}`,
     `Status: ${legalCase.status}`,
     `Stage: ${legalCase.stage}`,
     `Description: ${legalCase.description || "n/a"}`,
-    `Client: ${legalCase.client.user.name}`,
+    legalCase.jurisdiction ? `Jurisdiction: ${legalCase.jurisdiction}` : "",
+    legalCase.parties.length ? `Parties: ${legalCase.parties.join(", ")}` : "",
+    `Client: ${legalCase.client?.user.name || "Private/offline lawyer-managed matter"}`,
     `Documents:`,
     ...legalCase.documents.map(
       (doc) =>
@@ -253,50 +260,77 @@ export async function buildCaseContext(caseId: string) {
   return { legalCase, text };
 }
 
-async function buildMizanLawyerDirectoryContext() {
+function inferLawyerSearchHints(question: string) {
+  const cities = ["karachi", "lahore", "islamabad", "rawalpindi", "peshawar", "quetta", "multan", "faisalabad"];
+  const lower = question.toLowerCase();
+  const city = cities.find((item) => lower.includes(item));
+  const language = lower.includes("urdu")
+    ? "Urdu"
+    : lower.includes("punjabi")
+      ? "Punjabi"
+      : lower.includes("sindhi")
+        ? "Sindhi"
+        : lower.includes("english")
+          ? "English"
+          : undefined;
+  const budgetMatch = lower.match(/(?:under|below|less than|max(?:imum)?|budget)\s*(?:pkr|rs\.?|rupees)?\s*([0-9,]+)/i);
+  const maximumBudget = budgetMatch ? Number(budgetMatch[1].replace(/,/g, "")) : undefined;
+
+  return {
+    city: city ? city[0].toUpperCase() + city.slice(1) : undefined,
+    preferredLanguage: language,
+    budget: maximumBudget ? { maximum: maximumBudget } : undefined
+  };
+}
+
+async function buildMizanLawyerDirectoryContext(question: string) {
   try {
-    const lawyers = await prisma.lawyerProfile.findMany({
-      where: { isPublic: true },
-      select: {
-        id: true,
-        firmName: true,
-        city: true,
-        specialties: true,
-        yearsExperience: true,
-        rating: true,
-        fixedFeeFrom: true,
-        verifiedBadge: true,
-        user: {
-          select: {
-            name: true
-          }
-        }
-      },
-      orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }],
-      take: 12
+    const hints = inferLawyerSearchHints(question);
+    const { matches } = await searchLawyersForCase({
+      caseSummary: question,
+      practiceArea: question,
+      city: hints.city,
+      preferredLanguage: hints.preferredLanguage,
+      budget: hints.budget,
+      limit: 5
     });
 
-    if (!lawyers.length) return "";
+    if (!matches.length) {
+      return {
+        context:
+          "MIZAN lawyer search tool result: no verified, searchable lawyer profiles matched the available request details. Ask for missing city, practice area, budget, language, or consultation preference only if it would materially improve the search.",
+        sources: ["MIZAN lawyer search tool"]
+      };
+    }
 
-    return [
-      "MIZAN lawyer directory snapshot:",
-      "Use this only when the client asks about finding, choosing, or escalating to a lawyer. Treat a verified badge as MIZAN profile verification only; do not invent licence numbers, bar enrolment details, availability, or outcomes.",
-      ...lawyers.map((lawyer) =>
-        [
-          `- ${lawyer.user.name}`,
-          lawyer.firmName ? `firm: ${lawyer.firmName}` : "firm: independent practice",
-          lawyer.city ? `city: ${lawyer.city}` : "city: n/a",
-          lawyer.specialties.length ? `specialties: ${lawyer.specialties.join(", ")}` : "specialties: n/a",
-          `experience: ${lawyer.yearsExperience} years`,
-          typeof lawyer.rating === "number" ? `rating: ${lawyer.rating}` : "rating: n/a",
-          lawyer.fixedFeeFrom ? `fixed fee from PKR ${lawyer.fixedFeeFrom}` : "fixed fee: proposal based",
-          lawyer.verifiedBadge ? "MIZAN verified profile: yes" : "MIZAN verified profile: no"
-        ].join("; ")
-      )
-    ].join("\n");
+    return {
+      context: [
+        "MIZAN lawyer search tool result:",
+        "Use only these database-backed matches. Do not invent licences, outcomes, availability, fees, or private profile data. Explain match reasons and never guarantee success.",
+        ...matches.map((lawyer) =>
+          [
+            `- ${lawyer.name}`,
+            `lawyerId: ${lawyer.lawyerId}`,
+            lawyer.firmName ? `firm: ${lawyer.firmName}` : "firm: independent practice",
+            lawyer.city ? `city: ${lawyer.city}` : "city: n/a",
+            lawyer.practiceAreas.length ? `practice areas: ${lawyer.practiceAreas.join(", ")}` : "practice areas: n/a",
+            lawyer.languages.length ? `languages: ${lawyer.languages.join(", ")}` : "languages: n/a",
+            lawyer.jurisdictions.length ? `jurisdictions: ${lawyer.jurisdictions.join(", ")}` : "jurisdictions: n/a",
+            `experience: ${lawyer.yearsOfExperience} years`,
+            typeof lawyer.rating === "number" ? `rating: ${lawyer.rating}` : "rating: n/a",
+            lawyer.feeFrom ? `fee from PKR ${lawyer.feeFrom}` : "fee: proposal based",
+            `verification: ${lawyer.verificationStatus}`,
+            `availability: ${lawyer.availability}`,
+            `match score: ${lawyer.matchScore}`,
+            lawyer.matchReasons.length ? `match reasons: ${lawyer.matchReasons.join("; ")}` : "match reasons: general searchable profile match"
+          ].join("; ")
+        )
+      ].join("\n"),
+      sources: ["MIZAN lawyer search tool", ...matches.map((lawyer) => lawyer.name)]
+    };
   } catch (error) {
     console.error("Unable to load MIZAN lawyer directory context.", error);
-    return "";
+    return { context: "", sources: [] };
   }
 }
 
@@ -325,7 +359,7 @@ export async function answerPakistaniLegalQuestion({
   const recentThreadContext = formatRecentThreadMessages(recentMessages);
   const useLegalAnalysisFormat = needsLegalAnalysisFormat(question, Boolean(caseId || documentId));
   const asksAboutLawyers = /\b(lawyer|advocate|attorney|counsel|hire|find|proposal|represent|representation)\b/i.test(question);
-  const lawyerDirectoryContext = asksAboutLawyers ? await buildMizanLawyerDirectoryContext() : "";
+  const lawyerDirectoryContext = asksAboutLawyers ? await buildMizanLawyerDirectoryContext(question) : { context: "", sources: [] };
 
   if (caseId && useLegalAnalysisFormat) {
     const built = await buildCaseContext(caseId);
@@ -343,9 +377,9 @@ export async function answerPakistaniLegalQuestion({
     }
   }
 
-  if (lawyerDirectoryContext) {
-    context += `${lawyerDirectoryContext}\n\n`;
-    sources.push("MIZAN lawyer directory");
+  if (lawyerDirectoryContext.context) {
+    context += `${lawyerDirectoryContext.context}\n\n`;
+    sources.push(...lawyerDirectoryContext.sources);
   }
 
   const law = useLegalAnalysisFormat

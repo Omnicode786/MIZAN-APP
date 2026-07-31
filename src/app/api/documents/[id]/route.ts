@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
-import { handleApiError, notFound } from "@/lib/api-response";
+import { forbidden, handleApiError, notFound } from "@/lib/api-response";
 import { buildCloudinaryDownloadUrl, deleteFromCloudinary, getCloudinaryStorageMeta } from "@/lib/cloudinary-storage";
 import { readUploadedFileBytes } from "@/lib/document-pipeline/extract";
 import { recordStorageMetric, trackError, withApiObservability } from "@/lib/observability";
-import { getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
+import {
+  canPermanentlyRemoveDocumentForUser,
+  getAccessibleCase,
+  logActivity,
+  requireUser
+} from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 function contentDisposition(fileName: string, download: boolean) {
@@ -93,10 +98,28 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   return withApiObservability(request, { route: "/api/documents/[id]", feature: "documents.delete" }, async () => {
     try {
       const user = await requireUser();
-    const document = await prisma.document.findUnique({ where: { id: params.id } });
+    const document = await prisma.document.findUnique({
+      where: { id: params.id },
+      include: {
+        case: {
+          select: {
+            clientProfileId: true,
+            lawyerOwnerProfileId: true,
+            origin: true
+          }
+        }
+      }
+    });
     if (!document) return notFound();
     const { legalCase } = await getAccessibleCase(document.caseId);
     if (!legalCase) return notFound();
+    if (!canPermanentlyRemoveDocumentForUser(user, document)) {
+      await logActivity(document.caseId, user.id, "DOCUMENT_REMOVAL_BLOCKED", `Removal blocked for ${document.fileName}.`, {
+        documentId: document.id,
+        reason: "Lawyers cannot permanently remove client-owned evidence."
+      });
+      return forbidden();
+    }
 
     const cloudinaryMeta = getCloudinaryStorageMeta(document.metadata);
     if (cloudinaryMeta?.publicId) {

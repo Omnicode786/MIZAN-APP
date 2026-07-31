@@ -12,11 +12,15 @@ export async function GET(request: NextRequest) {
       const lawyers = await prisma.lawyerProfile.findMany({
         where: {
           isPublic: true,
+          searchable: true,
+          availability: { not: "UNAVAILABLE" },
           OR: q
             ? [
                 { user: { name: { contains: q, mode: "insensitive" } } },
                 { firmName: { contains: q, mode: "insensitive" } },
                 { specialties: { has: q } },
+                { languages: { has: q } },
+                { jurisdictions: { has: q } },
                 { bio: { contains: q, mode: "insensitive" } },
                 { city: { contains: q, mode: "insensitive" } }
               ]
@@ -27,6 +31,11 @@ export async function GET(request: NextRequest) {
           firmName: true,
           bio: true,
           specialties: true,
+          languages: true,
+          jurisdictions: true,
+          consultationTypes: true,
+          availability: true,
+          searchable: true,
           yearsExperience: true,
           hourlyRate: true,
           fixedFeeFrom: true,

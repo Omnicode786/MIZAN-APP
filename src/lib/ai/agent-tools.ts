@@ -17,6 +17,7 @@ import {
 } from "@/lib/permissions";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
 import { getCasePacketDetail } from "@/lib/data-access";
+import { searchLawyersForCase } from "@/lib/lawyer-search";
 
 export type AgentToolName =
   | "create_case"
@@ -93,6 +94,9 @@ type ResolvedCaseSummary = {
   category: (typeof CASE_CATEGORIES)[number];
   status: "DRAFT" | "INTAKE" | "ACTIVE" | "REVIEW" | "ESCALATED" | "CLOSED";
   stage: string;
+  description: string | null;
+  parties: string[];
+  jurisdiction: string | null;
 };
 
 type CaseResolution =
@@ -263,6 +267,7 @@ const ROLE_TOOL_SET: Record<Role, AgentToolName[]> = {
     "generate_next_steps"
   ],
   LAWYER: [
+    "create_case",
     "update_case",
     "add_timeline_event",
     "add_deadline",
@@ -442,7 +447,16 @@ async function resolveCaseReference(
   if (options.caseId) {
     const legalCase = await prisma.case.findFirst({
       where: buildAccessibleCaseWhereForUser(currentUser, options.caseId),
-      select: { id: true, title: true, category: true, status: true, stage: true }
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        status: true,
+        stage: true,
+        description: true,
+        parties: true,
+        jurisdiction: true
+      }
     });
 
     if (!legalCase) {
@@ -469,7 +483,16 @@ async function resolveCaseReference(
         }
       ]
     },
-    select: { id: true, title: true, category: true, status: true, stage: true },
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      status: true,
+      stage: true,
+      description: true,
+      parties: true,
+      jurisdiction: true
+    },
     take: 5,
     orderBy: { updatedAt: "desc" }
   });
@@ -707,18 +730,27 @@ const toolDefinitions: AgentToolDefinition[] = [
   {
     name: "create_case",
     description:
-      "Create a new client-owned case from a natural-language story, plus roadmap entries, optional timeline events, optional deadlines, and evidence notes.",
+      "Create a new client-owned or lawyer-private case from a natural-language story, plus roadmap entries, optional timeline events, optional deadlines, and evidence notes.",
     kind: "mutation",
-    allowedRoles: ["CLIENT"],
+    allowedRoles: ["CLIENT", "LAWYER"],
     schema: createCaseSchema,
     async execute({ currentUser, question }, args) {
-      if (currentUser.role !== "CLIENT" || !currentUser.clientProfile) {
+      if (currentUser.role === "CLIENT" && !currentUser.clientProfile) {
         return {
           ok: false,
-          message:
-            "This action is available for clients. As a lawyer, I can prepare a case brief or internal strategy for an assigned matter.",
+          message: "Create a client case from a client account with a complete client profile.",
           status: "info"
         };
+      }
+      if (currentUser.role === "LAWYER" && !currentUser.lawyerProfile) {
+        return {
+          ok: false,
+          message: "Create a lawyer-managed case after completing your lawyer profile.",
+          status: "info"
+        };
+      }
+      if (currentUser.role !== "CLIENT" && currentUser.role !== "LAWYER") {
+        return { ok: false, message: "This action is available for client and lawyer accounts.", status: "info" };
       }
 
       const category = normalizeCaseCategory(args.category);
@@ -766,16 +798,20 @@ const toolDefinitions: AgentToolDefinition[] = [
 
       const roadmap = getRoadmapForCase(category, new Date());
       const now = new Date();
+      const origin = currentUser.role === "LAWYER" ? "LAWYER_CREATED" : "CLIENT_SUBMITTED";
       const legalCase = await prisma.case.create({
         data: {
           title,
           category,
+          origin,
           priority,
           description,
+          parties,
           creatorId: currentUser.id,
-          clientProfileId: currentUser.clientProfile.id,
+          clientProfileId: currentUser.role === "CLIENT" ? currentUser.clientProfile!.id : null,
+          lawyerOwnerProfileId: currentUser.role === "LAWYER" ? currentUser.lawyerProfile!.id : null,
           status: "INTAKE",
-          stage: "AI intake organized",
+          stage: currentUser.role === "LAWYER" ? "AI private lawyer matter organized" : "AI intake organized",
           caseHealthScore: 18,
           evidenceCompleteness: Math.min(100, availableEvidence.length * 16),
           evidenceStrength: Math.min(100, availableEvidence.length * 14),
@@ -785,8 +821,11 @@ const toolDefinitions: AgentToolDefinition[] = [
           timelineEvents: {
             create: [
               {
-                title: "Case opened by AI intake",
-                description: "A new matter was created from the client's narrated facts.",
+                title: currentUser.role === "LAWYER" ? "Private lawyer case opened by AI" : "Case opened by AI intake",
+                description:
+                  currentUser.role === "LAWYER"
+                    ? "A new private lawyer-managed matter was created from the lawyer's notes."
+                    : "A new matter was created from the client's narrated facts.",
                 eventDate: now,
                 confidence: 1,
                 sourceLabel: "system",
@@ -859,6 +898,7 @@ const toolDefinitions: AgentToolDefinition[] = [
           action: "AI_CASE_CREATED",
           detail: `AI intake created case ${legalCase.title}.`,
           metadata: {
+            origin,
             evidenceGaps,
             recommendedNextSteps,
             question
@@ -893,7 +933,7 @@ const toolDefinitions: AgentToolDefinition[] = [
         action: {
           type: "open_case",
           label: "Open case",
-          href: `/client/cases/${legalCase.id}`
+          href: `/${currentUser.role === "LAWYER" ? "lawyer" : "client"}/cases/${legalCase.id}`
         },
         status: "success",
         data: { caseId: legalCase.id, title: legalCase.title, category: legalCase.category }
@@ -1900,6 +1940,13 @@ const toolDefinitions: AgentToolDefinition[] = [
         }
       });
       if (!legalCase) return { ok: false, message: "I could not find that case right now.", status: "error" };
+      if (!legalCase.clientProfileId || !legalCase.client) {
+        return {
+          ok: false,
+          message: "Consultations require a registered client and an accepted lawyer proposal.",
+          status: "info"
+        };
+      }
 
       const scheduledAt = parseDate(args.scheduledAt) || undefined;
 
@@ -2129,30 +2176,26 @@ const toolDefinitions: AgentToolDefinition[] = [
 
       if (resolved && "error" in resolved) return { ok: false, message: resolved.error, status: "info" };
 
-      const publicLawyers = await prisma.lawyerProfile.findMany({
-        where: { isPublic: true },
-        select: {
-          id: true,
-          specialties: true,
-          city: true,
-          verifiedBadge: true,
-          rating: true,
-          user: {
-            select: {
-              name: true
-            }
-          }
-        },
-        orderBy: [{ verifiedBadge: "desc" }, { rating: "desc" }],
-        take: 10
+      const lawyerSearch = await searchLawyersForCase({
+        caseSummary: [
+          question,
+          resolved?.legalCase?.title,
+          resolved?.legalCase?.description
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        practiceArea: resolved?.legalCase?.category,
+        caseCategory: resolved?.legalCase?.category,
+        jurisdiction: resolved?.legalCase?.jurisdiction || undefined,
+        limit: 5
       });
 
       const context = [
         resolved?.legalCase ? `Case: ${resolved.legalCase.title} (${resolved.legalCase.category})` : "",
-        "Public lawyer directory snapshot:",
-        ...publicLawyers.map(
+        "Database-backed lawyer matcher results:",
+        ...lawyerSearch.matches.map(
           (lawyer) =>
-            `- ${lawyer.user.name}; specialties: ${lawyer.specialties.join(", ") || "n/a"}; city: ${lawyer.city || "n/a"}; verified: ${lawyer.verifiedBadge ? "yes" : "no"}`
+            `- ${lawyer.name}; lawyerId: ${lawyer.lawyerId}; practice areas: ${lawyer.practiceAreas.join(", ") || "n/a"}; city: ${lawyer.city || "n/a"}; jurisdictions: ${lawyer.jurisdictions.join(", ") || "n/a"}; languages: ${lawyer.languages.join(", ") || "n/a"}; verified: ${lawyer.verificationStatus}; availability: ${lawyer.availability}; match score: ${lawyer.matchScore}; reasons: ${lawyer.matchReasons.join("; ") || "general searchable profile match"}`
         )
       ]
         .filter(Boolean)

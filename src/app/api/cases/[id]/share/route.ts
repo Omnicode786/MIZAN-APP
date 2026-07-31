@@ -15,6 +15,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     const { legalCase } = await getAccessibleCase(params.id);
     if (!legalCase) return notFound();
+    if (!legalCase.client) {
+      return validationError("Only client-submitted cases can be sent to a lawyer.");
+    }
 
     const body = schema.parse(await request.json());
     const lawyer = await prisma.lawyerProfile.findUnique({

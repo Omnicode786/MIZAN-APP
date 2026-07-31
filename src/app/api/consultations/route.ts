@@ -160,7 +160,7 @@ export async function POST(request: Request) {
     const scheduledAt = parseOptionalDate(body.scheduledAt);
 
     if (user.role === "CLIENT") {
-      if (!user.clientProfile || legalCase.clientProfileId !== user.clientProfile.id) return forbidden();
+      if (!user.clientProfile || legalCase.clientProfileId !== user.clientProfile.id || !legalCase.client) return forbidden();
 
       let assignment = body.assignmentId
         ? legalCase.assignments.find((item) => item.id === body.assignmentId)
@@ -203,6 +203,9 @@ export async function POST(request: Request) {
     }
 
     if (user.role !== "LAWYER" || !user.lawyerProfile) return forbidden();
+    if (!legalCase.clientProfileId || !legalCase.client) {
+      return validationError("Consultations require a registered client and an accepted proposal.");
+    }
 
     const assignment = legalCase.assignments.find((item) => item.lawyerProfileId === user.lawyerProfile?.id);
     if (!assignment) return forbidden();

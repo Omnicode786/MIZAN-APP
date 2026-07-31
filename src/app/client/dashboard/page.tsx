@@ -15,9 +15,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/workspace/app-shell";
 import { CaseCard } from "@/components/workspace/case-card";
-import { SectionHeader } from "@/components/workspace/section-header";
 import { DeadlineBoard } from "@/components/workspace/deadline-board";
-import { RiskReadinessDashboard } from "@/components/workspace/risk-readiness-dashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -125,43 +123,30 @@ export default async function ClientDashboardPage() {
           </section>
         </GlassSurface>
 
-        <SectionHeader
-          eyebrow="Matter Readiness"
-          title="Your case readiness overview"
-          description="See how complete your evidence, deadlines, drafts, and escalation posture look before requesting lawyer review."
-          action={
-            <Button asChild variant="outline">
-              <Link href="/client/cases">View all cases</Link>
-            </Button>
-          }
-        />
-
-        <RiskReadinessDashboard metrics={snapshot.metrics} />
-
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,420px)]">
           <main className="space-y-6">
             <div className="surface-panel flex flex-col gap-4 rounded-[2rem] p-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <Badge variant="outline" className="rounded-full px-3 py-1">
-                  Case Files
+                  Needs attention
                 </Badge>
                 <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-                  Your active matters
+                  Your most recent matters
                 </h2>
                 <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Open a matter to upload evidence, ask document-aware questions,
+                  Open a matter to upload proof, ask case-aware AI questions,
                   generate drafts, or request lawyer review.
                 </p>
               </div>
 
-              <Badge variant="secondary" className="w-fit rounded-full px-3 py-1">
-                {activeCases} active
-              </Badge>
+              <Button asChild variant="outline" className="w-fit">
+                <Link href="/client/cases">View all cases</Link>
+              </Button>
             </div>
 
             {snapshot.cases?.length ? (
               <div className="grid gap-4">
-                {snapshot.cases.map((legalCase: any) => (
+                {snapshot.cases.slice(0, 4).map((legalCase: any) => (
                   <CaseCard
                     key={legalCase.id}
                     legalCase={legalCase}

@@ -44,6 +44,7 @@ export default async function ClientAssistantPage() {
   const threads = await prisma.assistantThread.findMany({
     where: {
       createdById: user.id,
+      ownerRole: user.role,
       OR: [
         { caseId: null, documentId: null },
         { caseId: { in: caseIds }, documentId: null }
@@ -54,6 +55,7 @@ export default async function ClientAssistantPage() {
     select: {
       id: true,
       title: true,
+      ownerRole: true,
       caseId: true,
       documentId: true,
       scope: true,
@@ -122,6 +124,7 @@ export default async function ClientAssistantPage() {
   const safeThreads = sanitizeAssistantThreads(threadsWithMessages).map((thread) => ({
     id: thread.id,
     title: thread.title,
+    ownerRole: thread.ownerRole,
     caseId: thread.caseId,
     documentId: thread.documentId,
     scope: thread.scope,

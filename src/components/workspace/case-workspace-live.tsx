@@ -82,6 +82,8 @@ export function CaseWorkspaceLive({
   const [stage, setStage] = useState(initialCase.stage || "");
   const [status, setStatus] = useState(initialCase.status || "INTAKE");
   const [priority, setPriority] = useState(initialCase.priority || "MEDIUM");
+  const [jurisdiction, setJurisdiction] = useState(initialCase.jurisdiction || "");
+  const [parties, setParties] = useState(asArray<string>(initialCase.parties).join(", "));
   const [uploading, setUploading] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | undefined>();
   const [comment, setComment] = useState("");
@@ -123,6 +125,11 @@ export function CaseWorkspaceLive({
     () => assignments.filter((item: any) => item.status === "PENDING"),
     [assignments]
   );
+  const canDeleteCurrentCase =
+    role === "CLIENT" ||
+    (role === "LAWYER" &&
+      initialCase.origin === "LAWYER_CREATED" &&
+      initialCase.lawyerOwnerProfileId === currentUser.lawyerProfile?.id);
 
   const loadCaseSections = useCallback(async (signal?: AbortSignal) => {
     const response = await fetch(
@@ -186,7 +193,18 @@ export function CaseWorkspaceLive({
       const res = await fetch(`/api/cases/${initialCase.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, stage, status, priority })
+        body: JSON.stringify({
+          title,
+          description,
+          stage,
+          status,
+          priority,
+          jurisdiction,
+          parties: parties
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        })
       });
       await requireOk(res, "Unable to save case changes.");
       showSuccess("Case changes saved.");
@@ -198,7 +216,7 @@ export function CaseWorkspaceLive({
   }
 
   async function deleteCase() {
-    if (role !== "CLIENT") return;
+    if (!canDeleteCurrentCase) return;
     if (!deletePassword.trim()) {
       toast.error("Enter your account password to delete this case.");
       return;
@@ -706,6 +724,18 @@ export function CaseWorkspaceLive({
                     <option key={item}>{item}</option>
                   ))}
                 </select>
+
+                <Input
+                  value={jurisdiction}
+                  onChange={(e) => setJurisdiction(e.target.value)}
+                  placeholder="Jurisdiction"
+                />
+
+                <Input
+                  value={parties}
+                  onChange={(e) => setParties(e.target.value)}
+                  placeholder="Parties, comma separated"
+                />
               </div>
 
               <Textarea
@@ -719,7 +749,7 @@ export function CaseWorkspaceLive({
                 <Button onClick={saveCase} disabled={busy === "case"}>
                   {busy === "case" ? "Saving..." : "Save case changes"}
                 </Button>
-                {role === "CLIENT" ? (
+                {canDeleteCurrentCase ? (
                   <Button
                     variant="destructive"
                     onClick={() => {
@@ -736,7 +766,7 @@ export function CaseWorkspaceLive({
                 ) : null}
               </div>
 
-              {role === "CLIENT" && deleteConfirmOpen ? (
+              {canDeleteCurrentCase && deleteConfirmOpen ? (
                 <div className="rounded-2xl border border-destructive/25 bg-destructive/5 p-4">
                   <p className="text-sm font-medium text-destructive">Delete permanently</p>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -802,6 +832,12 @@ export function CaseWorkspaceLive({
                   busy={busy}
                   onAsk={() => setSelectedDocumentId(document.id)}
                   onDelete={() => removeDocument(document.id)}
+                  canDelete={
+                    role === "CLIENT" ||
+                    (role === "LAWYER" &&
+                      (initialCase.origin === "LAWYER_CREATED" ||
+                        (document.uploadedById === currentUser.id && document.sourceType === "LAWYER_UPLOAD")))
+                  }
                 />
               ))}
 
@@ -1522,12 +1558,14 @@ function DocumentCard({
   document,
   busy,
   onAsk,
-  onDelete
+  onDelete,
+  canDelete = true
 }: {
   document: any;
   busy: string | null;
   onAsk: () => void;
   onDelete: () => void;
+  canDelete?: boolean;
 }) {
   const documentUrl = `/api/documents/${document.id}`;
   const isImage = typeof document.mimeType === "string" && document.mimeType.startsWith("image/");
@@ -1642,14 +1680,16 @@ function DocumentCard({
           <Button variant="outline" size="sm" onClick={onAsk}>
             Ask AI
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            disabled={busy === `doc-${document.id}`}
-          >
-            Delete
-          </Button>
+          {canDelete ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              disabled={busy === `doc-${document.id}`}
+            >
+              Delete
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

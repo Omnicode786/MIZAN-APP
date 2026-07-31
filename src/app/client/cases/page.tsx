@@ -19,7 +19,7 @@ export default async function ClientCasesPage() {
         action={<div />}
       />
       <div className="mb-6">
-        <LiveCaseCreate />
+        <LiveCaseCreate role="CLIENT" />
       </div>
       <div className="space-y-5">
         {cases.map((legalCase: any) => (
