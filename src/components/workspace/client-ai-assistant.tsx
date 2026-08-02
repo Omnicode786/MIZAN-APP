@@ -997,7 +997,13 @@ function MessageBubble({
         )}
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <Badge variant={isAi ? "secondary" : "outline"} className={cn("rounded-full px-3 py-1", !isAi && "border-primary-foreground/30 text-primary-foreground")}>
+          <Badge
+            variant={isAi ? "secondary" : "outline"}
+            className={cn(
+              "rounded-full px-3 py-1",
+              !isAi && "border-border/70 bg-background/90 text-foreground dark:bg-background/90 dark:text-foreground"
+            )}
+          >
             {isAi ? "AI" : "You"}
           </Badge>
           {isAi && typeof message.confidence === "number" ? (

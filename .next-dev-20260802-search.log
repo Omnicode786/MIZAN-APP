@@ -1,0 +1,68 @@
+
+> mizan@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 15.6s
+ ○ Compiling / ...
+ ✓ Compiled / in 14.9s (1478 modules)
+ GET / 200 in 17331ms
+ ○ Compiling /src/middleware ...
+ ✓ Compiled /src/middleware in 716ms (153 modules)
+ ○ Compiling /client/dashboard ...
+ ✓ Compiled /client/dashboard in 9.1s (1732 modules)
+ ○ Compiling /client/assistant ...
+ ✓ Compiled /client/assistant in 3s (1740 modules)
+ ○ Compiling /api/ai/chat ...
+ ✓ Compiled /api/ai/chat in 3.7s (1407 modules)
+{"timestamp":"2026-08-01T21:02:20.651Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"3d18eba5-82bc-4ac8-a34c-34ae6f29055e","method":"POST"}
+ ✓ Compiled in 3.2s (2188 modules)
+{"timestamp":"2026-08-01T21:02:26.729Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"3d18eba5-82bc-4ac8-a34c-34ae6f29055e","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00028275,"durationMs":2401,"success":true}
+{"timestamp":"2026-08-01T21:02:29.562Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"3d18eba5-82bc-4ac8-a34c-34ae6f29055e","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.0003258,"durationMs":2827,"success":true}
+{"timestamp":"2026-08-01T21:02:32.961Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"3d18eba5-82bc-4ac8-a34c-34ae6f29055e","method":"POST","status":200,"durationMs":12312}
+ POST /api/ai/chat 200 in 18020ms
+{"timestamp":"2026-08-01T21:14:12.185Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"32ea22b6-0fb8-4a51-9a46-254dcd41adfe","method":"POST"}
+{"timestamp":"2026-08-01T21:14:19.145Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"32ea22b6-0fb8-4a51-9a46-254dcd41adfe","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00034515,"durationMs":1579,"success":true}
+{"timestamp":"2026-08-01T21:14:23.843Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"32ea22b6-0fb8-4a51-9a46-254dcd41adfe","method":"POST","status":200,"durationMs":11660}
+ POST /api/ai/chat 200 in 12138ms
+{"timestamp":"2026-08-01T21:16:42.098Z","level":"info","event":"api.request.start","route":"/api/ai/chat","feature":"ai.chat","requestId":"f3d7d4e8-2c0b-474f-add5-ac6cfc88b0ce","method":"POST"}
+{"timestamp":"2026-08-01T21:16:47.517Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"f3d7d4e8-2c0b-474f-add5-ac6cfc88b0ce","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00038385,"durationMs":3496,"success":true}
+{"timestamp":"2026-08-01T21:16:49.873Z","level":"info","event":"ai.usage","route":"/api/ai/chat","feature":"ai.chat","requestId":"f3d7d4e8-2c0b-474f-add5-ac6cfc88b0ce","method":"POST","provider":"gemini","model":"gemini-2.5-flash","userId":"anonymous","caseId":"none","documentId":null,"inputTokens":"[Redacted]","outputTokens":"[Redacted]","estimatedCostUsd":0.00035205,"durationMs":2340,"success":true}
+{"timestamp":"2026-08-01T21:16:51.851Z","level":"info","event":"api.request.complete","route":"/api/ai/chat","feature":"ai.chat","requestId":"f3d7d4e8-2c0b-474f-add5-ac6cfc88b0ce","method":"POST","status":200,"durationMs":9753}
+ POST /api/ai/chat 200 in 9809ms
+ GET / 200 in 1453ms
+ GET / 200 in 211ms
+ ○ Compiling /search ...
+ ✓ Compiled /search in 5.1s (1776 modules)
+ ✓ Compiled in 1658ms (790 modules)
+ ○ Compiling /client/upload ...
+ ✓ Compiled /client/upload in 829ms (1026 modules)
+ ✓ Compiled in 1731ms (791 modules)
+{"timestamp":"2026-08-01T22:00:16.804Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search.global","requestId":"b32d09a7-3144-4c07-9345-c09157ff64cf","method":"GET"}
+{"timestamp":"2026-08-01T22:00:16.819Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"0722bc56-86d3-4fe1-bca5-adc5f493fdad","method":"POST"}
+{"timestamp":"2026-08-01T22:00:23.935Z","level":"info","event":"search.global_completed","route":"/api/search","feature":"search.global","requestId":"b32d09a7-3144-4c07-9345-c09157ff64cf","method":"GET","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT","category":"all","resultCount":4,"totals":{"cases":0,"documents":0,"evidence":0,"lawyers":2,"timeline":2,"deadlines":0,"drafts":0,"comments":0}}
+{"timestamp":"2026-08-01T22:00:23.944Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search.global","requestId":"b32d09a7-3144-4c07-9345-c09157ff64cf","method":"GET","status":200,"durationMs":7141}
+ GET /api/search?q=muneeb&category=all&limit=10 200 in 10533ms
+{"timestamp":"2026-08-01T22:00:26.486Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"0722bc56-86d3-4fe1-bca5-adc5f493fdad","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-08-01T22:00:26.492Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"0722bc56-86d3-4fe1-bca5-adc5f493fdad","method":"POST","status":200,"durationMs":9673}
+ POST /api/search 200 in 13206ms
+{"timestamp":"2026-08-01T22:00:44.977Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"a1c5b930-345c-43e6-b08e-bfe36a2f382a","method":"POST"}
+{"timestamp":"2026-08-01T22:00:45.161Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search.global","requestId":"eaca22c3-fad5-4690-abdb-74d3e994c850","method":"GET"}
+{"timestamp":"2026-08-01T22:00:47.167Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"a1c5b930-345c-43e6-b08e-bfe36a2f382a","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-08-01T22:00:47.175Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"a1c5b930-345c-43e6-b08e-bfe36a2f382a","method":"POST","status":200,"durationMs":2198}
+ POST /api/search 200 in 2260ms
+{"timestamp":"2026-08-01T22:00:50.347Z","level":"info","event":"search.global_completed","route":"/api/search","feature":"search.global","requestId":"eaca22c3-fad5-4690-abdb-74d3e994c850","method":"GET","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT","category":"all","resultCount":4,"totals":{"cases":0,"documents":0,"evidence":0,"lawyers":2,"timeline":2,"deadlines":0,"drafts":0,"comments":0}}
+{"timestamp":"2026-08-01T22:00:50.353Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search.global","requestId":"eaca22c3-fad5-4690-abdb-74d3e994c850","method":"GET","status":200,"durationMs":5192}
+ GET /api/search?q=muneeb&category=all&limit=10 200 in 5257ms
+{"timestamp":"2026-08-01T22:01:11.955Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search.global","requestId":"80d3509b-9a08-474b-87dc-924262a50a1b","method":"GET"}
+{"timestamp":"2026-08-01T22:01:14.170Z","level":"info","event":"search.global_completed","route":"/api/search","feature":"search.global","requestId":"80d3509b-9a08-474b-87dc-924262a50a1b","method":"GET","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT","category":"deadlines","resultCount":0,"totals":{"cases":0,"documents":0,"evidence":0,"lawyers":0,"timeline":0,"deadlines":0,"drafts":0,"comments":0}}
+{"timestamp":"2026-08-01T22:01:14.176Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search.global","requestId":"80d3509b-9a08-474b-87dc-924262a50a1b","method":"GET","status":200,"durationMs":2221}
+ GET /api/search?q=muneeb&category=deadlines&limit=10 200 in 2288ms
+{"timestamp":"2026-08-01T22:01:26.490Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search.global","requestId":"a00e74c6-e371-4b4d-80a7-4b4bc7c8ffd8","method":"GET"}
+{"timestamp":"2026-08-01T22:01:30.182Z","level":"info","event":"search.global_completed","route":"/api/search","feature":"search.global","requestId":"a00e74c6-e371-4b4d-80a7-4b4bc7c8ffd8","method":"GET","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT","category":"all","resultCount":4,"totals":{"cases":0,"documents":0,"evidence":0,"lawyers":2,"timeline":2,"deadlines":0,"drafts":0,"comments":0}}
+{"timestamp":"2026-08-01T22:01:30.188Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search.global","requestId":"a00e74c6-e371-4b4d-80a7-4b4bc7c8ffd8","method":"GET","status":200,"durationMs":3698}
+ GET /api/search?q=muneeb&category=all&limit=10 200 in 3747ms

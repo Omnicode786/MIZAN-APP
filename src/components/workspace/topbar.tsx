@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, LogOut, PanelLeftOpen, Search, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
 import { Avatar } from "@/components/ui/avatar";
@@ -38,6 +38,7 @@ export function Topbar({
   const router = useRouter();
   const isLiquidGlass = uiMode === "glass";
   const [isMobileGlassViewport, setIsMobileGlassViewport] = useState(false);
+  const [workspaceSearchQuery, setWorkspaceSearchQuery] = useState("");
 
   function openMobileNav() {
     if (closeTimerRef.current) {
@@ -159,6 +160,18 @@ export function Topbar({
     }
   }
 
+  function submitWorkspaceSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = workspaceSearchQuery.trim();
+    const href = query ? `/search?q=${encodeURIComponent(query)}` : "/search";
+
+    router.push(href);
+
+    if (mobileNavMounted) {
+      closeMobileNav();
+    }
+  }
+
   const topbarContent = (
     <div className="flex min-h-14 w-full min-w-0 flex-wrap items-center gap-2 px-2 py-1.5 sm:min-h-16 sm:gap-2.5 sm:px-3 xl:flex-nowrap xl:px-4">
       <Button
@@ -173,13 +186,20 @@ export function Topbar({
         {mobileNavOpen ? <X className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
       </Button>
 
-      <div className="topbar-search relative order-3 hidden w-full flex-none md:order-none md:block md:min-w-[220px] md:flex-1 lg:max-w-lg xl:max-w-xl">
+      <form
+        onSubmit={submitWorkspaceSearch}
+        className="topbar-search relative order-3 hidden w-full flex-none md:order-none md:block md:min-w-[220px] md:flex-1 lg:max-w-lg xl:max-w-xl"
+      >
         <Search className="topbar-search-icon pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
+          name="workspaceSearch"
+          value={workspaceSearchQuery}
+          onChange={(event) => setWorkspaceSearchQuery(event.target.value)}
           className="topbar-search-input h-10 border-white/30 bg-white/25 pl-10 dark:bg-white/5"
           placeholder={t(language, "searchPlaceholder")}
+          aria-label="Search workspace"
         />
-      </div>
+      </form>
 
       <div className="topbar-actions ml-auto flex max-w-full min-w-0 items-center justify-end gap-1.5 overflow-x-auto overscroll-x-contain py-0.5 sm:gap-2 md:max-w-[64vw] lg:max-w-[54vw] xl:max-w-none">
         <div className="hidden md:block">
@@ -247,13 +267,17 @@ export function Topbar({
         </div>
 
         <div className="grid gap-3">
-          <div className="topbar-search relative w-full">
+          <form onSubmit={submitWorkspaceSearch} className="topbar-search relative w-full">
             <Search className="topbar-search-icon pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              name="mobileWorkspaceSearch"
+              value={workspaceSearchQuery}
+              onChange={(event) => setWorkspaceSearchQuery(event.target.value)}
               className="topbar-search-input h-12 rounded-2xl border-white/30 bg-white/25 pl-10 dark:bg-white/5"
               placeholder={t(language, "searchPlaceholder")}
+              aria-label="Search workspace"
             />
-          </div>
+          </form>
           <LanguageToggle compact />
         </div>
 
