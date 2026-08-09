@@ -1,7 +1,6 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { getCloudinaryStorageBucket, isCloudinaryConfigured, uploadToCloudinary } from "@/lib/cloudinary-storage";
 import { recordStorageMetric } from "@/lib/observability";
+import { writeSecureFile } from "@/lib/secure-file-core";
 
 export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
   if (isCloudinaryConfigured()) {
@@ -43,12 +42,7 @@ export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
   }
 
   const buffer = fileBuffer || Buffer.from(await file.arrayBuffer());
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(uploadDir, { recursive: true });
-
-  const safeName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-  const absolutePath = path.join(uploadDir, safeName);
-  await fs.writeFile(absolutePath, buffer);
+  const target = await writeSecureFile("uploads", file.name, buffer);
   recordStorageMetric("document.save.local", true, {
     bytes: file.size,
     mimeType: file.type
@@ -56,17 +50,17 @@ export async function saveUploadedFile(file: File, fileBuffer?: Buffer) {
 
   return {
     fileName: file.name,
-    absolutePath,
-    publicPath: `/uploads/${safeName}`,
+    absolutePath: target.absolutePath,
+    publicPath: target.filePath,
     storageProvider: "local",
-    storageBucket: "public/uploads",
-    storageKey: safeName,
-    storageUrl: `/uploads/${safeName}`,
+    storageBucket: target.storageBucket,
+    storageKey: target.storageKey,
+    storageUrl: null,
     metadata: {
       storageProvider: "local",
-      bucket: "public/uploads",
-      storageKey: safeName,
-      publicPath: `/uploads/${safeName}`
+      bucket: target.storageBucket,
+      storageKey: target.storageKey,
+      privatePath: target.filePath
     }
   };
 }

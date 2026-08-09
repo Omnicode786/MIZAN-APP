@@ -10,18 +10,12 @@ import {
   ShieldCheck,
   UserRoundCheck
 } from "lucide-react";
-import { LanguageToggle } from "@/components/language-toggle";
+import { AuthNavbar } from "@/components/auth/auth-navbar";
 import { SignupForm } from "@/components/auth/signup-form";
-import { Logo } from "@/components/logo";
-import { ThemePresetToggle } from "@/components/theme-preset-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UiModeToggle } from "@/components/ui-mode-toggle";
 import { useLanguage } from "@/hooks/use-language";
 import { t } from "@/lib/translations";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { GlassSurface } from "@/components/ui/glass-surface";
 
 const roleCards = [
   {
@@ -55,55 +49,7 @@ export default function SignupPage() {
       </div>
 
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8">
-        <GlassSurface
-          className="nav-surface sticky top-5 z-40 rounded-full border border-border/70 bg-card/80 shadow-sm backdrop-blur-xl"
-          width="100%"
-          height="auto"
-          borderRadius={999}
-          borderWidth={0.07}
-          brightness={50}
-          opacity={0.93}
-          blur={11}
-          displace={0.28}
-          backgroundOpacity={0.12}
-          saturation={1.14}
-          distortionScale={-160}
-          mixBlendMode="screen"
-        >
-          <div className="flex w-full items-center justify-between gap-4 px-5 py-3">
-            <Logo />
-
-            <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-              <Link href="/" className="transition hover:text-foreground">
-                Platform
-              </Link>
-              <Link href="/lawyers" className="transition hover:text-foreground">
-                {t(language, "lawyers")}
-              </Link>
-              <Link href="/login" className="transition hover:text-foreground">
-                {t(language, "login")}
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <LanguageToggle compact />
-              <ThemePresetToggle compact className="hidden max-w-[145px] xl:inline-flex" />
-              <UiModeToggle compact className="rounded-full px-3" />
-              <ThemeToggle className="rounded-full" />
-
-              <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                <Link href="/login">{t(language, "login")}</Link>
-              </Button>
-
-              <Button asChild>
-                <Link href="/lawyers">
-                  {t(language, "browseLawyers")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </GlassSurface>
+        <AuthNavbar mode="signup" />
 
         <main className="grid flex-1 gap-10 py-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
           <section className="space-y-8">

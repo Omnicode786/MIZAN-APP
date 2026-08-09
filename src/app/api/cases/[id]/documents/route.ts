@@ -43,7 +43,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
         tags: true,
         confidence: true,
         verificationStatus: true,
-        metadata: true,
         createdAt: true,
         updatedAt: true
       },

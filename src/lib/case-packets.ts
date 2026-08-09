@@ -1,5 +1,4 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import { writeSecureFile } from "@/lib/secure-file-core";
 import { formatDate } from "@/lib/utils";
 
 function cleanText(value: unknown, fallback = "Not provided") {
@@ -148,15 +147,12 @@ export async function writeMarkdownPacket(input: {
   kind: string;
   markdown: string;
 }) {
-  const outputDir = path.join(process.cwd(), "public", "exports");
-  await fs.mkdir(outputDir, { recursive: true });
-
   const fileName = `${safeFileName(input.kind)}-${safeFileName(input.title || input.caseId)}-${Date.now()}.md`;
-  const absolutePath = path.join(outputDir, fileName);
-  await fs.writeFile(absolutePath, input.markdown, "utf8");
+  const stored = await writeSecureFile("exports", fileName, input.markdown);
 
   return {
-    absolutePath,
-    publicPath: `/exports/${fileName}`
+    absolutePath: stored.absolutePath,
+    publicPath: stored.filePath,
+    storageKey: stored.storageKey
   };
 }

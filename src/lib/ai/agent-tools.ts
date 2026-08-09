@@ -1814,10 +1814,10 @@ const toolDefinitions: AgentToolDefinition[] = [
         action: {
           type: "open_export",
           label: "Open packet",
-          href: bundle.filePath
+          href: `/api/files/exports/${bundle.id}`
         },
         status: "success",
-        data: { bundleId: bundle.id, filePath: bundle.filePath }
+        data: { bundleId: bundle.id, fileUrl: `/api/files/exports/${bundle.id}` }
       };
     }
   },
@@ -1879,10 +1879,10 @@ const toolDefinitions: AgentToolDefinition[] = [
         action: {
           type: "open_export",
           label: "Open bundle",
-          href: bundle.filePath
+          href: `/api/files/exports/${bundle.id}`
         },
         status: "success",
-        data: { bundleId: bundle.id, filePath: bundle.filePath }
+        data: { bundleId: bundle.id, fileUrl: `/api/files/exports/${bundle.id}` }
       };
     }
   },

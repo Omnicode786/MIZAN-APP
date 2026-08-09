@@ -60,8 +60,9 @@ export async function POST(request: Request) {
 
       await logActivity(legalCase.id, user.id, "COURT_BUNDLE_CREATED", "Created a court-ready bundle.");
 
+      const file = `/api/files/exports/${bundle.id}`;
       recordExportMetric("court_ready_bundle", true, { userId: user.id, caseId: legalCase.id, bundleId: bundle.id });
-      return NextResponse.json({ bundle, file: packet.publicPath, markdown });
+      return NextResponse.json({ bundle: { ...bundle, filePath: file }, file, markdown });
     }
 
     const pdf = await createCaseBundlePdf({
@@ -91,8 +92,9 @@ export async function POST(request: Request) {
 
     await logActivity(legalCase.id, user.id, "CASE_BUNDLE_CREATED", "Created a PDF case bundle.");
 
+      const file = `/api/files/exports/${bundle.id}`;
       recordExportMetric("case_bundle_pdf", true, { userId: user.id, caseId: legalCase.id, bundleId: bundle.id });
-      return NextResponse.json({ bundle, file: pdf.publicPath });
+      return NextResponse.json({ bundle: { ...bundle, filePath: file }, file });
     } catch (error) {
       recordExportMetric("case_export", false);
       return handleApiError(error, "EXPORT_ROUTE", "Unable to export this case.");

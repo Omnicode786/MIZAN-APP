@@ -453,7 +453,7 @@ export function AssistantPanel({
           <div
             ref={chatViewportRef}
             onScroll={handleChatScroll}
-            className="premium-scroll max-h-[420px] space-y-3 overflow-y-auto pr-1"
+            className="message-list native-scroll-area premium-scroll max-h-[420px] space-y-3 overflow-y-auto pr-1"
           >
             {displayedMessages.map((message) => (
               <PanelMessageBubble
@@ -474,7 +474,7 @@ export function AssistantPanel({
             ) : null}
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="assistant-composer mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
             <Textarea
               ref={composerRef}
               value={question}

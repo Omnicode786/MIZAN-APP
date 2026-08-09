@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { forbidden, handleApiError, notFound } from "@/lib/api-response";
-import { buildCloudinaryDownloadUrl, deleteFromCloudinary, getCloudinaryStorageMeta } from "@/lib/cloudinary-storage";
-import { readUploadedFileBytes } from "@/lib/document-pipeline/extract";
+import { deleteFromCloudinary, getCloudinaryStorageMeta } from "@/lib/cloudinary-storage";
 import { recordStorageMetric, trackError, withApiObservability } from "@/lib/observability";
 import {
   canPermanentlyRemoveDocumentForUser,
@@ -10,62 +9,29 @@ import {
   requireUser
 } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
-
-function contentDisposition(fileName: string, download: boolean) {
-  const safeAsciiName = fileName.replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "");
-  const encodedName = encodeURIComponent(fileName);
-  return `${download ? "attachment" : "inline"}; filename="${safeAsciiName}"; filename*=UTF-8''${encodedName}`;
-}
+import {
+  buildFileResponse,
+  getAuthorizedDocumentFile,
+  readAuthorizedStoredFile,
+  unlinkStoredLocalFile
+} from "@/lib/secure-file-access";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   return withApiObservability(request, { route: "/api/documents/[id]", feature: "documents.download" }, async () => {
     try {
-      await requireUser();
-    const document = await prisma.document.findUnique({ where: { id: params.id } });
+      const user = await requireUser();
+    const document = await getAuthorizedDocumentFile(user, params.id);
     if (!document) return notFound();
-
-    const { legalCase } = await getAccessibleCase(document.caseId);
-    if (!legalCase) return notFound();
 
     const url = new URL(request.url);
     const download = url.searchParams.get("download") === "1";
     const cloudinaryMeta = getCloudinaryStorageMeta(document.metadata);
-    let bytes: Buffer;
-
-    try {
-      bytes = await readUploadedFileBytes(document.filePath, {
-        metadata: document.metadata,
-        fileName: document.fileName
-      });
-    } catch (error) {
-      if (!cloudinaryMeta?.publicId) {
-        throw error;
-      }
-
-      const fallbackUrl = buildCloudinaryDownloadUrl({
-        publicId: cloudinaryMeta.publicId,
-        resourceType: cloudinaryMeta.resourceType,
-        format: cloudinaryMeta.format || inferFormat(document.fileName),
-        deliveryType: cloudinaryMeta.deliveryType,
-        attachment: download
-      });
-
-      if (!fallbackUrl) {
-        throw error;
-      }
-
-      const response = await fetch(fallbackUrl);
-      if (!response.ok) {
-        recordStorageMetric("cloudinary.download", false, {
-          status: response.status,
-          documentId: document.id,
-          body: await response.text()
-        });
-        throw error;
-      }
-
-      bytes = Buffer.from(await response.arrayBuffer());
-    }
+    const bytes = await readAuthorizedStoredFile({
+      filePath: document.filePath,
+      storageKey: document.storageKey,
+      metadata: document.metadata,
+      fileName: document.fileName
+    });
 
     recordStorageMetric("document.download", true, {
       documentId: document.id,
@@ -74,24 +40,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
       storageProvider: document.storageProvider || (cloudinaryMeta?.publicId ? "cloudinary" : "local")
     });
 
-      return new NextResponse(new Uint8Array(bytes), {
-        headers: {
-          "Content-Disposition": contentDisposition(document.fileName, download),
-          "Content-Length": String(bytes.byteLength),
-          "Content-Type": document.mimeType || "application/octet-stream",
-          "Cache-Control": "private, max-age=60"
-        }
+      return buildFileResponse({
+        bytes,
+        fileName: document.fileName,
+        mimeType: document.mimeType,
+        download
       });
     } catch (error) {
       recordStorageMetric("document.download", false, { documentId: params.id });
       return handleApiError(error, "DOCUMENT_GET_ROUTE", "Unable to load document.");
     }
   });
-}
-
-function inferFormat(fileName: string) {
-  const extension = fileName.split(".").pop()?.trim().toLowerCase();
-  return extension || undefined;
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
@@ -127,6 +86,12 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         await deleteFromCloudinary(cloudinaryMeta.publicId, cloudinaryMeta.resourceType);
       } catch (error) {
         trackError("cloudinary.delete_document", error, { documentId: document.id });
+      }
+    } else {
+      try {
+        await unlinkStoredLocalFile(document.filePath, document.storageKey);
+      } catch (error) {
+        trackError("local.delete_document", error, { documentId: document.id });
       }
     }
 

@@ -5,3 +5,4 @@ prisma/dev.db
 dist
 coverage
 .DS_Store
+.mizan-secure-files

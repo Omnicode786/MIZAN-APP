@@ -220,6 +220,7 @@ const heroTrustSignals = [
 export default function LandingPage() {
   const [headlineIndex, setHeadlineIndex] = useState(0);
   const [landingNavOpen, setLandingNavOpen] = useState(false);
+  const [landingNavHidden, setLandingNavHidden] = useState(false);
   const language = useLanguage();
   const shouldReduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLElement | null>(null);
@@ -240,6 +241,51 @@ export default function LandingPage() {
 
     return () => window.clearInterval(timer);
   }, [shouldReduceMotion]);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let frame = 0;
+
+    const updateNavbar = () => {
+      frame = 0;
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY;
+
+      if (currentScrollY < 24 || delta < -4) {
+        setLandingNavHidden(false);
+      } else if (delta > 8 && currentScrollY > 96) {
+        setLandingNavHidden(true);
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    const handleScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateNavbar);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      const projectedScrollY = window.scrollY + event.deltaY;
+
+      if (event.deltaY < -4 || projectedScrollY < 24) {
+        setLandingNavHidden(false);
+      } else if (event.deltaY > 8 && projectedScrollY > 96) {
+        setLandingNavHidden(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("scroll", handleScroll, { passive: true, capture: true });
+    window.addEventListener("wheel", handleWheel, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("scroll", handleScroll, { capture: true });
+      window.removeEventListener("wheel", handleWheel);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   const surfaceClass =
     "rounded-xl border border-border/70 bg-card/95 text-card-foreground shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-colors duration-300 dark:bg-card/90 dark:shadow-[0_16px_36px_rgba(2,6,23,0.32)]";
@@ -309,29 +355,35 @@ export default function LandingPage() {
       </div>
 
       <div className="mx-auto max-w-[1440px] px-3 py-3 sm:px-5 sm:py-4 xl:px-8">
-        <GlassSurface
-          className={`${surfaceClass} nav-surface sticky top-3 z-40 bg-card/92 backdrop-blur sm:top-4`}
-          width="100%"
-          height="auto"
-          borderRadius={18}
-          borderWidth={0.1}
-          brightness={50}
-          opacity={0.93}
-          blur={11}
-          displace={0.35}
-          backgroundOpacity={0.12}
-          saturation={1.18}
-          distortionScale={-180}
-          mixBlendMode="screen"
+        <div
+          className={`prelogin-navbar-shell px-3 py-3 sm:px-5 sm:py-4 xl:px-8 ${
+            landingNavHidden && !landingNavOpen ? "prelogin-navbar-hidden" : ""
+          }`}
         >
-          <div className="flex min-h-16 w-full items-center gap-2 px-3 py-2 sm:px-4 lg:grid lg:grid-cols-[minmax(150px,0.95fr)_minmax(360px,1.35fr)_minmax(360px,1fr)] lg:gap-x-4 lg:px-5 xl:grid-cols-[minmax(170px,1fr)_minmax(420px,1.35fr)_minmax(390px,1fr)] xl:gap-x-6 xl:px-6">
-            <div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
+          <div className="mx-auto max-w-[1440px]">
+            <GlassSurface
+              className={`${surfaceClass} landing-navbar nav-surface bg-card/92 backdrop-blur`}
+              width="100%"
+              height="auto"
+              borderRadius={18}
+              borderWidth={0.1}
+              brightness={50}
+              opacity={0.93}
+              blur={11}
+              displace={0.35}
+              backgroundOpacity={0.12}
+              saturation={1.18}
+              distortionScale={-180}
+              mixBlendMode="screen"
+            >
+          <div className="landing-navbar-content flex min-h-14 w-full items-center justify-between gap-2 px-2 py-1.5 sm:min-h-16 sm:px-4 sm:py-2 lg:grid lg:grid-cols-[minmax(150px,0.95fr)_minmax(360px,1.35fr)_minmax(360px,1fr)] lg:gap-x-4 lg:px-5 xl:grid-cols-[minmax(170px,1fr)_minmax(420px,1.35fr)_minmax(390px,1fr)] xl:gap-x-6 xl:px-6">
+            <div className="landing-navbar-brand flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
               <Logo />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="ml-auto h-9 w-9 rounded-xl lg:hidden"
+                className="landing-navbar-menu-button ml-auto h-10 w-10 shrink-0 rounded-2xl lg:hidden"
                 onClick={() => setLandingNavOpen((open) => !open)}
                 aria-label={landingNavOpen ? "Close navigation" : "Open navigation"}
                 aria-expanded={landingNavOpen}
@@ -358,7 +410,7 @@ export default function LandingPage() {
               </a>
             </nav>
 
-            <div className="landing-topbar-actions flex min-w-0 flex-1 items-center justify-end gap-1.5 py-0.5 sm:gap-2 lg:flex-none">
+            <div className="landing-topbar-actions hidden min-w-0 flex-1 items-center justify-end gap-1.5 py-0.5 sm:gap-2 lg:flex lg:flex-none">
               <UiModeToggle compact className="hidden h-9 rounded-xl px-2.5 xl:inline-flex [&_span]:hidden" />
               <ThemeToggle className="h-8 w-8 rounded-xl" />
               <Button
@@ -383,9 +435,17 @@ export default function LandingPage() {
               </Button>
             </div>
           </div>
-          {landingNavOpen ? (
-            <div className="border-t border-border/60 px-3 pb-3 pt-2">
-              <nav className="grid gap-2 text-sm font-semibold text-muted-foreground lg:hidden">
+          <AnimatePresence initial={false}>
+            {landingNavOpen ? (
+            <motion.div
+              key="landing-mobile-panel"
+              className="landing-mobile-panel origin-top overflow-hidden border-t border-border/60 px-3 pb-3 pt-2 sm:px-4 lg:px-5"
+              initial={{ height: 0, opacity: 0, y: -8, scaleY: 0.98 }}
+              animate={{ height: "auto", opacity: 1, y: 0, scaleY: 1 }}
+              exit={{ height: 0, opacity: 0, y: -6, scaleY: 0.985 }}
+              transition={{ duration: shouldReduceMotion ? 0.01 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <nav className="landing-mobile-links grid gap-2 text-sm font-semibold text-muted-foreground lg:hidden">
                 {[
                   ["/home-2", "Home 2"],
                   ["#workflow", "Workflow"],
@@ -397,25 +457,36 @@ export default function LandingPage() {
                     key={href}
                     href={href}
                     onClick={() => setLandingNavOpen(false)}
-                    className="glass-chip rounded-2xl px-4 py-3 transition hover:text-foreground"
+                    className="glass-chip flex min-h-12 items-center rounded-2xl px-4 py-3 transition hover:text-foreground"
                   >
                     {label}
                   </a>
                 ))}
               </nav>
-              <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:ml-auto lg:max-w-2xl lg:grid-cols-4">
+              <div className="landing-mobile-actions mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:ml-auto lg:max-w-5xl lg:grid-cols-6">
                 <div className="landing-mobile-language glass-chip flex min-h-11 items-center justify-center rounded-2xl px-2">
                   <LanguageToggle compact />
                 </div>
+                <ThemeToggle className="h-11 w-full rounded-2xl" />
                 <ThemePresetToggle compact className="h-11 w-full max-w-none rounded-2xl" />
                 <UiModeToggle compact className="h-11 rounded-2xl" />
                 <Button asChild variant="outline" className="h-11 rounded-2xl font-semibold">
                   <Link href="/login">{t(language, "login")}</Link>
                 </Button>
+                <Button asChild className="h-11 rounded-2xl font-semibold">
+                  <Link href="/signup">
+                    {t(language, "getStarted")}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               </div>
-            </div>
-          ) : null}
-        </GlassSurface>
+            </motion.div>
+            ) : null}
+          </AnimatePresence>
+            </GlassSurface>
+          </div>
+        </div>
+        <div className="prelogin-navbar-spacer" aria-hidden="true" />
 
         <main>
           <section ref={heroRef} className="relative pb-0 pt-8">

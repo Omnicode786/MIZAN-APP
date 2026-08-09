@@ -57,6 +57,18 @@ export async function scanUploadedFile(
   const scannerUrl = (process.env.VIRUS_SCAN_ENDPOINT || "").trim();
 
   if (!scannerUrl) {
+    const allowUnscannedProductionUploads =
+      (process.env.ALLOW_UNSCANNED_UPLOADS_IN_PRODUCTION || "").trim().toLowerCase() === "true";
+    if (process.env.NODE_ENV === "production" && !allowUnscannedProductionUploads) {
+      return {
+        status: "FAILED",
+        allowed: false,
+        checkedAt,
+        message: "Virus scanning is required before production uploads are accepted.",
+        metadata: { scannerConfigured: false, requiredInProduction: true }
+      };
+    }
+
     return {
       status: "SKIPPED",
       allowed: true,

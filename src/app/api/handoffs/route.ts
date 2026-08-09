@@ -57,12 +57,13 @@ export async function POST(request: Request) {
       "Created a lawyer handoff packet from the workspace."
     );
 
+      const file = `/api/files/exports/${bundle.id}`;
       recordExportMetric("lawyer_handoff_packet", true, {
         userId: user.id,
         caseId: legalCase.id,
         bundleId: bundle.id
       });
-      return NextResponse.json({ bundle, file: packet.publicPath, markdown });
+      return NextResponse.json({ bundle: { ...bundle, filePath: file }, file, markdown });
     } catch (error) {
       recordExportMetric("lawyer_handoff_packet", false);
       return handleApiError(error, "HANDOFF_PACKET_ROUTE", "Unable to create lawyer handoff packet.");

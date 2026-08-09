@@ -17,7 +17,15 @@ import { getAccessibleCase, logActivity, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getRoadmapForCase } from "@/lib/case-roadmap";
 
-const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024);
+function getMaxUploadBytes() {
+  const configured = Number(process.env.MAX_UPLOAD_BYTES);
+  if (Number.isFinite(configured) && configured > 0) {
+    return Math.min(configured, 50 * 1024 * 1024);
+  }
+  return 20 * 1024 * 1024;
+}
+
+const MAX_UPLOAD_BYTES = getMaxUploadBytes();
 const ALLOWED_UPLOAD_TYPES = [
   "application/pdf",
   "application/msword",
@@ -293,7 +301,15 @@ export async function POST(request: Request) {
         bytes: file.size,
         mimeType
       });
-      return NextResponse.json({ document, analysis: { summary: aiSummary, timeline, deadlines, heatmap } });
+      return NextResponse.json({
+        document: {
+          ...document,
+          filePath: `/api/documents/${document.id}`,
+          storageUrl: null,
+          metadata: null
+        },
+        analysis: { summary: aiSummary, timeline, deadlines, heatmap }
+      });
     } catch (error) {
       recordStorageMetric("document.upload.completed", false);
       return handleApiError(error, "DOCUMENT_UPLOAD_ROUTE", "Unable to upload document.");

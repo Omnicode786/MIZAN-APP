@@ -1,9 +1,7 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import pdf from "pdf-parse";
 import mammoth from "mammoth";
 import { runVisionAiTask } from "@/lib/ai";
-import { buildCloudinaryDownloadUrl, getCloudinaryStorageMeta } from "@/lib/cloudinary-storage";
+import { readStoredFileBytes } from "@/lib/secure-file-core";
 
 type ReadFileOptions = {
   fileName?: string;
@@ -126,40 +124,8 @@ function cleanAiOcrText(value: string) {
   return cleaned;
 }
 
-async function fetchBytes(url: string) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Unable to read uploaded file.");
-  }
-
-  return Buffer.from(await response.arrayBuffer());
-}
-
 async function readFileBytes(filePath: string, options: ReadFileOptions = {}) {
-  if (/^https?:\/\//i.test(filePath)) {
-    try {
-      return await fetchBytes(filePath);
-    } catch (error) {
-      const cloudinaryMeta = getCloudinaryStorageMeta(options.metadata);
-      if (!cloudinaryMeta?.publicId) throw error;
-
-      const fallbackUrl = buildCloudinaryDownloadUrl({
-        publicId: cloudinaryMeta.publicId,
-        resourceType: cloudinaryMeta.resourceType,
-        format: cloudinaryMeta.format || inferFormat(options.fileName),
-        deliveryType: cloudinaryMeta.deliveryType
-      });
-
-      if (!fallbackUrl) throw error;
-      return fetchBytes(fallbackUrl);
-    }
-  }
-
-  if (filePath.startsWith("/uploads/")) {
-    return fs.readFile(path.join(process.cwd(), "public", filePath));
-  }
-
-  return fs.readFile(filePath);
+  return readStoredFileBytes({ filePath, metadata: options.metadata, fileName: options.fileName });
 }
 
 async function extractWithAiOcr(

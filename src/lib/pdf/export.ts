@@ -1,6 +1,5 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { writeSecureFile } from "@/lib/secure-file-core";
 
 export async function createCaseBundlePdf(input: {
   caseTitle: string;
@@ -54,14 +53,12 @@ export async function createCaseBundlePdf(input: {
   });
 
   const bytes = await pdfDoc.save();
-  const outputDir = path.join(process.cwd(), "public", "exports");
-  await fs.mkdir(outputDir, { recursive: true });
   const fileName = `case-bundle-${Date.now()}.pdf`;
-  const absolutePath = path.join(outputDir, fileName);
-  await fs.writeFile(absolutePath, bytes);
+  const stored = await writeSecureFile("exports", fileName, bytes);
 
   return {
-    absolutePath,
-    publicPath: `/exports/${fileName}`
+    absolutePath: stored.absolutePath,
+    publicPath: stored.filePath,
+    storageKey: stored.storageKey
   };
 }

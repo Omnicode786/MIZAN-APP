@@ -1,6 +1,4 @@
 import bcrypt from "bcryptjs";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -13,6 +11,7 @@ import { deleteFromCloudinary, getCloudinaryStorageMeta } from "@/lib/cloudinary
 import { recordStorageMetric, trackError } from "@/lib/observability";
 import { buildAccessibleCaseWhereForUser, canDeleteCaseForUser, logActivity, logCaseAudit, requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { unlinkStoredLocalFile } from "@/lib/secure-file-access";
 
 const patchSchema = z.object({
   title: z.string().min(3).optional(),
@@ -64,32 +63,10 @@ function markAssistantMessageCaseDeleted(content: string, caseId: string) {
   });
 }
 
-function resolvePublicFilePath(filePath?: string | null) {
-  if (!filePath || /^https?:\/\//i.test(filePath)) return "";
-
-  const publicDir = path.resolve(process.cwd(), "public");
-  const normalizedPath = filePath.replace(/\\/g, "/");
-  const allowedPublicRoots = ["/uploads/", "/exports/", "/redactions/"];
-
-  if (allowedPublicRoots.some((root) => normalizedPath.startsWith(root))) {
-    const resolved = path.resolve(publicDir, `.${normalizedPath}`);
-    return resolved.startsWith(publicDir + path.sep) ? resolved : "";
-  }
-
-  if (path.isAbsolute(filePath)) {
-    const resolved = path.resolve(filePath);
-    return resolved.startsWith(publicDir + path.sep) ? resolved : "";
-  }
-
-  return "";
-}
-
-async function deleteLocalPublicFile(filePath?: string | null, kind = "case_asset") {
-  const resolved = resolvePublicFilePath(filePath);
-  if (!resolved) return;
-
+async function deleteStoredLocalFile(filePath?: string | null, storageKey?: string | null, kind = "case_asset") {
+  if (!filePath || /^https?:\/\//i.test(filePath)) return;
   try {
-    await fs.unlink(resolved);
+    await unlinkStoredLocalFile(filePath, storageKey);
     recordStorageMetric(`case.delete.${kind}.local_file`, true, { filePath });
   } catch (error) {
     const code = typeof error === "object" && error && "code" in error ? (error as { code?: string }).code : "";
@@ -103,7 +80,7 @@ async function deleteLocalPublicFile(filePath?: string | null, kind = "case_asse
 }
 
 async function cleanupDeletedCaseAssets(input: {
-  documents: Array<{ id: string; filePath: string; metadata: unknown }>;
+  documents: Array<{ id: string; filePath: string; storageKey: string | null; metadata: unknown }>;
   exportBundles: Array<{ id: string; filePath: string }>;
   redactionJobs: Array<{ id: string; outputPath: string | null }>;
 }) {
@@ -118,10 +95,10 @@ async function cleanupDeletedCaseAssets(input: {
         }
       }
 
-      await deleteLocalPublicFile(document.filePath, "document");
+      await deleteStoredLocalFile(document.filePath, document.storageKey, "document");
     }),
-    ...input.exportBundles.map((bundle) => deleteLocalPublicFile(bundle.filePath, "export_bundle")),
-    ...input.redactionJobs.map((job) => deleteLocalPublicFile(job.outputPath, "redaction"))
+    ...input.exportBundles.map((bundle) => deleteStoredLocalFile(bundle.filePath, null, "export_bundle")),
+    ...input.redactionJobs.map((job) => deleteStoredLocalFile(job.outputPath, null, "redaction"))
   ]);
 }
 
@@ -342,6 +319,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
           select: {
             id: true,
             filePath: true,
+            storageKey: true,
             metadata: true
           }
         },

@@ -323,7 +323,6 @@ export async function getCaseDetail(
           bundleType: true,
           title: true,
           summary: true,
-          filePath: true,
           includePrivateNotes: true,
           metadata: true,
           createdAt: true

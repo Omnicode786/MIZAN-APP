@@ -1,0 +1,201 @@
+
+> mizan@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 5.8s
+ ○ Compiling / ...
+ ✓ Compiled / in 12.7s (1478 modules)
+ GET / 200 in 14179ms
+ GET / 200 in 451ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 8.8s (1481 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 10801ms
+ ○ Compiling /src/middleware ...
+ ✓ Compiled /src/middleware in 1296ms (153 modules)
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 3.7s (1483 modules)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 2.1s (1493 modules)
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 5.3s (893 modules)
+{"timestamp":"2026-08-08T21:47:02.704Z","level":"info","event":"api.request.start","route":"/api/auth/login","feature":"auth","requestId":"1eac52b7-9c37-4b13-8c87-9b88f5f6b3b9","method":"POST"}
+{"timestamp":"2026-08-08T21:47:06.143Z","level":"info","event":"auth.login_success","route":"/api/auth/login","feature":"auth","requestId":"1eac52b7-9c37-4b13-8c87-9b88f5f6b3b9","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT"}
+{"timestamp":"2026-08-08T21:47:06.153Z","level":"info","event":"api.request.complete","route":"/api/auth/login","feature":"auth","requestId":"1eac52b7-9c37-4b13-8c87-9b88f5f6b3b9","method":"POST","status":200,"durationMs":3449}
+ POST /api/auth/login 200 in 14693ms
+ ○ Compiling /client/dashboard ...
+ ✓ Compiled /client/dashboard in 5.7s (1785 modules)
+{"timestamp":"2026-08-08T21:47:14.978Z","level":"info","event":"api.request.start","route":"/api/auth/login","feature":"auth","requestId":"3e3a1ad3-fa51-4e5d-b4c8-7c4e6e630e4f","method":"POST"}
+{"timestamp":"2026-08-08T21:47:15.861Z","level":"info","event":"auth.login_success","route":"/api/auth/login","feature":"auth","requestId":"3e3a1ad3-fa51-4e5d-b4c8-7c4e6e630e4f","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT"}
+{"timestamp":"2026-08-08T21:47:15.867Z","level":"info","event":"api.request.complete","route":"/api/auth/login","feature":"auth","requestId":"3e3a1ad3-fa51-4e5d-b4c8-7c4e6e630e4f","method":"POST","status":200,"durationMs":890}
+ POST /api/auth/login 200 in 7469ms
+ ○ Compiling /client/lawyers ...
+ ✓ Compiled /client/lawyers in 1924ms (1790 modules)
+ ○ Compiling /api/lawyers/public ...
+ ✓ Compiled /api/lawyers/public in 1121ms (1023 modules)
+{"timestamp":"2026-08-08T21:47:41.512Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"5ccae2b2-7f79-4c0b-9c4f-f5029c15c1f1","method":"GET"}
+{"timestamp":"2026-08-08T21:47:42.313Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"5ccae2b2-7f79-4c0b-9c4f-f5029c15c1f1","method":"GET","status":200,"durationMs":802}
+ GET /api/lawyers/public 200 in 2273ms
+{"timestamp":"2026-08-08T21:47:42.439Z","level":"info","event":"api.request.start","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"f1aba38e-acb9-439c-9044-c299a8fe725c","method":"GET"}
+{"timestamp":"2026-08-08T21:47:42.834Z","level":"info","event":"api.request.complete","route":"/api/lawyers/public","feature":"lawyer.discovery","requestId":"f1aba38e-acb9-439c-9044-c299a8fe725c","method":"GET","status":200,"durationMs":394}
+ GET /api/lawyers/public 200 in 478ms
+ ○ Compiling /settings ...
+ ✓ Compiled /settings in 2.9s (1838 modules)
+ ✓ Compiled in 4.5s (1847 modules)
+ ✓ Compiled in 6.2s (1847 modules)
+ GET / 200 in 1016ms
+ ○ Compiling /search ...
+ ✓ Compiled /search in 4s (1820 modules)
+ ○ Compiling /api/search ...
+ ✓ Compiled /api/search in 1178ms (1052 modules)
+{"timestamp":"2026-08-08T21:49:05.109Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search.global","requestId":"f4165233-0530-4680-8f22-665aea92ff46","method":"GET"}
+{"timestamp":"2026-08-08T21:49:05.120Z","level":"info","event":"api.request.start","route":"/api/search","feature":"search","requestId":"34d65bc3-8d3c-469e-92ef-b8992876ddde","method":"POST"}
+{"timestamp":"2026-08-08T21:49:10.687Z","level":"info","event":"search.global_completed","route":"/api/search","feature":"search.global","requestId":"f4165233-0530-4680-8f22-665aea92ff46","method":"GET","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT","category":"all","resultCount":4,"totals":{"cases":0,"documents":1,"evidence":1,"lawyers":2,"timeline":0,"deadlines":0,"drafts":0,"comments":0}}
+{"timestamp":"2026-08-08T21:49:10.693Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search.global","requestId":"f4165233-0530-4680-8f22-665aea92ff46","method":"GET","status":200,"durationMs":5586}
+ GET /api/search?q=chat&category=all&limit=10 200 in 10739ms
+{"timestamp":"2026-08-08T21:49:12.146Z","level":"info","event":"search.completed","route":"/api/search","feature":"search","requestId":"34d65bc3-8d3c-469e-92ef-b8992876ddde","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","caseId":"all","scope":"ALL","resultCount":2,"documentCount":1,"evidenceCount":1}
+{"timestamp":"2026-08-08T21:49:12.149Z","level":"info","event":"api.request.complete","route":"/api/search","feature":"search","requestId":"34d65bc3-8d3c-469e-92ef-b8992876ddde","method":"POST","status":200,"durationMs":7030}
+ POST /api/search 200 in 12446ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1797ms (1863 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 2780ms
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 2s (683 modules)
+{"timestamp":"2026-08-08T21:50:32.388Z","level":"info","event":"api.request.start","route":"/api/auth/logout","feature":"auth","requestId":"3482712a-2214-4b94-bc38-f677566e469c","method":"POST"}
+{"timestamp":"2026-08-08T21:50:32.400Z","level":"info","event":"auth.logout","route":"/api/auth/logout","feature":"auth","requestId":"3482712a-2214-4b94-bc38-f677566e469c","method":"POST"}
+{"timestamp":"2026-08-08T21:50:32.402Z","level":"info","event":"api.request.complete","route":"/api/auth/logout","feature":"auth","requestId":"3482712a-2214-4b94-bc38-f677566e469c","method":"POST","status":200,"durationMs":15}
+ POST /api/auth/logout 200 in 2644ms
+ GET /login 200 in 1017ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 2.1s (1494 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 2756ms
+ ✓ Compiled in 5.8s (1508 modules)
+ GET /login 200 in 4020ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 153ms
+ GET /home 404 in 84ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 91ms
+ ○ Compiling / ...
+ ✓ Compiled / in 19.6s (1837 modules)
+ GET / 200 in 15646ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 152ms
+ ✓ Compiled in 7.3s (1827 modules)
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 2.3s (1012 modules)
+ ✓ Compiled in 9.2s (1834 modules)
+ ○ Compiling /lawyers ...
+ ✓ Compiled /lawyers in 3.8s (1837 modules)
+ ✓ Compiled in 2.9s (829 modules)
+ ✓ Compiled in 1704ms (829 modules)
+ ✓ Compiled in 6.5s (1767 modules)
+ ○ Compiling /pricing ...
+ ✓ Compiled /pricing in 3s (1822 modules)
+ GET / 200 in 1085ms
+ ○ Compiling /home-2 ...
+ ✓ Compiled /home-2 in 3.5s (1815 modules)
+ GET / 200 in 1009ms
+ ✓ Compiled in 17.8s (1779 modules)
+ GET / 200 in 1374ms
+ ✓ Compiled in 10.9s (1779 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 3.6s (1768 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 4662ms
+ ✓ Compiled in 12.7s (1782 modules)
+ GET / 200 in 1206ms
+ GET / 200 in 290ms
+ ✓ Compiled in 18.8s (1779 modules)
+ GET / 200 in 1362ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 2.8s (948 modules)
+ GET / 200 in 948ms
+ GET / 200 in 418ms
+ ✓ Compiled in 4.4s (1779 modules)
+ GET / 200 in 687ms
+ ✓ Compiled in 4.4s (837 modules)
+ ✓ Compiled in 3.5s (837 modules)
+ ✓ Compiled in 7.4s (1783 modules)
+ GET / 200 in 4588ms
+ ✓ Compiled in 3.2s (839 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 7.4s (1772 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 8855ms
+ ✓ Compiled in 15.3s (1786 modules)
+ GET /login 200 in 1660ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 140ms
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 2.5s (951 modules)
+ ✓ Compiled in 5.7s (1680 modules)
+ ✓ Compiled in 4.5s (1680 modules)
+ GET / 200 in 1225ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 196ms
+ ✓ Compiled in 10.5s (1680 modules)
+ ✓ Compiled in 9.9s (1680 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 401ms
+ GET / 200 in 974ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 261ms
+ ✓ Compiled in 8.3s (1677 modules)
+ GET / 200 in 669ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 3s (1666 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 4107ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 10.9s (1822 modules)
+{"timestamp":"2026-08-08T22:13:55.501Z","level":"info","event":"api.request.start","route":"/api/auth/login","feature":"auth","requestId":"77cd4e40-7275-4422-854f-c9fcba25ee16","method":"POST"}
+{"timestamp":"2026-08-08T22:14:00.854Z","level":"info","event":"auth.login_success","route":"/api/auth/login","feature":"auth","requestId":"77cd4e40-7275-4422-854f-c9fcba25ee16","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT"}
+{"timestamp":"2026-08-08T22:14:00.859Z","level":"info","event":"api.request.complete","route":"/api/auth/login","feature":"auth","requestId":"77cd4e40-7275-4422-854f-c9fcba25ee16","method":"POST","status":200,"durationMs":5361}
+ POST /api/auth/login 200 in 19325ms
+ ✓ Compiled /client/dashboard in 6.7s (1821 modules)
+ ✓ Compiled (1883 modules)
+ ✓ Compiled in 5.2s (1883 modules)
+ ✓ Compiled in 7.3s (1883 modules)
+ GET / 200 in 1174ms
+ GET / 200 in 422ms
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 2.9s (1024 modules)
+{"timestamp":"2026-08-08T22:16:01.078Z","level":"info","event":"api.request.start","route":"/api/auth/logout","feature":"auth","requestId":"3f83ed32-588d-4a60-a843-9a62b3a9216a","method":"POST"}
+{"timestamp":"2026-08-08T22:16:01.092Z","level":"info","event":"auth.logout","route":"/api/auth/logout","feature":"auth","requestId":"3f83ed32-588d-4a60-a843-9a62b3a9216a","method":"POST"}
+{"timestamp":"2026-08-08T22:16:01.094Z","level":"info","event":"api.request.complete","route":"/api/auth/logout","feature":"auth","requestId":"3f83ed32-588d-4a60-a843-9a62b3a9216a","method":"POST","status":200,"durationMs":18}
+ POST /api/auth/logout 200 in 8054ms
+ GET /login 200 in 1276ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 6.8s (1813 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 8308ms
+ ✓ Compiled in 4.9s (1827 modules)
+ ✓ Compiled in 4.5s (1824 modules)
+ ✓ Compiled in 7.1s (1824 modules)
+ GET / 200 in 991ms
+ GET /login 200 in 314ms
+ ✓ Compiled in 4.3s (1824 modules)
+ ✓ Compiled in 3.3s (1824 modules)
+ GET / 200 in 757ms
+ GET /login 200 in 318ms
+ ✓ Compiled in 5.5s (1824 modules)
+ ✓ Compiled in 4.7s (1824 modules)
+ ✓ Compiled in 4s (1824 modules)
+ ✓ Compiled in 3.7s (1824 modules)
+ GET / 200 in 1515ms
+ GET /login 200 in 472ms
+ ✓ Compiled in 8s (1824 modules)
+ GET / 200 in 1000ms
+ GET /login 200 in 392ms
+ GET / 200 in 499ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 2.4s (1027 modules)
+{"timestamp":"2026-08-08T22:26:10.733Z","level":"info","event":"api.request.start","route":"/api/auth/login","feature":"auth","requestId":"f5f52fef-41f7-4a25-9b4a-98703e3ea4d6","method":"POST"}
+{"timestamp":"2026-08-08T22:26:13.893Z","level":"info","event":"auth.login_success","route":"/api/auth/login","feature":"auth","requestId":"f5f52fef-41f7-4a25-9b4a-98703e3ea4d6","method":"POST","userId":"cmodvudvc0000xq7dfumff3ep","role":"CLIENT"}
+{"timestamp":"2026-08-08T22:26:13.901Z","level":"info","event":"api.request.complete","route":"/api/auth/login","feature":"auth","requestId":"f5f52fef-41f7-4a25-9b4a-98703e3ea4d6","method":"POST","status":200,"durationMs":3169}
+ POST /api/auth/login 200 in 10003ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 5.6s (1827 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 6949ms
+ ○ Compiling /client/cases/[id] ...
+ ✓ Compiled /client/cases/[id] in 14.8s (1869 modules)
+ ○ Compiling /client/cases ...
+ ✓ Compiled /client/cases in 7.4s (1878 modules)
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 11.4s (2081 modules)
+ GET /client/dashboard 500 in 19157ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 544ms

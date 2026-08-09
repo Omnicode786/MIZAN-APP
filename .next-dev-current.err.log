@@ -1,0 +1,117 @@
+ ⚠ Port 3000 is in use, trying 3001 instead.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\.next\cache\webpack\server-development\30.pack.gz_' -> 'C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\.next\cache\webpack\server-development\30.pack.gz'
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+{"timestamp":"2026-08-08T22:00:19.286Z","level":"warn","event":"db.connection_transient","message":"Error in PostgreSQL connection: Error { kind: Closed, cause: None }","target":"quaint::connector::postgres::native"}
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+{"timestamp":"2026-08-08T22:19:49.158Z","level":"warn","event":"db.connection_transient","message":"Error in PostgreSQL connection: Error { kind: Closed, cause: None }","target":"quaint::connector::postgres::native"}
+
+[1m[33mwarn[39m[22m - The class `duration-[260ms]` is ambiguous and matches multiple utilities.
+[1m[33mwarn[39m[22m - If this is content and not a class, replace it with `duration-&lsqb;260ms&rsqb;` to silence this warning.
+{"timestamp":"2026-08-08T22:26:18.270Z","level":"warn","event":"db.slow_query","durationMs":1242,"target":"quaint::connector::metrics","query":"SELECT \"public\".\"TimelineEvent\".\"id\", \"public\".\"TimelineEvent\".\"caseId\", \"public\".\"TimelineEvent\".\"title\", \"public\".\"TimelineEvent\".\"description\", \"public\".\"TimelineEvent\".\"eventDate\", \"public\".\"TimelineEvent\".\"confidence\", \"public\".\"TimelineEvent\".\"sourceLabel\", \"public\".\"TimelineEvent\".\"createdAt\", \"public\".\"TimelineEvent\".\"updatedAt\" FROM \"public\".\"TimelineEvent\" WHERE \"public\".\"TimelineEvent\".\"caseId\" IN ($1,$2,$3) ORDER BY \"public\".\"TimelineEvent\".\"eventDate\" DESC LIMIT $4 OFFSET $5"}
+{"timestamp":"2026-08-08T22:31:34.093Z","level":"warn","event":"db.connection_transient","message":"Error in PostgreSQL connection: Error { kind: Closed, cause: None }","target":"quaint::connector::postgres::native"}
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ TypeError: Cannot read properties of null (reading 'useState')
+    at Sidebar (./src/components/workspace/sidebar.tsx:66:86)
+digest: "3828495877"
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:162364)
+    at usePathname (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/navigation.js:121:34)
+    at ErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/error-boundary.js:159:50)
+    at au (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:10446)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:15122
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16908)
+    at a_ (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:49776)
+    at ab (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:11808)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16871
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16908)
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:46505)
+    at a_ (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:49776)
+    at ab (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:11808)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16871
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16908)
+    at a_ (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:49776)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:58612
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:59270
+    at aN (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:59278)
+    at Timeout._onTimeout (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:6939)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:162364)
+    at usePathname (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/navigation.js:121:34)
+    at ErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/error-boundary.js:159:50)
+    at au (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:10446)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:15122
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16908)
+    at a_ (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:49776)
+    at ab (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:11808)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16871
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16908)
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:46505)
+    at a_ (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:49776)
+    at ab (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:11808)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16871
+    at aw (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:16908)
+    at a_ (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:49776)
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:58612
+    at C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:59270
+    at aN (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:59278)
+    at Timeout._onTimeout (C:\Users\muzam\OneDrive\Desktop\Programming\MIZAN-APP\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:6939)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7) {
+  page: '/client/dashboard'
+}
+{"timestamp":"2026-08-08T22:47:04.397Z","level":"warn","event":"db.connection_transient","message":"Error in PostgreSQL connection: Error { kind: Closed, cause: None }","target":"quaint::connector::postgres::native"}

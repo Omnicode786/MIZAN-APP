@@ -556,15 +556,15 @@ export function ClientAiAssistant({
       </GlassSurface>
 
       <GlassSurface
-        className="overflow-hidden"
+        className="assistant-shell chat-shell overflow-hidden"
         borderRadius={34}
         borderGlow
         backgroundOpacity={0.12}
         blur={14}
         saturation={1.36}
-        innerClassName="grid overflow-hidden rounded-[inherit] xl:h-[calc(100dvh-8rem)] xl:min-h-[680px] xl:grid-cols-[360px_minmax(0,1fr)]"
+        innerClassName="grid overflow-hidden rounded-[inherit] lg:h-[calc(100dvh-9rem)] lg:min-h-[620px] xl:grid-cols-[360px_minmax(0,1fr)]"
       >
-        <aside className="border-b border-white/15 bg-white/10 p-5 dark:bg-white/5 xl:sticky xl:top-0 xl:h-full xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:border-b-0 xl:border-r">
+        <aside className="assistant-side-panel border-b border-white/15 bg-white/10 p-5 dark:bg-white/5 xl:sticky xl:top-0 xl:h-full xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:border-b-0 xl:border-r">
           <div className="space-y-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -673,7 +673,7 @@ export function ClientAiAssistant({
           </div>
         </aside>
 
-        <main className="flex min-h-[680px] flex-col xl:h-full xl:min-h-0">
+        <main className="assistant-chat-panel flex min-h-[680px] flex-col xl:h-full xl:min-h-0">
           <div className="shrink-0 flex flex-col gap-4 border-b border-white/15 bg-white/10 p-5 dark:bg-white/5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -716,7 +716,7 @@ export function ClientAiAssistant({
           <div
             ref={chatViewportRef}
             onScroll={handleChatScroll}
-            className="premium-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-5"
+            className="message-list native-scroll-area premium-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-5"
           >
             {displayedMessages.length ? (
               <div className="space-y-4">
@@ -739,7 +739,7 @@ export function ClientAiAssistant({
             )}
           </div>
 
-          <div className="shrink-0 border-t border-white/15 bg-white/10 p-5 dark:bg-white/5">
+          <div className="assistant-composer shrink-0 border-t border-white/15 bg-white/10 p-5 dark:bg-white/5">
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
               <Textarea
                 ref={composerRef}

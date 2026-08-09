@@ -267,8 +267,8 @@ export function GlobalSearchPanel({
             </Button>
           </form>
 
-          <div className="border-t border-border/70 p-4 sm:p-5">
-            <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="border-t border-border/70 p-3 sm:p-5">
+            <div className="native-filter-strip -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
               {categoryConfig.map((item) => {
                 const Icon = item.icon;
                 const active = item.key === category;
@@ -278,18 +278,18 @@ export function GlobalSearchPanel({
                     key={item.key}
                     type="button"
                     onClick={() => chooseCategory(item.key)}
-                    className={`group min-w-[150px] rounded-2xl border px-4 py-3 text-left transition ${
+                    className={`native-filter-chip group min-w-[132px] shrink-0 rounded-2xl border px-3 py-3 text-left transition sm:min-w-[150px] sm:px-4 ${
                       active
                         ? "border-primary/35 bg-primary/10 text-foreground shadow-[0_16px_40px_hsl(var(--primary)/0.16)]"
                         : "border-border/70 bg-background/70 text-muted-foreground hover:border-primary/25 hover:text-foreground"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-2">
                       <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
                       <Badge variant={active ? "default" : "outline"}>{categoryTotal(data, item.key)}</Badge>
                     </div>
-                    <p className="mt-3 text-sm font-semibold">{item.label}</p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                    <p className="mt-2 whitespace-normal text-sm font-semibold leading-tight">{item.label}</p>
+                    <p className="mt-1 hidden text-xs leading-5 text-muted-foreground sm:line-clamp-2">
                       {item.description}
                     </p>
                   </button>

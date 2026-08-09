@@ -1,4 +1,3 @@
-import fs from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { runAiTask, runVisionAiTask } from "@/lib/ai";
 import { readUploadedFileBytes } from "@/lib/document-pipeline/extract";
@@ -479,11 +478,7 @@ export async function summarizeDocumentWithAi(
   fallbackText: string,
   language?: AppLanguage
 ) {
-  const bytes = mimeType.startsWith("image/")
-    ? /^https?:\/\//i.test(filePath) || filePath.startsWith("/uploads/")
-      ? await readUploadedFileBytes(filePath)
-      : await fs.readFile(filePath)
-    : undefined;
+  const bytes = mimeType.startsWith("image/") ? await readUploadedFileBytes(filePath) : undefined;
 
   return summarizeDocumentContentWithAi({
     bytes,

@@ -1090,7 +1090,7 @@ export function CaseWorkspaceLive({
                     <div className="flex flex-wrap gap-2">
                       <SafePill variant="outline">{bundle.bundleType}</SafePill>
                       <Button variant="outline" size="sm" asChild>
-                        <a href={bundle.filePath} target="_blank" rel="noreferrer">
+                        <a href={`/api/files/exports/${bundle.id}`} target="_blank" rel="noreferrer">
                           <Download className="h-4 w-4" />
                           Open
                         </a>
